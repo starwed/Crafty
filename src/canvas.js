@@ -121,14 +121,24 @@ Crafty.c("Canvas", {
 			context.globalAlpha = this._alpha;
 		}
 
+		//draw with compositing operation
+		if (this._compOp){
+			var globalComposite = context.globalCompositeOperation;
+			context.globalCompositeOperation = this._compOp;
+		}
+
 		this.drawVars.ctx = context;
 		this.trigger("Draw", this.drawVars);
+
 
 		if (this._mbr || (this._flipX || this._flipY)) {
 			context.restore();
 		}
 		if (globalpha) {
 			context.globalAlpha = globalpha;
+		}
+		if (globalComposite){
+			context.globalCompositeOperation = globalComposite;
 		}
 		return this;
 	}
