@@ -305,6 +305,26 @@ $(document).ready(function() {
 		Crafty("*").destroy();
 	});
 
+	test("isAt", function(){
+		var player = Crafty.e("2D, DOM, Color");
+		player.x = 0;
+		player.y = 0;
+		player.w = 50;
+		player.h = 50;
+		strictEqual(player.isAt(25, 25), true, "isAt middle is true");
+		strictEqual(player.isAt(0, 25), true, "isAt left edge is true");
+		strictEqual(player.isAt(25, 0), true, "isAt top edge is true");
+		strictEqual(player.isAt(51, 51), false, "isAt outside is false");
+
+		player.rotation = 90;
+
+		strictEqual(player.isAt(25, 25), false, "isAt old middle is false after rotating away");
+		strictEqual(player.isAt(-25, 25), true, "isAt rotated middle is true");
+
+
+		Crafty("*").destroy();
+	})
+
 
 	
 	test("circle", function() {
