@@ -196,7 +196,7 @@ Crafty.c("DOM", {
             }
         }
 
-        if (this._mbr) {
+        if (this._rotation !== 0) {
             var origin = this._origin.x + "px " + this._origin.y + "px";
             style.transformOrigin = origin;
             style[prefix + "TransformOrigin"] = origin;

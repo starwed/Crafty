@@ -17,9 +17,13 @@ Crafty.c("Collision", {
      */
     init: function () {
         this.requires("2D");
-        var area = this._mbr || this;
-
         this.collision();
+    },
+
+
+    remove: function() {
+        this._cbr = null;
+        this.unbind("Resize", this._resizeMap);
     },
 
     /**@
@@ -59,12 +63,16 @@ Crafty.c("Collision", {
         if (!poly) {
             poly = new Crafty.polygon([0, 0], [this._w, 0], [this._w, this._h], [0, this._h]);
             this.bind("Resize", this._resizeMap);
-        }
+            this._cbr = null;
+        } else {
 
-        if (arguments.length > 1) {
-            //convert args to array to create polygon
-            var args = Array.prototype.slice.call(arguments, 0);
-            poly = new Crafty.polygon(args);
+            if (arguments.length > 1) {
+                //convert args to array to create polygon
+                var args = Array.prototype.slice.call(arguments, 0);
+                poly = new Crafty.polygon(args);
+            }
+            // Check to see if the polygon sits outside the entity
+            this._checkBounds(poly.points);
         }
 
         if (this.rotation) {
@@ -85,6 +93,35 @@ Crafty.c("Collision", {
         return this;
     },
 
+    _checkBounds: function(points) {
+        var minX = Infinity, maxX = -Infinity, minY=Infinity, maxY=-Infinity;
+        var p;
+        for (var i=0; i<points.length; ++i){
+            p = points[i];
+            if (p[0] < minX)
+                minX = p[0];
+            if (p[0] > maxX)
+                maxX = p[0];
+            if (p[1] < minY)
+                minY = p[1];
+            if (p[1] > maxY)
+                maxY = p[1];
+        }
+        if (minX >= 0 && minY >= 0 && maxX <= this._w && maxY <= this._h){
+            this._cbr = null;
+            return false;
+        } else {
+            this._cbr = {
+                cx: (minX + maxX) / 2,
+                cy: (minY + maxY) / 2,
+                r: Math.sqrt( (maxX - minX)*(maxX - minX) + (maxY - minY)*(maxY - minY))/2
+            };
+            this._calculateMBR(this._origin.x + this._x, this._origin.y + this._y, -this._rotation * DEG_TO_RAD);
+            return true;
+        }
+
+
+    },
 
     // Change the hitbox when a "Resize" event triggers. 
     _resizeMap: function (e) {
@@ -152,7 +189,7 @@ Crafty.c("Collision", {
      * @see .onHit, 2D
      */
     hit: function (comp) {
-        var area = this._mbr || this,
+        var area = this._cbr || this._mbr || this,
             results = Crafty.map.search(area, false),
             i = 0,
             l = results.length,
@@ -167,7 +204,7 @@ Crafty.c("Collision", {
 
         for (; i < l; ++i) {
             obj = results[i];
-            oarea = obj._mbr || obj; //use the mbr
+            oarea = obj._cbr || obj._mbr || obj; //use the mbr
 
             if (!obj) continue;
             id = obj[0];
