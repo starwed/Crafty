@@ -94,27 +94,78 @@ Crafty.c("Collision", {
     },
 
     _checkBounds: function(points) {
-        var minX = Infinity, maxX = -Infinity, minY=Infinity, maxY=-Infinity;
-        var p;
-        for (var i=0; i<points.length; ++i){
+        var minX , maxX, minY, maxY;
+        minX = maxX = minY = maxY = points[0];
+
+        var p, i, l = points.length;
+        for (i; i<points.length; ++i){
             p = points[i];
-            if (p[0] < minX)
-                minX = p[0];
-            if (p[0] > maxX)
-                maxX = p[0];
-            if (p[1] < minY)
-                minY = p[1];
-            if (p[1] > maxY)
-                maxY = p[1];
+            if (p[0] < minX[0])
+                minX = p;
+            if (p[0] > maxX[0])
+                maxX = p;
+            if (p[1] < minY[1])
+                minY = p;
+            if (p[1] > maxY[1])
+                maxY = p;
         }
-        if (minX >= 0 && minY >= 0 && maxX <= this._w && maxY <= this._h){
+        if (minX[0] >= 0 && minY[1] >= 0 && maxX[0] <= this._w && maxY[1] <= this._h){
             this._cbr = null;
             return false;
         } else {
+            // Ritter algorithm, taken from here:
+            //  https://github.com/erich666/GraphicsGems/blob/master/gems/BoundSphere.c
+
+            // Find a pair of extreme points
+            var dx, dy, xspan, yspan;
+            dx = maxX[0] - minX[0];
+            dy = maxX[1] - minX[1];
+            xspan = dx*dx + dy*dy;
+
+            dx = maxY[0] - minY[0];
+            dy = maxY[1] - minY[1];
+            yspan = dx*dx + dy*dy;
+
+            var dia1 = minX, dia2 = maxX, maxspan = xspan;
+            if (yspan > maxspan) {
+                dia1 = minY;
+                dia2 = maxY;
+                maxspan = yspan;
+            }
+
+            // Calculate the middle of the points, and set up a minimal sphere that bounds them
+            var cx = (dia1[0] + dia2[0]) / 2,
+                cy = (dia1[1] + dia2[1]) / 2;
+            dx = dia2[0] - cx;
+            dy = dia2[1] - cy;
+            var r_sq = dx*dx + dy*dy,
+                r = Math.sqrt(r_sq);
+
+            // SECOND PASS
+            // Increase sphere until all points are encompassed
+            var old_to_p, old_to_p_sq, old_to_new, r2 = r*r;
+            for (i=0; i<l; i++){
+                p = points[i];
+                dx = p[0] - cx;
+                dy = p[1] - cy;
+                old_to_p_sq = dx*dx + dy*dy;
+                if (old_to_p_sq > r_sq){
+                    old_to_p = Math.sqrt(old_to_p_sq);
+                    // Increase the radius
+                    r = (r + old_to_p) / 2;
+                    r_sq = r * r;
+                    old_to_new = old_to_p - r;
+                    // Move the center point
+                    cx = (r * cx + old_to_new * p[0]) / old_to_p;
+                    cy = (r * cy + old_to_new * p[1]) / old_to_p;
+                }
+
+            }
+
             this._cbr = {
-                cx: (minX + maxX) / 2,
-                cy: (minY + maxY) / 2,
-                r: Math.sqrt( (maxX - minX)*(maxX - minX) + (maxY - minY)*(maxY - minY))/2
+                cx: cx,
+                cy: cy,
+                r: r
             };
             this._calculateMBR(this._origin.x + this._x, this._origin.y + this._y, -this._rotation * DEG_TO_RAD);
             return true;
