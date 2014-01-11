@@ -223,12 +223,6 @@ Crafty.c("WebGL", {
         pos._w = (w || this._w);
         pos._h = (h || this._h);
 
-        // FIXME defaults to z=0
-        // Shouldn't actually be calculated every time!
-        //this._calculateVertices()
-
-
-
         // Handle flipX, flipY
         if (this._flipX || this._flipY) {
            
@@ -281,29 +275,6 @@ Crafty.c("WebGL", {
         return this;
     },
 
-
-    // Create a vertex buffer for a rectangular entity
-    _calculateVertices: function(){
-    	gl = Crafty.webgl.context;
-      //this._vertexBuffer = gl.createBuffer();
-    	gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexBuffer)
-    	var vertices = [
-        0, 0,
-        0, 1,
-        1, 0,
-        1, 1
-      ];
-    	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    	this._vertexBuffer.itemSize = 2;
-    	this._vertexBuffer.numItems = 4;
-    },
-
-    _calculateEntityMatrix: function(){
-    	// Create a matrix representing the transformations necessary before rendering this entity
-    	
-
-    },
-
     // v_src is optional, there's a default vertex shader that works for regular rectangular entities
     _establishShader: function(compName, f_src, v_src){
         var wgl = Crafty.webgl;
@@ -312,6 +283,8 @@ Crafty.c("WebGL", {
         }
           
         this._shaderProgram = wgl.programs[compName];
+
+
 
         this.ready = true;
     },
@@ -372,6 +345,9 @@ Crafty.extend({
             if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
               throw("Could not initialise shaders");
             }
+
+
+
             return shaderProgram;
         },
 
@@ -493,6 +469,7 @@ Crafty.extend({
 
         setViewportUniforms: function(shaderProgram){
             gl = Crafty.webgl.context;
+            gl.useProgram(shaderProgram);
             var w = gl.getUniformLocation(shaderProgram, "uViewportWidth");
             var h = gl.getUniformLocation(shaderProgram, "uViewportHeight");
             var x = gl.getUniformLocation(shaderProgram, "uViewportX");
@@ -522,7 +499,11 @@ Crafty.extend({
             //Set the viewport uniform variables
             var shaderProgram = Crafty.webgl._shaderProgram;
             
-            
+            var programs = Crafty.webgl.programs;
+            for (var comp in programs){
+
+                Crafty.webgl.setViewportUniforms(programs[comp]);
+            }
 
 
             for (; i < l; i++) {
@@ -532,7 +513,7 @@ Crafty.extend({
                     
                     shaderProgram = current._shaderProgram;
                     gl.useProgram(shaderProgram);
-                    Crafty.webgl.setViewportUniforms(shaderProgram);
+                    //Crafty.webgl.setViewportUniforms(shaderProgram);
                     current.draw();
                     current._changed = false;
                 }
