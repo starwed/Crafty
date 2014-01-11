@@ -479,6 +479,16 @@ Crafty.extend({
             //Bind rendering of canvas context (see drawing.js)
             Crafty.uniqueBind("RenderScene", Crafty.webgl.render);
 
+            Crafty.uniqueBind("ViewportResize", Crafty.webgl._resize)
+
+        },
+
+        _resize: function(){
+            var c = Crafty.webgl._canvas;
+            c.width = Crafty.viewport.width;
+            c.height = Crafty.viewport.height;
+            gl.viewportWidth = c.width;
+            gl.viewportHeight = c.height;
         },
 
         setViewportUniforms: function(shaderProgram){
