@@ -27,40 +27,32 @@ var VERTEX_SHADER_SRC_OLD =
 // Vertex shader source, unformatted
 /*
 attribute vec2 a_position;
-uniform float uViewportWidth;
-uniform float uViewportHeight;
-uniform float uViewportX;
-uniform float uViewportY;
-
-uniform float uEntityWidth;
-uniform float uEntityHeight;
-uniform float uEntityX;
-uniform float uEntityY;
-uniform float uEntityZ;
-
-uniform float uOriginX;
-uniform float uOriginY;
-uniform float uEntityRotation;
+uniform  vec4 uViewport;
+uniform  vec4 uEntityPos;
+uniform  vec4 uEntityExtra;
 
 
-mat4 viewportScale = mat4(2.0 / uViewportWidth,0,0,0, 0,-2.0 / uViewportHeight, 0,0, 0,0,1,0, -1, +1.0,0,1);
-vec4 viewportTranslation = vec4(uViewportX, uViewportY, 0, 0);
+varying highp vec2 vTextureCoord;
 
-mat2 entityScale = mat2( uEntityWidth, 0, 0, uEntityHeight);
-vec2 entityTranslation = vec2(uEntityX, uEntityY);
-vec2 entityOrigin = vec2(uOriginX, uOriginY);
-mat2 entityRotationMatrix = mat2(cos(uEntityRotation), sin(uEntityRotation), -sin(uEntityRotation), cos(uEntityRotation));
+mat4 viewportScale = mat4(2.0 / uViewport.z, 0, 0, 0,    0, -2.0 / uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);
+vec4 viewportTranslation = vec4(uViewport.xy, 0, 0);
+
+vec2 entityScale = uEntityPos.zw;
+vec2 entityTranslation = uEntityPos.xy;
+vec2 entityOrigin = uEntityExtra.xy;
+mat2 entityRotationMatrix = mat2(cos(uEntityExtra.w), sin(uEntityExtra.w), -sin(uEntityExtra.w), cos(uEntityExtra.w));
 
 void main() {
   vec2 pos = entityScale * a_position;
   pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;
-  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityZ, 1) );
+  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityExtra.z, 1) );
+  vTextureCoord = a_position;
 }
 */
 
-
+// Escape using a tool like [this one](http://www.freeformatter.com/javascript-escape.html).
 var VERTEX_SHADER_SRC = 
-"\r\nattribute vec2 a_position;\r\nuniform float uViewportWidth;\r\nuniform float uViewportHeight;\r\nuniform float uViewportX;\r\nuniform float uViewportY;\r\n\r\nuniform float uEntityWidth;\r\nuniform float uEntityHeight;\r\nuniform float uEntityX;\r\nuniform float uEntityY;\r\nuniform float uEntityZ;\r\n\r\nuniform float uOriginX;\r\nuniform float uOriginY;\r\nuniform float uEntityRotation;\r\n\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewportWidth,0,0,0, 0,-2.0 \/ uViewportHeight, 0,0, 0,0,1,0, -1, +1.0,0,1);\r\nvec4 viewportTranslation = vec4(uViewportX, uViewportY, 0, 0);\r\n\r\nmat2 entityScale = mat2( uEntityWidth, 0, 0, uEntityHeight);\r\nvec2 entityTranslation = vec2(uEntityX, uEntityY);\r\nvec2 entityOrigin = vec2(uOriginX, uOriginY);\r\nmat2 entityRotationMatrix = mat2(cos(uEntityRotation), sin(uEntityRotation), -sin(uEntityRotation), cos(uEntityRotation));\r\n\r\nvoid main() {\r\n  vec2 pos = entityScale * a_position;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityZ, 1) );\r\n}"
+"attribute vec2 a_position;\r\nuniform  vec4 uViewport;\r\nuniform  vec4 uEntityPos;\r\nuniform  vec4 uEntityExtra;\r\n\r\n\r\nvarying highp vec2 vTextureCoord;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityScale = uEntityPos.zw;\r\nvec2 entityTranslation = uEntityPos.xy;\r\nvec2 entityOrigin = uEntityExtra.xy;\r\nmat2 entityRotationMatrix = mat2(cos(uEntityExtra.w), sin(uEntityExtra.w), -sin(uEntityExtra.w), cos(uEntityExtra.w));\r\n\r\nvoid main() {\r\n  vec2 pos = entityScale * a_position;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityExtra.z, 1) );\r\n  vTextureCoord = a_position;\r\n}";
 
 
 
@@ -100,23 +92,15 @@ Crafty.c("TestColor", {
 
   _fragmentShader: 
     "precision mediump float;"
-    + "uniform float uRed;"
-    + "uniform float uBlue;"
-    + "uniform float uGreen;"
+    + "uniform lowp vec3 uColor;"
     + "void main(void) {"
-    + "  gl_FragColor = vec4(uRed, uGreen, uBlue, 1.0);"
+    + "  gl_FragColor = vec4(uColor, 1.0);"
     + "}",
 
   _drawColor: function(drawVars){
     var gl = drawVars.gl, shaderProgram = drawVars.program;
-    var r = gl.getUniformLocation(shaderProgram, "uRed");
-    var g = gl.getUniformLocation(shaderProgram, "uGreen");
-    var b = gl.getUniformLocation(shaderProgram, "uBlue");
-    gl.uniform1f(r, this._red);
-    gl.uniform1f(g, this._green);
-    gl.uniform1f(b, this._blue);
-
-
+    var color = gl.getUniformLocation(shaderProgram, "uColor");
+    gl.uniform3f(color, this._red, this._green, this._blue);
   },
 
   color: function (r, g, b){
@@ -183,7 +167,7 @@ Crafty.c("WebGL", {
      * Method to draw the entity on the canvas element. Can pass rect values for redrawing a segment of the entity.
      */
 
-    // Cache the various objects and arrays used in draw:
+    // Cache the various objects and arrays used in draw
     drawVars: {
         type: "webgl",
         pos: {},
@@ -212,9 +196,6 @@ Crafty.c("WebGL", {
             x = ctx;
             ctx = Crafty.webgl.context;
         }
-
-        //console.log("Beginning draw")
-
 
 
         var pos = this.drawVars.pos;
@@ -245,28 +226,8 @@ Crafty.c("WebGL", {
 
 
         // Set all the crazy uniform variables for the entity
-
-        
-
-        var w = gl.getUniformLocation(shaderProgram, "uEntityWidth");
-        var h = gl.getUniformLocation(shaderProgram, "uEntityHeight");
-        var x = gl.getUniformLocation(shaderProgram, "uEntityX");
-        var y = gl.getUniformLocation(shaderProgram, "uEntityY");
-        var z = gl.getUniformLocation(shaderProgram, "uEntityZ");
-        gl.uniform1f(w, pos._w);
-        gl.uniform1f(h, pos._h);
-        gl.uniform1f(x, pos._x);
-        gl.uniform1f(y, pos._y);
-        gl.uniform1f(z, 1/this._globalZ);
-
-        x = gl.getUniformLocation(shaderProgram, "uOriginX");
-        y = gl.getUniformLocation(shaderProgram, "uOriginY");
-        var rot = gl.getUniformLocation(shaderProgram, "uEntityRotation");
-
-        gl.uniform1f(x, this._origin.x);
-        gl.uniform1f(y, this._origin.y);
-        gl.uniform1f(rot, this._rotation);
-
+        gl.uniform4f(shaderProgram.entity_pos, pos._x, pos._y, pos._w, pos._h)
+        gl.uniform4f(shaderProgram.entity_extra, this._origin.x, this._origin.y, 1/this._globalZ, this._rotation)
 
         this.trigger("Draw", this.drawVars);
 
@@ -320,6 +281,7 @@ Crafty.extend({
          */
 
         programs: {},
+
         compileShader: function (src, type){
             var gl = this.context;
             var shader = gl.createShader(type);
@@ -346,9 +308,18 @@ Crafty.extend({
               throw("Could not initialise shaders");
             }
 
+            shaderProgram.entity_pos = gl.getUniformLocation(shaderProgram, "uEntityPos");
+            shaderProgram.entity_extra = gl.getUniformLocation(shaderProgram, "uEntityExtra");
+            shaderProgram.viewport = gl.getUniformLocation(shaderProgram, "uViewport");
+
 
 
             return shaderProgram;
+        },
+        
+        textures: {},
+        makeTexture: function(url, image){
+
         },
 
 
@@ -470,15 +441,8 @@ Crafty.extend({
         setViewportUniforms: function(shaderProgram){
             gl = Crafty.webgl.context;
             gl.useProgram(shaderProgram);
-            var w = gl.getUniformLocation(shaderProgram, "uViewportWidth");
-            var h = gl.getUniformLocation(shaderProgram, "uViewportHeight");
-            var x = gl.getUniformLocation(shaderProgram, "uViewportX");
-            var y = gl.getUniformLocation(shaderProgram, "uViewportY");
-            gl.uniform1f(w, Crafty.viewport.width);
-            gl.uniform1f(h, Crafty.viewport.height);
-            gl.uniform1f(x, Crafty.viewport._x);
-            gl.uniform1f(y, Crafty.viewport._y);
-
+            var viewport = Crafty.viewport;
+            gl.uniform4f(shaderProgram.viewport, viewport._x, viewport._y, viewport._width, viewport._height);
         },
 
         render: function(rect){
@@ -497,11 +461,9 @@ Crafty.extend({
             //We don't set the perspective because the default is what we WANT -- no depth 
 
             //Set the viewport uniform variables
-            var shaderProgram = Crafty.webgl._shaderProgram;
-            
+            var shaderProgram;            
             var programs = Crafty.webgl.programs;
             for (var comp in programs){
-
                 Crafty.webgl.setViewportUniforms(programs[comp]);
             }
 
@@ -510,10 +472,8 @@ Crafty.extend({
                 current = q[i];
                 if (current._visible && current.__c.WebGL) {
                     //console.log("rendering a thing #" + current[0])
-                    
                     shaderProgram = current._shaderProgram;
                     gl.useProgram(shaderProgram);
-                    //Crafty.webgl.setViewportUniforms(shaderProgram);
                     current.draw();
                     current._changed = false;
                 }
