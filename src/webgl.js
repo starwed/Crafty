@@ -428,6 +428,10 @@ Crafty.extend({
 
             Crafty.uniqueBind("ViewportResize", Crafty.webgl._resize)
 
+            var webgl = Crafty.webgl;
+            Crafty.uniqueBind("InvalidateViewport", function(){webgl.dirtyViewport = true;})
+            webgl.dirtyViewport = true;
+
         },
 
         _resize: function(){
@@ -463,10 +467,12 @@ Crafty.extend({
             //Set the viewport uniform variables
             var shaderProgram;            
             var programs = Crafty.webgl.programs;
-            for (var comp in programs){
-                Crafty.webgl.setViewportUniforms(programs[comp]);
+            if (Crafty.webgl.dirtyViewport){
+              for (var comp in programs){
+                  Crafty.webgl.setViewportUniforms(programs[comp]);
+              }
+              Crafty.webgl.dirtyViewport = false;
             }
-
 
             for (; i < l; i++) {
                 current = q[i];
