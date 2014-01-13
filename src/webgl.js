@@ -549,7 +549,7 @@ Crafty.extend({
             for (; i < l; i++) {
                 current = q[i];
                 if (current._visible && current.__c.WebGL) {
-                    //console.log("rendering a thing #" + current[0])
+                    console.log("rendering a thing #" + current[0])
                     shaderProgram = current._shaderProgram;
                     gl.useProgram(shaderProgram);
                     current.draw();
