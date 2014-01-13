@@ -24,6 +24,24 @@ var VERTEX_SHADER_SRC_OLD =
   + " gl_Position = vec4(aVertexPosition, 0, 1);"
   + "}";
 
+
+// fragment shader source for an image/etc
+/*
+varying highp vec2 vTextureCoord;
+      
+uniform sampler2D uSampler;
+uniform highp vec2 uTextureDimensions;
+uniform highp vec4 uSpriteCoords;
+
+void main(void) {
+  highp vec2 coord =  ( uSpriteCoords.zw * vTextureCoord + uSpriteCoords.xy) / uTextureDimensions;
+  gl_FragColor = texture2D(uSampler, coord);
+}
+*/
+var TEXTURE_FRAGMENT_SHADER_SRC = 
+  "varying highp vec2 vTextureCoord;\r\n      \r\nuniform sampler2D uSampler;\r\nuniform highp vec2 uTextureDimensions;\r\nuniform highp vec4 uSpriteCoords;\r\n\r\nvoid main(void) {\r\n  highp vec2 coord =  ( uSpriteCoords.zw * vTextureCoord + uSpriteCoords.xy) \/ uTextureDimensions;\r\n  gl_FragColor = texture2D(uSampler, coord);\r\n}";
+
+
 // Vertex shader source, unformatted
 /*
 attribute vec2 a_position;
@@ -120,6 +138,7 @@ Crafty.c("WebGL", {
             Crafty.webgl.init();
         }
 
+        this.webgl = Crafty.webgl;
         var gl = Crafty.webgl.context;
 
         //increment the amount of canvas objs
@@ -204,6 +223,13 @@ Crafty.c("WebGL", {
         pos._w = (w || this._w);
         pos._h = (h || this._h);
 
+        var coord = this.__coord || [0, 0, 0, 0];
+        var co = this.drawVars.co;
+        co.x = coord[0] + (x || 0);
+        co.y = coord[1] + (y || 0);
+        co.w = w || coord[2];
+        co.h = h || coord[3];
+
         // Handle flipX, flipY
         if (this._flipX || this._flipY) {
            
@@ -245,8 +271,7 @@ Crafty.c("WebGL", {
           
         this._shaderProgram = wgl.programs[compName];
 
-
-
+        // Shader program means ready
         this.ready = true;
     },
 });
@@ -291,7 +316,6 @@ Crafty.extend({
               throw(gl.getShaderInfoLog(shader));
             };
             return shader;
-
         },
 
         makeProgram: function (fragment_src, vertex_src){
@@ -308,18 +332,60 @@ Crafty.extend({
               throw("Could not initialise shaders");
             }
 
+
+            // Get uniform locations
             shaderProgram.entity_pos = gl.getUniformLocation(shaderProgram, "uEntityPos");
             shaderProgram.entity_extra = gl.getUniformLocation(shaderProgram, "uEntityExtra");
             shaderProgram.viewport = gl.getUniformLocation(shaderProgram, "uViewport");
-
-
-
             return shaderProgram;
         },
         
         textures: {},
+        textureCount: 0,
         makeTexture: function(url, image){
 
+            var webgl = Crafty.webgl;
+
+            if (typeof webgl.textures[url] !== 'undefined')
+              return webgl.textures[url];
+            var gl = Crafty.webgl.context;
+            
+            var texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+             gl.generateMipmap(gl.TEXTURE_2D);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+
+            gl.activeTexture(gl["TEXTURE" + webgl.textureCount]);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            webgl.textures[url] = {
+              t: texture,
+              sampler: webgl.textureCount,
+              key: "TEXTURE" + webgl.textureCount,
+              width: image.width,
+              height: image.height,
+              url: url
+            };
+            webgl.textureCount++;
+            gl.activeTexture(gl["TEXTURE" + (webgl.textureCount)]);
+            return webgl.textures[url];
+        },
+
+        bindTexture: function(program, texture_obj) {
+            if (typeof program.texture_obj !== "undefined")
+              return;
+            var gl = Crafty.webgl.context;
+            var webgl = Crafty.webgl;
+            gl.useProgram(program);
+            // Set the texture buffer to use
+            gl.uniform1i(gl.getUniformLocation(program, "uSampler"), texture_obj.sampler);
+            // Set the image dimensions
+            gl.uniform2f(gl.getUniformLocation(program, "uTextureDimensions"), texture_obj.width, texture_obj.height);
+            
+            program.texture_obj = texture_obj;
+            program.uSpriteCoords = gl.getUniformLocation(program, "uSpriteCoords");
         },
 
 
@@ -416,7 +482,7 @@ Crafty.extend({
             //
             // End temp program!
 
-            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.clearColor(0.0, 0.0, 0.0, 0.0);
             gl.enable(gl.DEPTH_TEST);
             
             

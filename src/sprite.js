@@ -62,7 +62,13 @@ Crafty.c("Sprite", {
                 if (vscale != 1 || hscale != 1) {
                     style.backgroundSize = (this.img.width * hscale) + "px" + " " + (this.img.height * vscale) + "px";
                 }
-            }
+            } else if (e.type === "webgl") {
+                console.log("Rendering webgl sprite")
+                console.log(co);
+                var gl = this.webgl.context;
+                gl.uniform4f(this._shaderProgram.uSpriteCoords, co.x, co.y, co.w, co.h);
+
+            };
         };
 
         this.bind("Draw", draw).bind("RemoveComponent", function (id) {
