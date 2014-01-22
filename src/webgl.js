@@ -73,6 +73,43 @@ var VERTEX_SHADER_SRC =
 "attribute vec2 a_position;\r\nuniform  vec4 uViewport;\r\nuniform  vec4 uEntityPos;\r\nuniform  vec4 uEntityExtra;\r\n\r\n\r\nvarying highp vec2 vTextureCoord;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityScale = uEntityPos.zw;\r\nvec2 entityTranslation = uEntityPos.xy;\r\nvec2 entityOrigin = uEntityExtra.xy;\r\nmat2 entityRotationMatrix = mat2(cos(uEntityExtra.w), sin(uEntityExtra.w), -sin(uEntityExtra.w), cos(uEntityExtra.w));\r\n\r\nvoid main() {\r\n  vec2 pos = entityScale * a_position;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityExtra.z, 1) );\r\n  vTextureCoord = a_position;\r\n}";
 
 
+// New fragmetn/vertex for color
+
+
+/*
+attribute vec2 aPosition;
+attribute vec4 aExtras;
+attribute lowp vec4 aColor;
+
+varying highp vec4 aColor;
+
+uniform  vec4 uViewport;
+
+mat4 viewportScale = mat4(2.0 / uViewport.z, 0, 0, 0,    0, -2.0 / uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);
+vec4 viewportTranslation = vec4(uViewport.xy, 0, 0);
+
+vec2 entityScale = aPosition.zw;
+vec2 entityTranslation = aPosition.xy;
+vec2 entityOrigin = aExtras.xy;
+mat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));
+
+void main() {
+  vec2 pos = entityScale * aPosition;
+  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;
+  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityExtra.z, 1) );
+  vColor = vec4(0,1,1,1);
+}
+
+*/
+var COLOR_VERTEX_SHADER = 
+  "attribute vec2 aPosition;\r\nattribute vec4 aExtras;\r\nattribute lowp vec4 aColor;\r\n\r\nvarying highp vec4 aColor;\r\n\r\nuniform  vec4 uViewport;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityScale = aPosition.zw;\r\nvec2 entityTranslation = aPosition.xy;\r\nvec2 entityOrigin = aExtras.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));\r\n\r\nvoid main() {\r\n  vec2 pos = entityScale * aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityExtra.z, 1) );\r\n  vColor = vec4(0,1,1,1);\r\n}";
+
+
+var COLOR_FRAGMENT_SHADER = "";
+
+
+
+
 
 Crafty.c("TestSquare", {
   init: function(){
@@ -101,7 +138,8 @@ Crafty.c("TestSquareWhite", {
 Crafty.c("TestColor", {
   init: function(){
       if (this.has("WebGL")){
-        this._establishShader("TestColor", this._fragmentShader)
+        this._establishShader("TestColor", this._fragmentShader, this._vertexShader);
+        this._shaderProgram
       }
 
       this._red = this._blue = this._green = 1.0;
@@ -110,10 +148,12 @@ Crafty.c("TestColor", {
 
   _fragmentShader: 
     "precision mediump float;"
-    + "uniform lowp vec3 uColor;"
+    + "varying lowp vec4 vColor;"
     + "void main(void) {"
-    + "  gl_FragColor = vec4(uColor, 1.0);"
+    + "  gl_FragColor = vColor"
     + "}",
+
+  _vertexShader: COLOR_VERTEX_SHADER,
 
   _drawColor: function(drawVars){
     var gl = drawVars.gl, shaderProgram = drawVars.program;
@@ -121,6 +161,17 @@ Crafty.c("TestColor", {
     gl.uniform3f(color, this._red, this._green, this._blue);
   },
 
+  _writeToBuffer: function(){
+      //intermediate: just CREATE the matrix right here
+      var array = Float32Array()
+      // Write position; x, y, w, h
+
+      // Write extra; ox, oy, z, theta
+
+      // Write color; r, g, b, a
+
+
+  },
   color: function (r, g, b){
     this._red = r;
     this._green = g;
