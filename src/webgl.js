@@ -25,6 +25,46 @@ var VERTEX_SHADER_SRC_OLD =
   + "}";
 
 
+glHelpers = {
+// Either x,y signature or x1, y1, x2, y2, etc
+  writeVec2: function (data, offset, stride, x, y){
+    //console.log(arguments);
+    if (arguments.length == 5){
+      for (var i = 0; i<4; i++){
+        data[offset + stride*i] = x;
+        data[offset + stride*i + 1] = y;
+      }
+    } else {
+      for (var i = 0; i<4; i++){
+        data[offset + stride*i] = arguments[3 + i*2];
+        data[offset + stride*i + 1] = arguments[4 + i*2];
+      }
+    }
+
+  },
+
+  // Either x,y, z, w signature or x1, y1, x2, y2, etc
+  writeVec4: function (data, offset, stride, x, y, z, w){
+    if (arguments.length == 7){
+      for (var i = 0; i<4; i++){
+        data[offset + stride*i] = x;
+        data[offset + stride*i + 1] = y;
+        data[offset + stride*i + 2] = z;
+        data[offset + stride*i + 3] = w;
+      }
+    } else {
+      for (var i =0; i<4; i++){
+        data[offset + stride*i] = arguments[3 + i*4];
+        data[offset + stride*i + 1] = arguments[4 + i*4];
+        data[offset + stride*i + 2] = arguments[5 + i*4];
+        data[offset + stride*i + 3] = arguments[6 + i*4];
+      }
+    }
+  }
+};
+
+
+
 // fragment shader source for an image/etc
 /*
 varying highp vec2 vTextureCoord;
@@ -79,30 +119,30 @@ var VERTEX_SHADER_SRC =
 /*
 attribute vec2 aPosition;
 attribute vec4 aExtras;
-attribute lowp vec4 aColor;
+attribute vec4 aColor;
 
-varying highp vec4 aColor;
+varying lowp vec4 vColor;
 
 uniform  vec4 uViewport;
 
 mat4 viewportScale = mat4(2.0 / uViewport.z, 0, 0, 0,    0, -2.0 / uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);
 vec4 viewportTranslation = vec4(uViewport.xy, 0, 0);
 
-vec2 entityScale = aPosition.zw;
-vec2 entityTranslation = aPosition.xy;
 vec2 entityOrigin = aExtras.xy;
 mat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));
 
 void main() {
-  vec2 pos = entityScale * aPosition;
-  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;
-  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityExtra.z, 1) );
-  vColor = vec4(0,1,1,1);
+  vec2 pos = aPosition;
+  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;
+  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aExtras.z) ), 1) );
+  vColor = aColor;
 }
 
 */
+
+
 var COLOR_VERTEX_SHADER = 
-  "attribute vec2 aPosition;\r\nattribute vec4 aExtras;\r\nattribute lowp vec4 aColor;\r\n\r\nvarying highp vec4 aColor;\r\n\r\nuniform  vec4 uViewport;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityScale = aPosition.zw;\r\nvec2 entityTranslation = aPosition.xy;\r\nvec2 entityOrigin = aExtras.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));\r\n\r\nvoid main() {\r\n  vec2 pos = entityScale * aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityExtra.z, 1) );\r\n  vColor = vec4(0,1,1,1);\r\n}";
+  "attribute vec2 aPosition;\r\nattribute vec4 aExtras;\r\nattribute vec4 aColor;\r\n\r\nvarying lowp vec4 vColor;\r\n\r\nuniform  vec4 uViewport;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityOrigin = aExtras.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));\r\n\r\nvoid main() {\r\n  vec2 pos = aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0\/(1.0+exp(aExtras.z) ), 1) );\r\n  vColor = aColor;\r\n}";
 
 
 var COLOR_FRAGMENT_SHADER = "";
@@ -138,44 +178,132 @@ Crafty.c("TestSquareWhite", {
 Crafty.c("TestColor", {
   init: function(){
       if (this.has("WebGL")){
+        var gl = Crafty.webgl.context;
         this._establishShader("TestColor", this._fragmentShader, this._vertexShader);
-        this._shaderProgram
+
+        if (typeof this._shaderProgram.posLocation === "undefined"){
+          this._specializeProgram();
+        }
+        this._glNum = this._shaderProgram._elementCount++;
+
       }
 
+
       this._red = this._blue = this._green = 1.0;
-      this.bind("Draw", this._drawColor)
+      this.bind("Draw", this._drawColor);
+
+  },
+
+  _specializeProgram: function(){
+    var gl = this.webgl.context;
+    console.log('setting positions');
+    var prog = this._shaderProgram;
+    
+
+    prog._bufferArray = new Float32Array(4000);
+    prog._kingBuffer = gl.createBuffer();
+    prog.index = new Uint16Array(600);
+    prog._indexBuffer = gl.createBuffer();
+
+    prog.posLocation = gl.getAttribLocation(prog, "aPosition");
+    gl.enableVertexAttribArray(prog.posLocation);
+    prog.extrasLocation = gl.getAttribLocation(prog, "aExtras");
+    gl.enableVertexAttribArray(prog.extrasLocation);
+    prog.colLocation = gl.getAttribLocation(prog, "aColor");
+    gl.enableVertexAttribArray(prog.colLocation);
+    prog._elementCount = 0;
+
+
+
+
+    var size = Float32Array.BYTES_PER_ELEMENT;
+    var stride =  (2+4+4) * size;
+    prog.stride = stride;
+    prog.switchTo = function(){
+      gl.useProgram(prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, prog._kingBuffer);
+      gl.vertexAttribPointer(prog.posLocation, 2, gl.FLOAT, false, stride, 0);
+      gl.vertexAttribPointer(prog.extrasLocation, 4, gl.FLOAT, false, stride, 2*size);
+      gl.vertexAttribPointer(prog.colLocation, 4, gl.FLOAT, false, stride, (2+4)*size);
+    };
+
+    prog.renderBatch = function(){
+      gl.bindBuffer(gl.ARRAY_BUFFER, prog._kingBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, prog._bufferArray, gl.STATIC_DRAW); 
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, prog._indexBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, prog.index, gl.STATIC_DRAW);
+      gl.drawElements(gl.TRIANGLES, prog.pointer, gl.UNSIGNED_SHORT, 0);
+    };
+
   },
 
   _fragmentShader: 
     "precision mediump float;"
     + "varying lowp vec4 vColor;"
     + "void main(void) {"
-    + "  gl_FragColor = vColor"
+    + "  gl_FragColor = vColor;"
     + "}",
 
   _vertexShader: COLOR_VERTEX_SHADER,
 
   _drawColor: function(drawVars){
-    var gl = drawVars.gl, shaderProgram = drawVars.program;
-    var color = gl.getUniformLocation(shaderProgram, "uColor");
-    gl.uniform3f(color, this._red, this._green, this._blue);
+    //console.log("Drawing color");
+    var gl = drawVars.gl, prog = drawVars.program;
+
+    // Write the vertex data into the array
+    this._writeToArray(prog._bufferArray);
+    //console.log(prog._bufferArray);
+    
+
+    // Register the vertex groups to be drawn
+    // Two triangles; (0, 1, 2) and (1, 2, 3)
+    var offset = this._glNum * 4;
+    var index = prog.index;
+    var l = prog.pointer;
+    index[0+l] = 0 + offset;
+    index[1+l] = 1 + offset;
+    index[2+l] = 2 + offset;
+    index[3+l] = 1 + offset;
+    index[4+l] = 2 + offset;
+    index[5+l] = 3 + offset;
+    prog.pointer += 6;
   },
 
-  _writeToBuffer: function(){
+  _writeToArray: function(data){
       //intermediate: just CREATE the matrix right here
-      var array = Float32Array()
+      
+      var width = 2 + 4 + 4;
+      var offset = (width * 4) * this._glNum;
+
       // Write position; x, y, w, h
-
-      // Write extra; ox, oy, z, theta
-
-      // Write color; r, g, b, a
-
+      glHelpers.writeVec2(data, offset, width,
+        this._x, this._y, 
+        this._x , this._y + this._h,
+        this._x + this._w, this._y,
+        this._x + this._w, this._y + this._h
+      );
+      // Write orientation and z level
+      glHelpers.writeVec4(data, offset + 2, width,
+        this._origin.x + this._x,
+        this._origin.y + this._y,
+        this._z,
+        this._rotation
+      );
+      glHelpers.writeVec4(data, offset + 6, width,
+        this._red,
+        this._green,
+        this._blue,
+        1
+      );
 
   },
+
   color: function (r, g, b){
     this._red = r;
     this._green = g;
     this._blue = b;
+
+    return this;
   }
 
 });
@@ -298,17 +426,17 @@ Crafty.c("WebGL", {
         var shaderProgram = this._shaderProgram;
         this.drawVars.program = shaderProgram;
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexBuffer);
-        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this._vertexBuffer.itemSize, gl.FLOAT, false, 0, 0) 
+        //gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexBuffer);
+        //gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this._vertexBuffer.itemSize, gl.FLOAT, false, 0, 0) 
 
 
         // Set all the crazy uniform variables for the entity
-        gl.uniform4f(shaderProgram.entity_pos, pos._x, pos._y, pos._w, pos._h)
-        gl.uniform4f(shaderProgram.entity_extra, this._origin.x, this._origin.y, 1/this._globalZ, this._rotation)
+        //gl.uniform4f(shaderProgram.entity_pos, pos._x, pos._y, pos._w, pos._h)
+        //gl.uniform4f(shaderProgram.entity_extra, this._origin.x, this._origin.y, 1/this._globalZ, this._rotation)
 
         this.trigger("Draw", this.drawVars);
 
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, this._vertexBuffer.numItems);
+        //gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         
         return this;
     },
@@ -385,8 +513,8 @@ Crafty.extend({
 
 
             // Get uniform locations
-            shaderProgram.entity_pos = gl.getUniformLocation(shaderProgram, "uEntityPos");
-            shaderProgram.entity_extra = gl.getUniformLocation(shaderProgram, "uEntityExtra");
+            //shaderProgram.entity_pos = gl.getUniformLocation(shaderProgram, "uEntityPos");
+            //shaderProgram.entity_extra = gl.getUniformLocation(shaderProgram, "uEntityExtra");
             shaderProgram.viewport = gl.getUniformLocation(shaderProgram, "uViewport");
             return shaderProgram;
         },
@@ -517,10 +645,13 @@ Crafty.extend({
             var shaderProgram = this.makeProgram(FRAGMENT_SHADER_SRC);
             this._shaderProgram = shaderProgram;
 
-            gl.useProgram(shaderProgram);
 
             
-            this.defaultVertexBuffer = gl.createBuffer();
+
+            //gl.useProgram(shaderProgram);
+
+            
+            /*this.defaultVertexBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.defaultVertexBuffer)
             var vertices = [
               0, 0,
@@ -530,20 +661,29 @@ Crafty.extend({
             ];
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
             this.defaultVertexBuffer.itemSize = 2;
-            this.defaultVertexBuffer.numItems = 4;
+            this.defaultVertexBuffer.numItems = 4;*/
+
+            // Temp buffer
+            /*this.masterBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.masterBuffer);
+            this.masterData = new Float32Array(3000);
+            gl.bufferData(gl.ARRAY_BUFFER, this.masterData, gl.STATIC_DRAW);*/
 
 
-            shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "a_position");
-            gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+
+            //shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "a_position");
+            //gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
             //
             // End temp program!
 
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
-            //gl.enable(gl.DEPTH_TEST);
-            gl.disable(gl.DEPTH_TEST);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-            gl.enable(gl.BLEND);
+            gl.enable(gl.DEPTH_TEST);
+            
+            //gl.disable(gl.DEPTH_TEST);
+            //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            //gl.enable(gl.BLEND);
             
             
 
@@ -557,6 +697,8 @@ Crafty.extend({
             var webgl = Crafty.webgl;
             Crafty.uniqueBind("InvalidateViewport", function(){webgl.dirtyViewport = true;})
             webgl.dirtyViewport = true;
+
+            console.log("webgl inited");
 
         },
 
@@ -581,6 +723,7 @@ Crafty.extend({
             var q = Crafty.map.search(rect),
                 i = 0,
                 l = q.length,
+                webgl = Crafty.webgl,
                 gl = Crafty.webgl.context,
                 current;
 
@@ -593,23 +736,43 @@ Crafty.extend({
             //Set the viewport uniform variables
             var shaderProgram;            
             var programs = Crafty.webgl.programs;
-            if (Crafty.webgl.dirtyViewport){
+            if (webgl.dirtyViewport){
               for (var comp in programs){
-                  Crafty.webgl.setViewportUniforms(programs[comp]);
+                  webgl.setViewportUniforms(programs[comp]);
               }
-              Crafty.webgl.dirtyViewport = false;
+              webgl.dirtyViewport = false;
             }
 
+
+            
+            shaderProgram = null;
             for (; i < l; i++) {
                 current = q[i];
+
                 if (current._visible && current.__c.WebGL) {
-                    console.log("rendering a thing #" + current[0])
-                    shaderProgram = current._shaderProgram;
-                    gl.useProgram(shaderProgram);
+                    if (shaderProgram !== current._shaderProgram){
+                      if (shaderProgram !== null){
+                        shaderProgram.renderBatch();
+                      }
+
+                      
+                      shaderProgram = current._shaderProgram;
+                      shaderProgram.pointer = 0;
+                      
+                      shaderProgram.switchTo();
+                    } 
+                    //console.log("rendering a thing #" + current[0])
+                    
                     current.draw();
                     current._changed = false;
+                    
                 }
             }
+
+            if (shaderProgram !== null){
+              shaderProgram.renderBatch();
+            }
+            
         }
 
         
