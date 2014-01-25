@@ -447,9 +447,6 @@ Crafty.c("GLSprite", {
     // Write the vertex data into the array
     this._writeToArray(prog._bufferArray, drawVars.co);
 
-    console.log(prog._bufferArray);
-    
-
     // Register the vertex groups to be drawn
     // Two triangles; (0, 1, 2) and (1, 2, 3)
     var offset = this._glNum * 4;
@@ -471,12 +468,14 @@ Crafty.c("GLSprite", {
       var offset = (width * 4) * this._glNum;
 
       // Write position; x, y, w, h
+
       glHelpers.writeVec2(data, offset, width,
         this._x, this._y, 
         this._x , this._y + this._h,
         this._x + this._w, this._y,
         this._x + this._w, this._y + this._h
       );
+
       // Write orientation and z level
       glHelpers.writeVec4(data, offset + 2, width,
         this._origin.x + this._x,
@@ -484,6 +483,7 @@ Crafty.c("GLSprite", {
         this._z,
         this._rotation
       );
+      
       // Write array coordinates
       glHelpers.writeVec2(data, offset + 6, width,
         co.x, co.y,
@@ -571,8 +571,6 @@ Crafty.c("WebGL", {
 
     },
 
-    _entityMatrix: null,
-
     draw: function (ctx, x, y, w, h) {
 
         if (!this.ready) return;
@@ -613,16 +611,8 @@ Crafty.c("WebGL", {
         //Draw entity
         var gl = Crafty.webgl.context;
         this.drawVars.gl = gl;
-        var shaderProgram = this._shaderProgram;
-        this.drawVars.program = shaderProgram;
+        this.drawVars.program = this._shaderProgram;
 
-        //gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexBuffer);
-        //gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this._vertexBuffer.itemSize, gl.FLOAT, false, 0, 0) 
-
-
-        // Set all the crazy uniform variables for the entity
-        //gl.uniform4f(shaderProgram.entity_pos, pos._x, pos._y, pos._w, pos._h)
-        //gl.uniform4f(shaderProgram.entity_extra, this._origin.x, this._origin.y, 1/this._globalZ, this._rotation)
 
         this.trigger("Draw", this.drawVars);
 
@@ -760,7 +750,6 @@ Crafty.extend({
             gl.uniform2f(gl.getUniformLocation(program, "uTextureDimensions"), texture_obj.width, texture_obj.height);
             
             program.texture_obj = texture_obj;
-            program.uSpriteCoords = gl.getUniformLocation(program, "uSpriteCoords");
         },
 
 
@@ -794,10 +783,7 @@ Crafty.extend({
             c.style.left = "0px";
             c.style.top = "0px";
 
-            
-
             Crafty.stage.elem.appendChild(c);
-
 
             // Equivalent of initGL in sample prog
             var gl;
@@ -817,16 +803,8 @@ Crafty.extend({
             Crafty.webgl._canvas = c;
 
             //Set any existing transformations
-           
-
-            
             this.defaultVertexShader = this.compileShader(VERTEX_SHADER_SRC, gl.VERTEX_SHADER);
             
-
-            //var shaderProgram = this.makeProgram(FRAGMENT_SHADER_SRC);
-            //this._shaderProgram = shaderProgram;
-
-
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
             gl.enable(gl.DEPTH_TEST);
             
@@ -834,9 +812,6 @@ Crafty.extend({
             //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             //gl.enable(gl.BLEND);
             
-            
-
-      
 
             //Bind rendering of canvas context (see drawing.js)
             Crafty.uniqueBind("RenderScene", Crafty.webgl.render);
@@ -893,38 +868,32 @@ Crafty.extend({
             }
 
 
-            
+            var batchCount = 0;
             shaderProgram = null;
             for (; i < l; i++) {
                 current = q[i];
-
                 if (current._visible && current.__c.WebGL) {
                     if (shaderProgram !== current._shaderProgram){
                       if (shaderProgram !== null){
                         shaderProgram.renderBatch();
+                        batchCount++;
                       }
-
-                      
                       shaderProgram = current._shaderProgram;
                       shaderProgram.pointer = 0;
-                      
                       shaderProgram.switchTo();
                     } 
-                    //console.log("rendering a thing #" + current[0])
-                    
                     current.draw();
                     current._changed = false;
-                    
                 }
             }
 
             if (shaderProgram !== null){
               shaderProgram.renderBatch();
+              batchCount++;
             }
+            console.log("Batches: " + batchCount)
             
         }
-
-        
 
     }
 });
