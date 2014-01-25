@@ -148,8 +148,49 @@ var COLOR_VERTEX_SHADER =
 var COLOR_FRAGMENT_SHADER = "";
 
 
+/*
+attribute vec2 aPosition;
+attribute vec4 aExtras;
+attribute vec2 aTextureCoord;
+
+varying mediump vec2 vTextureCoord;
+
+uniform vec4 uViewport;
+uniform mediump vec2 uTextureDimensions;
+
+mat4 viewportScale = mat4(2.0 / uViewport.z, 0, 0, 0,    0, -2.0 / uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);
+vec4 viewportTranslation = vec4(uViewport.xy, 0, 0);
+
+vec2 entityOrigin = aExtras.xy;
+mat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));
+
+void main() {
+  vec2 pos = aPosition;
+  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;
+  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aExtras.z) ), 1) );
+  vTextureCoord = aTextureCoord;
+}
+
+*/
+
+var SPRITE_VERTEX_SHADER = 
+  "attribute vec2 aPosition;\r\nattribute vec4 aExtras;\r\nattribute vec2 aTextureCoord;\r\n\r\nvarying mediump vec2 vTextureCoord;\r\n\r\nuniform vec4 uViewport;\r\nuniform mediump vec2 uTextureDimensions;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityOrigin = aExtras.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));\r\n\r\nvoid main() {\r\n  vec2 pos = aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0\/(1.0+exp(aExtras.z) ), 1) );\r\n  vTextureCoord = aTextureCoord;\r\n}\r\n";
+
+/*
+    varying mediump vec2 vTextureCoord;
+      
+    uniform sampler2D uSampler;
+    uniform mediump vec2 uTextureDimensions;
+
+    void main(void) {
+      highp vec2 coord =   vTextureCoord / uTextureDimensions;
+      gl_FragColor = texture2D(uSampler, coord);
+    }
+*/
 
 
+var SPRITE_FRAGMENT_SHADER = 
+  "    varying mediump vec2 vTextureCoord;\r\n      \r\n    uniform sampler2D uSampler;\r\n    uniform mediump vec2 uTextureDimensions;\r\n\r\n    void main(void) {\r\n      highp vec2 coord =   vTextureCoord \/ uTextureDimensions;\r\n      gl_FragColor = texture2D(uSampler, coord);\r\n    }";
 
 Crafty.c("TestSquare", {
   init: function(){
@@ -308,6 +349,155 @@ Crafty.c("TestColor", {
 
 });
 
+/*
+console.log("Initing webgl sprite");
+                var webgl = this.webgl;
+                this._establishShader(url, TEXTURE_FRAGMENT_SHADER_SRC)
+                this.__texture = webgl.makeTexture(this.__image, this.img);
+                console.log("Made texture")
+                console.log(this.__texture);
+                console.log("Image complete? " + img.complete)
+                webgl.bindTexture(this._shaderProgram, this.__texture)
+              */
+
+
+
+Crafty.c("GLSprite", {
+  init: function(){
+      if (this.has("WebGL")){
+        var gl = Crafty.webgl.context;
+        this._establishShader(this.__image, this._fragmentShader, this._vertexShader);
+
+        if (typeof this._shaderProgram.posLocation === "undefined"){
+          this._specializeProgram();
+        }
+        this._glNum = this._shaderProgram._elementCount++;
+
+      }
+
+
+      
+      this.bind("Draw", this._drawSprite);
+
+  },
+
+
+  // For sprite
+  _specializeProgram: function(){
+    var gl = this.webgl.context;
+    var webgl =this.webgl;
+    console.log('setting sprite positions');
+    var prog = this._shaderProgram;
+
+
+    prog.__texture = webgl.makeTexture(this.__image, this.img);
+    //console.log("Made texture")
+    //console.log(this.__texture);
+    //console.log("Image complete? " + img.complete)
+    webgl.bindTexture(this._shaderProgram, prog.__texture);
+    
+
+    prog._bufferArray = new Float32Array(4000);
+    prog._kingBuffer = gl.createBuffer();
+    prog.index = new Uint16Array(600);
+    prog._indexBuffer = gl.createBuffer();
+
+    prog.posLocation = gl.getAttribLocation(prog, "aPosition");
+    gl.enableVertexAttribArray(prog.posLocation);
+    prog.extrasLocation = gl.getAttribLocation(prog, "aExtras");
+    gl.enableVertexAttribArray(prog.extrasLocation);
+    prog.textureLocation = gl.getAttribLocation(prog, "aTextureCoord");
+    gl.enableVertexAttribArray(prog.textureLocation);
+    prog._elementCount = 0;
+
+
+
+
+    var size = Float32Array.BYTES_PER_ELEMENT;
+    var stride =  (2+4+2) * size;
+    prog.stride = stride;
+    prog.switchTo = function(){
+      gl.useProgram(prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, prog._kingBuffer);
+      gl.vertexAttribPointer(prog.posLocation, 2, gl.FLOAT, false, stride, 0);
+      gl.vertexAttribPointer(prog.extrasLocation, 4, gl.FLOAT, false, stride, 2*size);
+      gl.vertexAttribPointer(prog.colLocation, 4, gl.FLOAT, false, stride, (2+4)*size);
+    };
+
+    prog.renderBatch = function(){
+      gl.bindBuffer(gl.ARRAY_BUFFER, prog._kingBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, prog._bufferArray, gl.STATIC_DRAW); 
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, prog._indexBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, prog.index, gl.STATIC_DRAW);
+      gl.drawElements(gl.TRIANGLES, prog.pointer, gl.UNSIGNED_SHORT, 0);
+    };
+
+  },
+
+
+
+  _fragmentShader: SPRITE_FRAGMENT_SHADER,
+
+  _vertexShader: SPRITE_VERTEX_SHADER,
+
+  _drawSprite: function(drawVars){
+    //console.log("Drawing color");
+    var gl = drawVars.gl, prog = drawVars.program;
+
+    // Write the vertex data into the array
+    this._writeToArray(prog._bufferArray, drawVars.co);
+
+    console.log(prog._bufferArray);
+    
+
+    // Register the vertex groups to be drawn
+    // Two triangles; (0, 1, 2) and (1, 2, 3)
+    var offset = this._glNum * 4;
+    var index = prog.index;
+    var l = prog.pointer;
+    index[0+l] = 0 + offset;
+    index[1+l] = 1 + offset;
+    index[2+l] = 2 + offset;
+    index[3+l] = 1 + offset;
+    index[4+l] = 2 + offset;
+    index[5+l] = 3 + offset;
+    prog.pointer += 6;
+  },
+
+  _writeToArray: function(data, co){
+      //intermediate: just CREATE the matrix right here
+      
+      var width = 2 + 4 + 2;
+      var offset = (width * 4) * this._glNum;
+
+      // Write position; x, y, w, h
+      glHelpers.writeVec2(data, offset, width,
+        this._x, this._y, 
+        this._x , this._y + this._h,
+        this._x + this._w, this._y,
+        this._x + this._w, this._y + this._h
+      );
+      // Write orientation and z level
+      glHelpers.writeVec4(data, offset + 2, width,
+        this._origin.x + this._x,
+        this._origin.y + this._y,
+        this._z,
+        this._rotation
+      );
+      // Write array coordinates
+      glHelpers.writeVec2(data, offset + 6, width,
+        co.x, co.y,
+        co.x, co.y + co.h,
+        co.x + co.w, co.y,
+        co.x + co.w, co.y + co.h
+      );
+
+  }
+
+
+
+});
+
 
 
 // This will totally assume, for now, that gl-matrix is available
@@ -443,6 +633,7 @@ Crafty.c("WebGL", {
 
     // v_src is optional, there's a default vertex shader that works for regular rectangular entities
     _establishShader: function(compName, f_src, v_src){
+        console.log("Establishing shader");
         var wgl = Crafty.webgl;
         if (typeof wgl.programs[compName] === "undefined"){
           wgl.programs[compName] = wgl.makeProgram(f_src, v_src);
@@ -498,6 +689,9 @@ Crafty.extend({
         },
 
         makeProgram: function (fragment_src, vertex_src){
+            
+            console.log("Making program");
+            console.log(fragment_src);
             var gl = this.context;
             var fragment_shader = this.compileShader(fragment_src, gl.FRAGMENT_SHADER);
             var vertex_shader = (vertex_src) ? this.compileShader(vertex_src, gl.VERTEX_SHADER) : this.defaultVertexShader;
@@ -510,11 +704,7 @@ Crafty.extend({
             if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
               throw("Could not initialise shaders");
             }
-
-
-            // Get uniform locations
-            //shaderProgram.entity_pos = gl.getUniformLocation(shaderProgram, "uEntityPos");
-            //shaderProgram.entity_extra = gl.getUniformLocation(shaderProgram, "uEntityExtra");
+            
             shaderProgram.viewport = gl.getUniformLocation(shaderProgram, "uViewport");
             return shaderProgram;
         },
@@ -627,56 +817,15 @@ Crafty.extend({
             Crafty.webgl._canvas = c;
 
             //Set any existing transformations
-            /*var zoom = Crafty.viewport._scale;
-            if (zoom != 1)
-                Crafty.canvas.context.scale(zoom, zoom);*/
-
-
-            // Create temp shaders and program for now
-            // long term, these should somehow be compiled by each *component*, hopefully shared by all entities?
-            //
-            // Equivalent of initShaders in sample prog
-            //
+           
 
             
             this.defaultVertexShader = this.compileShader(VERTEX_SHADER_SRC, gl.VERTEX_SHADER);
             
 
-            var shaderProgram = this.makeProgram(FRAGMENT_SHADER_SRC);
-            this._shaderProgram = shaderProgram;
+            //var shaderProgram = this.makeProgram(FRAGMENT_SHADER_SRC);
+            //this._shaderProgram = shaderProgram;
 
-
-            
-
-            //gl.useProgram(shaderProgram);
-
-            
-            /*this.defaultVertexBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.defaultVertexBuffer)
-            var vertices = [
-              0, 0,
-              0, 1,
-              1, 0,
-              1, 1
-            ];
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-            this.defaultVertexBuffer.itemSize = 2;
-            this.defaultVertexBuffer.numItems = 4;*/
-
-            // Temp buffer
-            /*this.masterBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.masterBuffer);
-            this.masterData = new Float32Array(3000);
-            gl.bufferData(gl.ARRAY_BUFFER, this.masterData, gl.STATIC_DRAW);*/
-
-
-
-
-            //shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "a_position");
-            //gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-            //
-            // End temp program!
 
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
             gl.enable(gl.DEPTH_TEST);

@@ -232,10 +232,7 @@ Crafty.extend({
             };
         }
 
-        // fragment shader of an image component
-        var TEXTURE_FRAGMENT_SHADER_SRC = 
-  "varying highp vec2 vTextureCoord;\r\n      \r\nuniform sampler2D uSampler;\r\nuniform highp vec2 uTextureDimensions;\r\nuniform highp vec4 uSpriteCoords;\r\n\r\nvoid main(void) {\r\n  highp vec2 coord =  ( uSpriteCoords.zw * vTextureCoord + uSpriteCoords.xy) \/ uTextureDimensions;\r\n  gl_FragColor = texture2D(uSampler, coord);\r\n}";
-
+      
         var sharedSpriteInit = function() {
             this.requires("2D, Sprite");
             this.__trim = [0, 0, 0, 0];
@@ -260,17 +257,8 @@ Crafty.extend({
 
             //
             if (this.has("WebGL")){
-                // should really be on ready
-                console.log("Initing webgl sprite");
-                var webgl = this.webgl;
-                this._establishShader(url, TEXTURE_FRAGMENT_SHADER_SRC)
-                this.__texture = webgl.makeTexture(this.__image, this.img);
-                console.log("Made texture")
-                console.log(this.__texture);
-                console.log("Image complete? " + img.complete)
-                webgl.bindTexture(this._shaderProgram, this.__texture)
+                this.addComponent("GLSprite");
             }
-            //
         };
 
         for (spriteName in map) {
