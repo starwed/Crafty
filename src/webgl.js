@@ -60,7 +60,34 @@ glHelpers = {
         data[offset + stride*i + 3] = arguments[6 + i*4];
       }
     }
-  }
+  },
+
+  makeProgram: function (gl, fragment_src, vertex_src){
+            var gl = this.context;
+            var fragment_shader = this.compileShader(gl, fragment_src, gl.FRAGMENT_SHADER);
+            var vertex_shader = this.compileShader(gl, vertex_src, gl.VERTEX_SHADER);
+
+            var shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertex_shader);
+            gl.attachShader(shaderProgram, fragment_shader);
+            gl.linkProgram(shaderProgram);
+
+            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+              throw("Could not initialise shaders");
+            }
+            
+            shaderProgram.viewport = gl.getUniformLocation(shaderProgram, "uViewport");
+            return shaderProgram;
+        },
+  compileShader: function (gl, src, type){
+            var shader = gl.createShader(type);
+            gl.shaderSource(shader, src);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+              throw(gl.getShaderInfoLog(shader));
+            };
+            return shader;
+        },
 };
 
 
@@ -219,7 +246,7 @@ Crafty.c("TestSquareWhite", {
 Crafty.c("TestColor", {
   init: function(){
       if (this.has("WebGL")){
-        var gl = Crafty.webgl.context;
+        var gl = this.webgl.context;
         this._establishShader("TestColor", this._fragmentShader, this._vertexShader);
 
         if (typeof this._shaderProgram.posLocation === "undefined"){
@@ -365,7 +392,7 @@ console.log("Initing webgl sprite");
 Crafty.c("GLSprite", {
   init: function(){
       if (this.has("WebGL")){
-        var gl = Crafty.webgl.context;
+        var gl = this.webgl.context;
         this._establishShader(this.__image, this._fragmentShader, this._vertexShader);
 
         if (typeof this._shaderProgram.posLocation === "undefined"){
@@ -507,38 +534,29 @@ Crafty.c("WebGL", {
             Crafty.webgl.init();
         }
 
-        this.webgl = Crafty.webgl;
-        var gl = Crafty.webgl.context;
+        var webgl = this.webgl = Crafty.webgl;
+        var gl = webgl.context;
 
         //increment the amount of canvas objs
-        Crafty.webgl.entities++;
+        webgl.entities++;
         
         this._changed = true;
-        Crafty.webgl.add(this);
-
-
-        this._vertexBuffer = Crafty.webgl.defaultVertexBuffer;
-
+        webgl.add(this);
 
         this.bind("Change", function (e) {
             //flag if changed
             if (this._changed === false) {
                 this._changed = true;
-                Crafty.webgl.add(this);
+                webgl.add(this);
             }
 
         });
 
-
         this.bind("Remove", function () {
-            Crafty.webgl.entities--;
+            webgl.entities--;
             this._changed = true;
-            Crafty.webgl.add(this);
+            webgl.add(this);
         });
-
-          //console.log("init done");
-        
-
 
     },
 
@@ -580,7 +598,7 @@ Crafty.c("WebGL", {
             w = y;
             y = x;
             x = ctx;
-            ctx = Crafty.webgl.context;
+            ctx = this.webgl.context;
         }
 
 
@@ -609,7 +627,7 @@ Crafty.c("WebGL", {
         }
 
         //Draw entity
-        var gl = Crafty.webgl.context;
+        var gl = this.webgl.context;
         this.drawVars.gl = gl;
         this.drawVars.program = this._shaderProgram;
 
@@ -624,9 +642,9 @@ Crafty.c("WebGL", {
     // v_src is optional, there's a default vertex shader that works for regular rectangular entities
     _establishShader: function(compName, f_src, v_src){
         console.log("Establishing shader");
-        var wgl = Crafty.webgl;
+        var wgl = this.webgl;
         if (typeof wgl.programs[compName] === "undefined"){
-          wgl.programs[compName] = wgl.makeProgram(f_src, v_src);
+          wgl.programs[compName] = glHelpers.makeProgram(gl, f_src, v_src);
         }
           
         this._shaderProgram = wgl.programs[compName];
@@ -703,11 +721,11 @@ Crafty.extend({
         textureCount: 0,
         makeTexture: function(url, image){
 
-            var webgl = Crafty.webgl;
+            var webgl = this;
 
             if (typeof webgl.textures[url] !== 'undefined')
               return webgl.textures[url];
-            var gl = Crafty.webgl.context;
+            var gl = webgl.context;
             
             var texture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -741,8 +759,8 @@ Crafty.extend({
         bindTexture: function(program, texture_obj) {
             if (typeof program.texture_obj !== "undefined")
               return;
-            var gl = Crafty.webgl.context;
-            var webgl = Crafty.webgl;
+            this.context;
+            var webgl = this;
             gl.useProgram(program);
             // Set the texture buffer to use
             gl.uniform1i(gl.getUniformLocation(program, "uSampler"), texture_obj.sampler);
@@ -799,12 +817,9 @@ Crafty.extend({
     		      Crafty.trigger("NoWebGL");
               return;
     		    }
-            Crafty.webgl.context = gl;
-            Crafty.webgl._canvas = c;
+            this.context = gl;
+            this._canvas = c;
 
-            //Set any existing transformations
-            this.defaultVertexShader = this.compileShader(VERTEX_SHADER_SRC, gl.VERTEX_SHADER);
-            
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
             gl.enable(gl.DEPTH_TEST);
             
@@ -814,13 +829,13 @@ Crafty.extend({
             
 
             //Bind rendering of canvas context (see drawing.js)
-            Crafty.uniqueBind("RenderScene", Crafty.webgl.render);
+            var webgl = this;
+            Crafty.uniqueBind("RenderScene", webgl.render);
 
-            Crafty.uniqueBind("ViewportResize", Crafty.webgl._resize)
-
-            var webgl = Crafty.webgl;
+            Crafty.uniqueBind("ViewportResize", webgl._resize)
+            
             Crafty.uniqueBind("InvalidateViewport", function(){webgl.dirtyViewport = true;})
-            webgl.dirtyViewport = true;
+            this.dirtyViewport = true;
 
             console.log("webgl inited");
 
@@ -830,12 +845,12 @@ Crafty.extend({
             var c = Crafty.webgl._canvas;
             c.width = Crafty.viewport.width;
             c.height = Crafty.viewport.height;
-            gl.viewportWidth = c.width;
+            gl.viewportWidth = c.widtxh;
             gl.viewportHeight = c.height;
         },
 
         setViewportUniforms: function(shaderProgram){
-            gl = Crafty.webgl.context;
+            gl = this.webgl.context;
             gl.useProgram(shaderProgram);
             var viewport = Crafty.viewport;
             gl.uniform4f(shaderProgram.viewport, viewport._x, viewport._y, viewport._width, viewport._height);
@@ -848,8 +863,10 @@ Crafty.extend({
                 i = 0,
                 l = q.length,
                 webgl = Crafty.webgl,
-                gl = Crafty.webgl.context,
+                gl = webgl.context,
                 current;
+
+
 
             // Set viewport and clear it
             gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -859,7 +876,7 @@ Crafty.extend({
 
             //Set the viewport uniform variables
             var shaderProgram;            
-            var programs = Crafty.webgl.programs;
+            var programs = webgl.programs;
             if (webgl.dirtyViewport){
               for (var comp in programs){
                   webgl.setViewportUniforms(programs[comp]);
