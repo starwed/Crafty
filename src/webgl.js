@@ -62,32 +62,6 @@ glHelpers = {
     }
   },
 
-  makeProgram: function (gl, fragment_src, vertex_src){
-            var gl = this.context;
-            var fragment_shader = this.compileShader(gl, fragment_src, gl.FRAGMENT_SHADER);
-            var vertex_shader = this.compileShader(gl, vertex_src, gl.VERTEX_SHADER);
-
-            var shaderProgram = gl.createProgram();
-            gl.attachShader(shaderProgram, vertex_shader);
-            gl.attachShader(shaderProgram, fragment_shader);
-            gl.linkProgram(shaderProgram);
-
-            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-              throw("Could not initialise shaders");
-            }
-            
-            shaderProgram.viewport = gl.getUniformLocation(shaderProgram, "uViewport");
-            return shaderProgram;
-        },
-  compileShader: function (gl, src, type){
-            var shader = gl.createShader(type);
-            gl.shaderSource(shader, src);
-            gl.compileShader(shader);
-            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-              throw(gl.getShaderInfoLog(shader));
-            };
-            return shader;
-        },
 };
 
 
@@ -644,7 +618,7 @@ Crafty.c("WebGL", {
         console.log("Establishing shader");
         var wgl = this.webgl;
         if (typeof wgl.programs[compName] === "undefined"){
-          wgl.programs[compName] = glHelpers.makeProgram(gl, f_src, v_src);
+          wgl.programs[compName] = wgl.makeProgram(wgl.context, f_src, v_src);
         }
           
         this._shaderProgram = wgl.programs[compName];
@@ -845,6 +819,8 @@ Crafty.extend({
             var c = Crafty.webgl._canvas;
             c.width = Crafty.viewport.width;
             c.height = Crafty.viewport.height;
+
+            var gl = Crafty.webgl.context;
             gl.viewportWidth = c.widtxh;
             gl.viewportHeight = c.height;
         },
