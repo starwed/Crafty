@@ -618,7 +618,7 @@ Crafty.c("WebGL", {
         console.log("Establishing shader");
         var wgl = this.webgl;
         if (typeof wgl.programs[compName] === "undefined"){
-          wgl.programs[compName] = wgl.makeProgram(wgl.context, f_src, v_src);
+          wgl.programs[compName] = wgl.makeProgram(f_src, v_src);
         }
           
         this._shaderProgram = wgl.programs[compName];
