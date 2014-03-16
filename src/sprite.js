@@ -120,6 +120,9 @@ Crafty.extend({
             //set the width and height to the sprite size
             this.w = this.__coord[2];
             this.h = this.__coord[3];
+
+            if(this.has("WebGL"))
+                this.addComponent("GLSprite");
         };
 
         for (spriteName in map) {
@@ -201,7 +204,13 @@ Crafty.c("Sprite", {
                 if (vscale != 1 || hscale != 1) {
                     style.backgroundSize = (this.img.width * hscale) + "px" + " " + (this.img.height * vscale) + "px";
                 }
-            }
+            } /*else if (e.type === "webgl") {
+                console.log("Rendering webgl sprite")
+                console.log(co);
+                var gl = this.webgl.context;
+                gl.uniform4f(this._shaderProgram.uSpriteCoords, co.x, co.y, co.w, co.h);
+
+            };*/
         };
 
         this.bind("Draw", draw).bind("RemoveComponent", function (id) {

@@ -61,7 +61,8 @@
     "src/time.js",
     "src/DebugLayer.js",
     "src/keycodes.js",
-    "src/model.js"
+    "src/model.js",
+    "src/webgl.js"
   ],
   "dependencies": {
     "grunt": "0.4.1",
