@@ -193,6 +193,104 @@ var SPRITE_VERTEX_SHADER =
 var SPRITE_FRAGMENT_SHADER = 
   "    varying mediump vec2 vTextureCoord;\r\n      \r\n    uniform sampler2D uSampler;\r\n    uniform mediump vec2 uTextureDimensions;\r\n\r\n    void main(void) {\r\n      highp vec2 coord =   vTextureCoord \/ uTextureDimensions;\r\n      gl_FragColor = texture2D(uSampler, coord);\r\n    }";
 
+
+
+
+RenderProgram = function(context, shader){
+  this.program = shader;
+  this.context = context;
+  this._bufferArray = new Float32Array(4000);
+    this._kingBuffer = gl.createBuffer();
+    this.index = new Uint16Array(600);
+    this._indexBuffer = gl.createBuffer();
+    this._attribute_table = {};
+}
+
+RenderProgram.prototype = {
+  setAttributes: function(attribs){
+    this.attributes = attributes;
+    var offset = 0;
+    for (var i=0; i<attributes.length; i++){
+      var a = attributes[i];
+      this._attribute_table[a.name] = a;
+
+      a.bytes = a.bytes || Float32Array.BYTES_PER_ELEMENT;
+      a.type = a.type || this.context.FLOAT;
+      a.offset = offset;
+      a.location = this.context.getAttribLocation(this.program, a.name);
+
+      this.context.enableVertexAttribArray(a.location);
+
+      offset += a.width * a.bytes ;
+    }
+    // Stride is the full width including the last set
+    this.stride = offset;
+  },
+
+  setCurrentElement: function(el){
+    this.el_offset = el._glNum*4;
+    this.el = el;
+  },
+
+  switchTo: function(){
+    var gl = this.context;
+        gl.useProgram(prog);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._kingBuffer);
+        var a, attributes = this.attributes;
+        // Process every attribute
+        for (vari=0; i<attributes.length; i++){
+          a = attributes[i];
+          gl.vertexAttribPointer(a.location, a.width, a.type, false, this.stride, a.offset);
+        }
+
+        this.index_pointer = 0;
+  },
+
+  addIndices: function(offset){
+    var index = this.index, l = this.index_pointer;
+    index[0+l] = 0 + offset;
+      index[1+l] = 1 + offset;
+      index[2+l] = 2 + offset;
+      index[3+l] = 1 + offset;
+      index[4+l] = 2 + offset;
+      index[5+l] = 3 + offset;
+
+    this.index_pointer+=6;
+  },
+
+  renderBatch: function(){
+    var gl = this.context;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._kingBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, this._bufferArray, gl.STATIC_DRAW); 
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.index, gl.STATIC_DRAW);
+      gl.drawElements(gl.TRIANGLES, this.index_pointer, gl.UNSIGNED_SHORT, 0);
+
+  },
+
+    writeVector: function (name, x, y){
+        //console.log(arguments);
+        var a = this._attribute_table[name],
+            offset = a.offset+this.el_offset, 
+            stride = this.stride,
+            l = arguments.length,
+            data = this._bufferArray;
+
+        // Fill in the attribtue with the given arguments, cycling through the data if necessary
+        // If the arguments provided match the width of the attribute, that means it'll fill the same values for each of the four vertices.
+        // TODO determine if this is too big a performance penalty!
+        for (var r=0; r<4 ; r++)
+            for (var c=0; c<a.width; c++)
+                data[offset + stride*r + c] = arguments[ (a.width*r + c)%l + 1];  
+    },
+
+   
+}
+
+
+
+
+
 Crafty.c("TestSquare", {
   init: function(){
       if (this.has("WebGL")){
@@ -605,10 +703,15 @@ Crafty.c("WebGL", {
         this.drawVars.gl = gl;
         this.drawVars.program = this._shaderProgram;
 
+        // TODO: Set current element
 
+        // TODO: Write 2D variables to array
+
+        // This should only need to handle *specific* attributes!
         this.trigger("Draw", this.drawVars);
 
-        //gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        // TODO: Write indices to array
+
         
         return this;
     },
@@ -733,7 +836,7 @@ Crafty.extend({
         bindTexture: function(program, texture_obj) {
             if (typeof program.texture_obj !== "undefined")
               return;
-            this.context;
+            var gl = this.context;
             var webgl = this;
             gl.useProgram(program);
             // Set the texture buffer to use
@@ -826,7 +929,7 @@ Crafty.extend({
         },
 
         setViewportUniforms: function(shaderProgram){
-            gl = this.webgl.context;
+            gl = this.context;
             gl.useProgram(shaderProgram);
             var viewport = Crafty.viewport;
             gl.uniform4f(shaderProgram.viewport, viewport._x, viewport._y, viewport._width, viewport._height);
