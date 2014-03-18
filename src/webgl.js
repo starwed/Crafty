@@ -1,78 +1,9 @@
 var Crafty = require('./core.js'),
     document = window.document;
 
-// test fragment shader -- everything is white!
-var FRAGMENT_SHADER_SRC = 
-  "precision mediump float;"
-
-  +"void main(void) {"
-  +"gl_FragColor = vec4(0.0, 1.0, 1.0, 0.5);"
-  +"}";
-
-var FRAGMENT_SHADER_SRC_2 = 
-  "precision mediump float;"
-
-  +"void main(void) {"
-  +"gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);"
-  +"}";
-
-// test vertex shader
-var VERTEX_SHADER_SRC_OLD = 
-  "attribute vec2 aVertexPosition;"
-  + "uniform mat2 uGlobalScaleMatrix;"
-  + "void main(void) {"
-  + " gl_Position = vec4(aVertexPosition, 0, 1);"
-  + "}";
 
 
 
-
-// fragment shader source for an image/etc
-/*
-varying highp vec2 vTextureCoord;
-      
-uniform sampler2D uSampler;
-uniform highp vec2 uTextureDimensions;
-uniform highp vec4 uSpriteCoords;
-
-void main(void) {
-  highp vec2 coord =  ( uSpriteCoords.zw * vTextureCoord + uSpriteCoords.xy) / uTextureDimensions;
-  gl_FragColor = texture2D(uSampler, coord);
-}
-*/
-var TEXTURE_FRAGMENT_SHADER_SRC = 
-  "varying highp vec2 vTextureCoord;\r\n      \r\nuniform sampler2D uSampler;\r\nuniform highp vec2 uTextureDimensions;\r\nuniform highp vec4 uSpriteCoords;\r\n\r\nvoid main(void) {\r\n  highp vec2 coord =  ( uSpriteCoords.zw * vTextureCoord + uSpriteCoords.xy) \/ uTextureDimensions;\r\n  gl_FragColor = texture2D(uSampler, coord);\r\n}";
-
-
-// Vertex shader source, unformatted
-/*
-attribute vec2 a_position;
-uniform  vec4 uViewport;
-uniform  vec4 uEntityPos;
-uniform  vec4 uEntityExtra;
-
-
-varying highp vec2 vTextureCoord;
-
-mat4 viewportScale = mat4(2.0 / uViewport.z, 0, 0, 0,    0, -2.0 / uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);
-vec4 viewportTranslation = vec4(uViewport.xy, 0, 0);
-
-vec2 entityScale = uEntityPos.zw;
-vec2 entityTranslation = uEntityPos.xy;
-vec2 entityOrigin = uEntityExtra.xy;
-mat2 entityRotationMatrix = mat2(cos(uEntityExtra.w), sin(uEntityExtra.w), -sin(uEntityExtra.w), cos(uEntityExtra.w));
-
-void main() {
-  vec2 pos = entityScale * a_position;
-  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;
-  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityExtra.z, 1) );
-  vTextureCoord = a_position;
-}
-*/
-
-// Escape using a tool like [this one](http://www.freeformatter.com/javascript-escape.html).
-var VERTEX_SHADER_SRC = 
-"attribute vec2 a_position;\r\nuniform  vec4 uViewport;\r\nuniform  vec4 uEntityPos;\r\nuniform  vec4 uEntityExtra;\r\n\r\n\r\nvarying highp vec2 vTextureCoord;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityScale = uEntityPos.zw;\r\nvec2 entityTranslation = uEntityPos.xy;\r\nvec2 entityOrigin = uEntityExtra.xy;\r\nmat2 entityRotationMatrix = mat2(cos(uEntityExtra.w), sin(uEntityExtra.w), -sin(uEntityExtra.w), cos(uEntityExtra.w));\r\n\r\nvoid main() {\r\n  vec2 pos = entityScale * a_position;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin + entityTranslation;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, uEntityExtra.z, 1) );\r\n  vTextureCoord = a_position;\r\n}";
 
 
 // New fragmetn/vertex for color
@@ -80,7 +11,8 @@ var VERTEX_SHADER_SRC =
 
 /*
 attribute vec2 aPosition;
-attribute vec4 aExtras;
+attribute vec3 aOrientation;
+attribute vec2 aDepth;
 attribute vec4 aColor;
 
 varying lowp vec4 vColor;
@@ -90,13 +22,13 @@ uniform  vec4 uViewport;
 mat4 viewportScale = mat4(2.0 / uViewport.z, 0, 0, 0,    0, -2.0 / uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);
 vec4 viewportTranslation = vec4(uViewport.xy, 0, 0);
 
-vec2 entityOrigin = aExtras.xy;
-mat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));
+vec2 entityOrigin = aOrientation.xy;
+mat2 entityRotationMatrix = mat2(cos(aOrientation.z), sin(aOrientation.z), -sin(aOrientation.z), cos(aOrientation.z));
 
 void main() {
   vec2 pos = aPosition;
   pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;
-  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aExtras.z) ), 1) );
+  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aDepth.x) ), 1) );
   vColor = aColor;
 }
 
@@ -104,7 +36,7 @@ void main() {
 
 
 var COLOR_VERTEX_SHADER = 
-  "attribute vec2 aPosition;\r\nattribute vec4 aExtras;\r\nattribute vec4 aColor;\r\n\r\nvarying lowp vec4 vColor;\r\n\r\nuniform  vec4 uViewport;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityOrigin = aExtras.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));\r\n\r\nvoid main() {\r\n  vec2 pos = aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0\/(1.0+exp(aExtras.z) ), 1) );\r\n  vColor = aColor;\r\n}";
+  "attribute vec2 aPosition;\r\nattribute vec3 aOrientation;\r\nattribute vec2 aDepth;\r\nattribute vec4 aColor;\r\n\r\nvarying lowp vec4 vColor;\r\n\r\nuniform  vec4 uViewport;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityOrigin = aOrientation.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aOrientation.z), sin(aOrientation.z), -sin(aOrientation.z), cos(aOrientation.z));\r\n\r\nvoid main() {\r\n  vec2 pos = aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0\/(1.0+exp(aDepth.x) ), 1) );\r\n  vColor = aColor;\r\n}\r\n";
 
 
 var COLOR_FRAGMENT_SHADER = "";
@@ -112,7 +44,8 @@ var COLOR_FRAGMENT_SHADER = "";
 
 /*
 attribute vec2 aPosition;
-attribute vec4 aExtras;
+attribute vec3 aOrientation;
+attribute vec2 aDepth;
 attribute vec2 aTextureCoord;
 
 varying mediump vec2 vTextureCoord;
@@ -123,20 +56,20 @@ uniform mediump vec2 uTextureDimensions;
 mat4 viewportScale = mat4(2.0 / uViewport.z, 0, 0, 0,    0, -2.0 / uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);
 vec4 viewportTranslation = vec4(uViewport.xy, 0, 0);
 
-vec2 entityOrigin = aExtras.xy;
-mat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));
+vec2 entityOrigin = aOrientation.xy;
+mat2 entityRotationMatrix = mat2(cos(aOrientation.z), sin(aOrientation.z), -sin(aOrientation.z), cos(aOrientation.z));
 
 void main() {
   vec2 pos = aPosition;
   pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;
-  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aExtras.z) ), 1) );
+  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aDepth.x) ), 1) );
   vTextureCoord = aTextureCoord;
 }
 
 */
 
 var SPRITE_VERTEX_SHADER = 
-  "attribute vec2 aPosition;\r\nattribute vec4 aExtras;\r\nattribute vec2 aTextureCoord;\r\n\r\nvarying mediump vec2 vTextureCoord;\r\n\r\nuniform vec4 uViewport;\r\nuniform mediump vec2 uTextureDimensions;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityOrigin = aExtras.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aExtras.w), sin(aExtras.w), -sin(aExtras.w), cos(aExtras.w));\r\n\r\nvoid main() {\r\n  vec2 pos = aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0\/(1.0+exp(aExtras.z) ), 1) );\r\n  vTextureCoord = aTextureCoord;\r\n}\r\n";
+  "attribute vec2 aPosition;\r\nattribute vec3 aOrientation;\r\nattribute vec2 aDepth;\r\nattribute vec2 aTextureCoord;\r\n\r\nvarying mediump vec2 vTextureCoord;\r\n\r\nuniform vec4 uViewport;\r\nuniform mediump vec2 uTextureDimensions;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityOrigin = aOrientation.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aOrientation.z), sin(aOrientation.z), -sin(aOrientation.z), cos(aOrientation.z));\r\n\r\nvoid main() {\r\n  vec2 pos = aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0\/(1.0+exp(aDepth.x) ), 1) );\r\n  vTextureCoord = aTextureCoord;\r\n}";
 
 /*
     varying mediump vec2 vTextureCoord;
@@ -280,36 +213,11 @@ RenderProgram.prototype = {
 
 
 
-
-
-Crafty.c("TestSquare", {
-  init: function(){
-      if (this.has("WebGL")){
-        this._establishShader("TestSquare", this._fragmentShader)
-      }
-
-  },
-
-  _fragmentShader: FRAGMENT_SHADER_SRC
-
-});
-
-Crafty.c("TestSquareWhite", {
-  init: function(){
-      if (this.has("WebGL")){
-        this._establishShader("TestSquareWhite", this._fragmentShader)
-      }
-
-  },
-
-  _fragmentShader: FRAGMENT_SHADER_SRC_2
-
-});
-
 Crafty.c("TestColor", {
   _GL_attributes:  [
         {name:"aPosition", width: 2},
-        {name:"aExtras", width: 4},
+        {name:"aOrientation", width: 3},
+        {name:"aDepth", width:2},
         {name:"aColor",  width: 4}
   ],
   init: function(){
@@ -365,7 +273,8 @@ Crafty.c("TestColor", {
 Crafty.c("GLSprite", {
   _GL_attributes:  [
         {name:"aPosition", width: 2},
-        {name:"aExtras", width: 4},
+        {name:"aOrientation", width: 3},
+        {name:"aDepth", width:2},
         {name:"aTextureCoord",  width: 2}
   ],
   init: function(){
@@ -519,11 +428,15 @@ Crafty.c("WebGL", {
         );
 
         // Write orientation and z level
-        prog.writeVector("aExtras",
+        prog.writeVector("aOrientation",
             this._origin.x + this._x,
             this._origin.y + this._y,
-            this._z,
             this._rotation
+        );
+
+        prog.writeVector("aDepth", 
+            this._z,
+            this._alpha
         );
 
         // This should only need to handle *specific* attributes!
@@ -544,7 +457,7 @@ Crafty.c("WebGL", {
         console.log("Established", compName, this._glNum)
         // Shader program means ready
         this.ready = true;
-    },
+    }
 });
 
 /**@
@@ -711,11 +624,11 @@ Crafty.extend({
             this._canvas = c;
 
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
-            gl.enable(gl.DEPTH_TEST);
+            //gl.enable(gl.DEPTH_TEST);
             
-            //gl.disable(gl.DEPTH_TEST);
-            //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-            //gl.enable(gl.BLEND);
+            gl.disable(gl.DEPTH_TEST);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.enable(gl.BLEND);
             
 
             //Bind rendering of canvas context (see drawing.js)
