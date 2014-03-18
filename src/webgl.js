@@ -3,7 +3,6 @@ var Crafty = require('./core.js'),
 
 
 var fs = require('fs');
-var testText = fs.readFileSync(__dirname + '/text.txt', 'utf8');
 
 
 

@@ -3,7 +3,7 @@ attribute vec3 aOrientation;
 attribute vec2 aDepth;
 attribute vec2 aTextureCoord;
 
-varying mediump vec2 vTextureCoord;
+varying mediump vec3 vTextureCoord;
 
 uniform vec4 uViewport;
 uniform mediump vec2 uTextureDimensions;
@@ -18,5 +18,5 @@ void main() {
   vec2 pos = aPosition;
   pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;
   gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aDepth.x) ), 1) );
-  vTextureCoord = aTextureCoord;
+  vTextureCoord = vec3(aTextureCoord, aDepth.y);
 }
