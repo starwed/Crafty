@@ -579,7 +579,7 @@ Crafty.extend({
             gl = this.context;
             gl.useProgram(shaderProgram);
             var viewport = Crafty.viewport;
-            gl.uniform4f(shaderProgram.viewport, viewport._x, viewport._y, viewport._width, viewport._height);
+            gl.uniform4f(shaderProgram.viewport, viewport._x, viewport._y, viewport._width/viewport._scale, viewport._height/viewport._scale);
         },
 
         render: function(rect){
