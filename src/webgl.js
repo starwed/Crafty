@@ -25,45 +25,6 @@ var VERTEX_SHADER_SRC_OLD =
   + "}";
 
 
-glHelpers = {
-// Either x,y signature or x1, y1, x2, y2, etc
-  writeVec2: function (data, offset, stride, x, y){
-    //console.log(arguments);
-    if (arguments.length == 5){
-      for (var i = 0; i<4; i++){
-        data[offset + stride*i] = x;
-        data[offset + stride*i + 1] = y;
-      }
-    } else {
-      for (var i = 0; i<4; i++){
-        data[offset + stride*i] = arguments[3 + i*2];
-        data[offset + stride*i + 1] = arguments[4 + i*2];
-      }
-    }
-
-  },
-
-  // Either x,y, z, w signature or x1, y1, x2, y2, etc
-  writeVec4: function (data, offset, stride, x, y, z, w){
-    if (arguments.length == 7){
-      for (var i = 0; i<4; i++){
-        data[offset + stride*i] = x;
-        data[offset + stride*i + 1] = y;
-        data[offset + stride*i + 2] = z;
-        data[offset + stride*i + 3] = w;
-      }
-    } else {
-      for (var i =0; i<4; i++){
-        data[offset + stride*i] = arguments[3 + i*4];
-        data[offset + stride*i + 1] = arguments[4 + i*4];
-        data[offset + stride*i + 2] = arguments[5 + i*4];
-        data[offset + stride*i + 3] = arguments[6 + i*4];
-      }
-    }
-  },
-
-};
-
 
 
 // fragment shader source for an image/etc
@@ -195,96 +156,126 @@ var SPRITE_FRAGMENT_SHADER =
 
 
 
-
 RenderProgram = function(context, shader){
-  this.program = shader;
-  this.context = context;
-  this._bufferArray = new Float32Array(4000);
-    this._kingBuffer = gl.createBuffer();
+    this.shader = shader;
+    this.context = context;
+    this._bufferArray = new Float32Array(4000);
+    this._kingBuffer = context.createBuffer();
     this.index = new Uint16Array(600);
-    this._indexBuffer = gl.createBuffer();
+    this._indexBuffer = context.createBuffer();
     this._attribute_table = {};
+    this._elementCount = 0;
 }
 
 RenderProgram.prototype = {
-  setAttributes: function(attribs){
-    this.attributes = attributes;
-    var offset = 0;
-    for (var i=0; i<attributes.length; i++){
-      var a = attributes[i];
-      this._attribute_table[a.name] = a;
+    setAttributes: function(attributes){
+        this.attributes = attributes;
+        var offset = 0;
+        for (var i=0; i<attributes.length; i++){
+            var a = attributes[i];
+            this._attribute_table[a.name] = a;
 
-      a.bytes = a.bytes || Float32Array.BYTES_PER_ELEMENT;
-      a.type = a.type || this.context.FLOAT;
-      a.offset = offset;
-      a.location = this.context.getAttribLocation(this.program, a.name);
+            a.bytes = a.bytes || Float32Array.BYTES_PER_ELEMENT;
+            a.type = a.type || this.context.FLOAT;
+            a.offset = offset;
+            a.location = this.context.getAttribLocation(this.shader, a.name);
 
-      this.context.enableVertexAttribArray(a.location);
+            this.context.enableVertexAttribArray(a.location);
 
-      offset += a.width * a.bytes ;
-    }
-    // Stride is the full width including the last set
-    this.stride = offset;
-  },
+            offset += a.width;
+        }
 
-  setCurrentElement: function(el){
-    this.el_offset = el._glNum*4;
-    this.el = el;
-  },
+        // Stride is the full width including the last set
+        this.stride = offset;
+    },
 
-  switchTo: function(){
-    var gl = this.context;
-        gl.useProgram(prog);
+    setCurrentElement: function(el){
+        this.el_offset = el._glNum*4;
+        this.el = el;
+    },
+
+    switchTo: function(){
+        var gl = this.context;
+        gl.useProgram(this.shader);
         gl.bindBuffer(gl.ARRAY_BUFFER, this._kingBuffer);
         var a, attributes = this.attributes;
         // Process every attribute
-        for (vari=0; i<attributes.length; i++){
-          a = attributes[i];
-          gl.vertexAttribPointer(a.location, a.width, a.type, false, this.stride, a.offset);
+        for (var i=0; i<attributes.length; i++){
+            a = attributes[i];
+            gl.vertexAttribPointer(a.location, a.width, a.type, false, this.stride*a.bytes, a.offset*a.bytes);
         }
 
         this.index_pointer = 0;
-  },
+    },
 
-  addIndices: function(offset){
-    var index = this.index, l = this.index_pointer;
-    index[0+l] = 0 + offset;
-      index[1+l] = 1 + offset;
-      index[2+l] = 2 + offset;
-      index[3+l] = 1 + offset;
-      index[4+l] = 2 + offset;
-      index[5+l] = 3 + offset;
+    bindTexture: function(texture_obj) {
+        // Only needs to be done once
+        if (this.texture_obj !== undefined)
+            return
+        var gl = this.context;
+        gl.useProgram(this.shader);
+        // Set the texture buffer to use
+        gl.uniform1i(gl.getUniformLocation(this.shader, "uSampler"), texture_obj.sampler);
+        // Set the image dimensions
+        gl.uniform2f(gl.getUniformLocation(this.shader, "uTextureDimensions"), texture_obj.width, texture_obj.height);
+        
+        this.texture_obj = texture_obj;  
+    },
 
-    this.index_pointer+=6;
-  },
+    addIndices: function(offset){
+        var index = this.index, l = this.index_pointer;
+        console.log(offset, this.index_pointer);
+        index[0+l] = 0 + offset;
+        index[1+l] = 1 + offset;
+        index[2+l] = 2 + offset;
+        index[3+l] = 1 + offset;
+        index[4+l] = 2 + offset;
+        index[5+l] = 3 + offset;
 
-  renderBatch: function(){
-    var gl = this.context;
-    gl.bindBuffer(gl.ARRAY_BUFFER, this._kingBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this._bufferArray, gl.STATIC_DRAW); 
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.index, gl.STATIC_DRAW);
-      gl.drawElements(gl.TRIANGLES, this.index_pointer, gl.UNSIGNED_SHORT, 0);
+        this.index_pointer+=6;
+    },
 
-  },
+    renderBatch: function(){
+        var gl = this.context;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._kingBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this._bufferArray, gl.STATIC_DRAW); 
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.index, gl.STATIC_DRAW);
+        gl.drawElements(gl.TRIANGLES, this.index_pointer, gl.UNSIGNED_SHORT, 0);
+        //console.log("Batch info\n", this.index_pointer)
+        //console.log(this.index)
+        
+
+        console.log("First row of ", this.name)
+        
+        for(var off =0; off<12; off++){
+            var rw = [];
+            for (var i=0; i<this.stride; i++)
+                rw.push(this._bufferArray[i+off*this.stride])
+            console.log(rw);
+        }
+
+    },
 
     writeVector: function (name, x, y){
-        //console.log(arguments);
-        var a = this._attribute_table[name],
-            offset = a.offset+this.el_offset, 
-            stride = this.stride,
-            l = arguments.length,
-            data = this._bufferArray;
+    //console.log(arguments);
+        var a = this._attribute_table[name];
+        var offset = a.offset+this.el_offset*this.stride, stride = this.stride;
+        var l = (arguments.length-1);
+        var data = this._bufferArray;
+        //console.log("---\n", name, stride, offset, this.el_offset);
 
         // Fill in the attribtue with the given arguments, cycling through the data if necessary
         // If the arguments provided match the width of the attribute, that means it'll fill the same values for each of the four vertices.
         // TODO determine if this is too big a performance penalty!
         for (var r=0; r<4 ; r++)
-            for (var c=0; c<a.width; c++)
-                data[offset + stride*r + c] = arguments[ (a.width*r + c)%l + 1];  
-    },
+            for (var c=0; c<a.width; c++){
+                //console.log("Data info", r, c, "index", offset+stride*r+c);
+                data[offset + stride*r + c] = arguments[ (a.width*r + c)%l + 1];    
+            }
+      }
 
-   
+     
 }
 
 
@@ -316,16 +307,14 @@ Crafty.c("TestSquareWhite", {
 });
 
 Crafty.c("TestColor", {
+  _GL_attributes:  [
+        {name:"aPosition", width: 2},
+        {name:"aExtras", width: 4},
+        {name:"aColor",  width: 4}
+  ],
   init: function(){
       if (this.has("WebGL")){
-        var gl = this.webgl.context;
-        this._establishShader("TestColor", this._fragmentShader, this._vertexShader);
-
-        if (typeof this._shaderProgram.posLocation === "undefined"){
-          this._specializeProgram();
-        }
-        this._glNum = this._shaderProgram._elementCount++;
-
+        this._establishShader("TestColor", this._fragmentShader, this._vertexShader, this._GL_attributes);
       }
 
 
@@ -334,48 +323,7 @@ Crafty.c("TestColor", {
 
   },
 
-  _specializeProgram: function(){
-    var gl = this.webgl.context;
-    console.log('setting positions');
-    var prog = this._shaderProgram;
-    
 
-    prog._bufferArray = new Float32Array(4000);
-    prog._kingBuffer = gl.createBuffer();
-    prog.index = new Uint16Array(600);
-    prog._indexBuffer = gl.createBuffer();
-
-    prog.posLocation = gl.getAttribLocation(prog, "aPosition");
-    gl.enableVertexAttribArray(prog.posLocation);
-    prog.extrasLocation = gl.getAttribLocation(prog, "aExtras");
-    gl.enableVertexAttribArray(prog.extrasLocation);
-    prog.colLocation = gl.getAttribLocation(prog, "aColor");
-    gl.enableVertexAttribArray(prog.colLocation);
-    prog._elementCount = 0;
-
-
-
-
-    var size = Float32Array.BYTES_PER_ELEMENT;
-    var stride =  (2+4+4) * size;
-    prog.stride = stride;
-    prog.switchTo = function(){
-      gl.useProgram(prog);
-      gl.bindBuffer(gl.ARRAY_BUFFER, prog._kingBuffer);
-      gl.vertexAttribPointer(prog.posLocation, 2, gl.FLOAT, false, stride, 0);
-      gl.vertexAttribPointer(prog.extrasLocation, 4, gl.FLOAT, false, stride, 2*size);
-      gl.vertexAttribPointer(prog.colLocation, 4, gl.FLOAT, false, stride, (2+4)*size);
-    };
-
-    prog.renderBatch = function(){
-      gl.bindBuffer(gl.ARRAY_BUFFER, prog._kingBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, prog._bufferArray, gl.STATIC_DRAW); 
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, prog._indexBuffer);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, prog.index, gl.STATIC_DRAW);
-      gl.drawElements(gl.TRIANGLES, prog.pointer, gl.UNSIGNED_SHORT, 0);
-    };
-
-  },
 
   _fragmentShader: 
     "precision mediump float;"
@@ -387,56 +335,18 @@ Crafty.c("TestColor", {
   _vertexShader: COLOR_VERTEX_SHADER,
 
   _drawColor: function(drawVars){
-    //console.log("Drawing color");
-    var gl = drawVars.gl, prog = drawVars.program;
-
     // Write the vertex data into the array
-    this._writeToArray(prog._bufferArray);
-    //console.log(prog._bufferArray);
-    
-
-    // Register the vertex groups to be drawn
-    // Two triangles; (0, 1, 2) and (1, 2, 3)
-    var offset = this._glNum * 4;
-    var index = prog.index;
-    var l = prog.pointer;
-    index[0+l] = 0 + offset;
-    index[1+l] = 1 + offset;
-    index[2+l] = 2 + offset;
-    index[3+l] = 1 + offset;
-    index[4+l] = 2 + offset;
-    index[5+l] = 3 + offset;
-    prog.pointer += 6;
-  },
-
-  _writeToArray: function(data){
-      //intermediate: just CREATE the matrix right here
-      
-      var width = 2 + 4 + 4;
-      var offset = (width * 4) * this._glNum;
-
-      // Write position; x, y, w, h
-      glHelpers.writeVec2(data, offset, width,
-        this._x, this._y, 
-        this._x , this._y + this._h,
-        this._x + this._w, this._y,
-        this._x + this._w, this._y + this._h
-      );
-      // Write orientation and z level
-      glHelpers.writeVec4(data, offset + 2, width,
-        this._origin.x + this._x,
-        this._origin.y + this._y,
-        this._z,
-        this._rotation
-      );
-      glHelpers.writeVec4(data, offset + 6, width,
+    var prog = drawVars.program;
+    prog.writeVector("aColor",
         this._red,
         this._green,
         this._blue,
         1
-      );
+    );
 
   },
+
+ 
 
   color: function (r, g, b){
     this._red = r;
@@ -448,29 +358,21 @@ Crafty.c("TestColor", {
 
 });
 
-/*
-console.log("Initing webgl sprite");
-                var webgl = this.webgl;
-                this._establishShader(url, TEXTURE_FRAGMENT_SHADER_SRC)
-                this.__texture = webgl.makeTexture(this.__image, this.img);
-                console.log("Made texture")
-                console.log(this.__texture);
-                console.log("Image complete? " + img.complete)
-                webgl.bindTexture(this._shaderProgram, this.__texture)
-              */
+
 
 
 
 Crafty.c("GLSprite", {
+  _GL_attributes:  [
+        {name:"aPosition", width: 2},
+        {name:"aExtras", width: 4},
+        {name:"aTextureCoord",  width: 2}
+  ],
   init: function(){
       if (this.has("WebGL")){
-        var gl = this.webgl.context;
-        this._establishShader(this.__image, this._fragmentShader, this._vertexShader);
-
-        if (typeof this._shaderProgram.posLocation === "undefined"){
-          this._specializeProgram();
-        }
-        this._glNum = this._shaderProgram._elementCount++;
+        this._establishShader(this.__image, this._fragmentShader, this._vertexShader, this._GL_attributes);
+        this.program.bindTexture( this.webgl.makeTexture(this.__image, this.img) );
+        
 
       }
 
@@ -480,116 +382,20 @@ Crafty.c("GLSprite", {
 
   },
 
-
-  // For sprite
-  _specializeProgram: function(){
-    var gl = this.webgl.context;
-    var webgl =this.webgl;
-    console.log('setting sprite positions');
-    var prog = this._shaderProgram;
-
-
-    prog.__texture = webgl.makeTexture(this.__image, this.img);
-    //console.log("Made texture")
-    //console.log(this.__texture);
-    //console.log("Image complete? " + img.complete)
-    webgl.bindTexture(this._shaderProgram, prog.__texture);
-    
-
-    prog._bufferArray = new Float32Array(4000);
-    prog._kingBuffer = gl.createBuffer();
-    prog.index = new Uint16Array(600);
-    prog._indexBuffer = gl.createBuffer();
-
-    prog.posLocation = gl.getAttribLocation(prog, "aPosition");
-    gl.enableVertexAttribArray(prog.posLocation);
-    prog.extrasLocation = gl.getAttribLocation(prog, "aExtras");
-    gl.enableVertexAttribArray(prog.extrasLocation);
-    prog.textureLocation = gl.getAttribLocation(prog, "aTextureCoord");
-    gl.enableVertexAttribArray(prog.textureLocation);
-    prog._elementCount = 0;
-
-
-
-
-    var size = Float32Array.BYTES_PER_ELEMENT;
-    var stride =  (2+4+2) * size;
-    prog.stride = stride;
-    prog.switchTo = function(){
-      gl.useProgram(prog);
-      gl.bindBuffer(gl.ARRAY_BUFFER, prog._kingBuffer);
-      gl.vertexAttribPointer(prog.posLocation, 2, gl.FLOAT, false, stride, 0);
-      gl.vertexAttribPointer(prog.extrasLocation, 4, gl.FLOAT, false, stride, 2*size);
-      gl.vertexAttribPointer(prog.colLocation, 4, gl.FLOAT, false, stride, (2+4)*size);
-    };
-
-    prog.renderBatch = function(){
-      gl.bindBuffer(gl.ARRAY_BUFFER, prog._kingBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, prog._bufferArray, gl.STATIC_DRAW); 
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, prog._indexBuffer);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, prog.index, gl.STATIC_DRAW);
-      gl.drawElements(gl.TRIANGLES, prog.pointer, gl.UNSIGNED_SHORT, 0);
-    };
-
-  },
-
-
-
   _fragmentShader: SPRITE_FRAGMENT_SHADER,
 
   _vertexShader: SPRITE_VERTEX_SHADER,
 
   _drawSprite: function(drawVars){
-    //console.log("Drawing color");
-    var gl = drawVars.gl, prog = drawVars.program;
-
-    // Write the vertex data into the array
-    this._writeToArray(prog._bufferArray, drawVars.co);
-
-    // Register the vertex groups to be drawn
-    // Two triangles; (0, 1, 2) and (1, 2, 3)
-    var offset = this._glNum * 4;
-    var index = prog.index;
-    var l = prog.pointer;
-    index[0+l] = 0 + offset;
-    index[1+l] = 1 + offset;
-    index[2+l] = 2 + offset;
-    index[3+l] = 1 + offset;
-    index[4+l] = 2 + offset;
-    index[5+l] = 3 + offset;
-    prog.pointer += 6;
-  },
-
-  _writeToArray: function(data, co){
-      //intermediate: just CREATE the matrix right here
-      
-      var width = 2 + 4 + 2;
-      var offset = (width * 4) * this._glNum;
-
-      // Write position; x, y, w, h
-
-      glHelpers.writeVec2(data, offset, width,
-        this._x, this._y, 
-        this._x , this._y + this._h,
-        this._x + this._w, this._y,
-        this._x + this._w, this._y + this._h
-      );
-
-      // Write orientation and z level
-      glHelpers.writeVec4(data, offset + 2, width,
-        this._origin.x + this._x,
-        this._origin.y + this._y,
-        this._z,
-        this._rotation
-      );
-      
-      // Write array coordinates
-      glHelpers.writeVec2(data, offset + 6, width,
+    var prog = drawVars.program;
+    var co = drawVars.co;
+    // Write texture coordinates
+    prog.writeVector("aTextureCoord",
         co.x, co.y,
         co.x, co.y + co.h,
         co.x + co.w, co.y,
         co.x + co.w, co.y + co.h
-      );
+    );
 
   }
 
@@ -701,31 +507,41 @@ Crafty.c("WebGL", {
         //Draw entity
         var gl = this.webgl.context;
         this.drawVars.gl = gl;
-        this.drawVars.program = this._shaderProgram;
+        var prog = this.drawVars.program = this.program;
 
-        // TODO: Set current element
+        prog.setCurrentElement(this);
+        // Write position; x, y, w, h
+        prog.writeVector("aPosition",
+            this._x, this._y, 
+            this._x , this._y + this._h,
+            this._x + this._w, this._y,
+            this._x + this._w, this._y + this._h
+        );
 
-        // TODO: Write 2D variables to array
+        // Write orientation and z level
+        prog.writeVector("aExtras",
+            this._origin.x + this._x,
+            this._origin.y + this._y,
+            this._z,
+            this._rotation
+        );
 
         // This should only need to handle *specific* attributes!
         this.trigger("Draw", this.drawVars);
 
-        // TODO: Write indices to array
-
+        // Register the vertex groups to be drawn, referring to this entities position in the big buffer
+        var offset = this._glNum * 4;
+        prog.addIndices(offset);
         
         return this;
     },
 
     // v_src is optional, there's a default vertex shader that works for regular rectangular entities
-    _establishShader: function(compName, f_src, v_src){
-        console.log("Establishing shader");
-        var wgl = this.webgl;
-        if (typeof wgl.programs[compName] === "undefined"){
-          wgl.programs[compName] = wgl.makeProgram(f_src, v_src);
-        }
-          
-        this._shaderProgram = wgl.programs[compName];
-
+    _establishShader: function(compName, f_src, v_src, attributes){
+        this.program = this.webgl.initProgram(compName, f_src, v_src, attributes);
+        // Needs to know where in the big array we are!
+        this._glNum = this.program._elementCount++;
+        console.log("Established", compName, this._glNum)
         // Shader program means ready
         this.ready = true;
     },
@@ -793,6 +609,18 @@ Crafty.extend({
             shaderProgram.viewport = gl.getUniformLocation(shaderProgram, "uViewport");
             return shaderProgram;
         },
+
+        programs: {},
+        initProgram: function(name, fragment_src, vertex_src, attributes){
+            if (this.programs[name] === undefined){
+                var shader = this.makeProgram(fragment_src, vertex_src);
+                var program = new RenderProgram(this.context, shader);
+                program.name = name;
+                program.setAttributes(attributes);
+                this.programs[name] = program;
+            }
+            return this.programs[name];
+        },
         
         textures: {},
         textureCount: 0,
@@ -832,21 +660,6 @@ Crafty.extend({
             gl.activeTexture(gl["TEXTURE" + (webgl.textureCount)]);
             return webgl.textures[url];
         },
-
-        bindTexture: function(program, texture_obj) {
-            if (typeof program.texture_obj !== "undefined")
-              return;
-            var gl = this.context;
-            var webgl = this;
-            gl.useProgram(program);
-            // Set the texture buffer to use
-            gl.uniform1i(gl.getUniformLocation(program, "uSampler"), texture_obj.sampler);
-            // Set the image dimensions
-            gl.uniform2f(gl.getUniformLocation(program, "uTextureDimensions"), texture_obj.width, texture_obj.height);
-            
-            program.texture_obj = texture_obj;
-        },
-
 
         /**@
          * #Crafty.webgl.init
@@ -958,7 +771,7 @@ Crafty.extend({
             var programs = webgl.programs;
             if (webgl.dirtyViewport){
               for (var comp in programs){
-                  webgl.setViewportUniforms(programs[comp]);
+                  webgl.setViewportUniforms(programs[comp].shader);
               }
               webgl.dirtyViewport = false;
             }
@@ -969,13 +782,13 @@ Crafty.extend({
             for (; i < l; i++) {
                 current = q[i];
                 if (current._visible && current.__c.WebGL) {
-                    if (shaderProgram !== current._shaderProgram){
+                    if (shaderProgram !== current.program){
                       if (shaderProgram !== null){
                         shaderProgram.renderBatch();
                         batchCount++;
                       }
-                      shaderProgram = current._shaderProgram;
-                      shaderProgram.pointer = 0;
+                      shaderProgram = current.program;
+                      shaderProgram.index_pointer = 0;
                       shaderProgram.switchTo();
                     } 
                     current.draw();
