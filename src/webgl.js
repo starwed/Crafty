@@ -2,90 +2,17 @@ var Crafty = require('./core.js'),
     document = window.document;
 
 
+var fs = require('fs');
+var testText = fs.readFileSync(__dirname + '/text.txt', 'utf8');
 
 
 
-
-// New fragmetn/vertex for color
-
-
-/*
-attribute vec2 aPosition;
-attribute vec3 aOrientation;
-attribute vec2 aDepth;
-attribute vec4 aColor;
-
-varying lowp vec4 vColor;
-
-uniform  vec4 uViewport;
-
-mat4 viewportScale = mat4(2.0 / uViewport.z, 0, 0, 0,    0, -2.0 / uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);
-vec4 viewportTranslation = vec4(uViewport.xy, 0, 0);
-
-vec2 entityOrigin = aOrientation.xy;
-mat2 entityRotationMatrix = mat2(cos(aOrientation.z), sin(aOrientation.z), -sin(aOrientation.z), cos(aOrientation.z));
-
-void main() {
-  vec2 pos = aPosition;
-  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;
-  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aDepth.x) ), 1) );
-  vColor = aColor;
-}
-
-*/
+var COLOR_VERTEX_SHADER = fs.readFileSync(__dirname + '/shaders/color.vert', 'utf8');
+var COLOR_FRAGMENT_SHADER = fs.readFileSync(__dirname + '/shaders/color.frag', 'utf8');;
 
 
-var COLOR_VERTEX_SHADER = 
-  "attribute vec2 aPosition;\r\nattribute vec3 aOrientation;\r\nattribute vec2 aDepth;\r\nattribute vec4 aColor;\r\n\r\nvarying lowp vec4 vColor;\r\n\r\nuniform  vec4 uViewport;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityOrigin = aOrientation.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aOrientation.z), sin(aOrientation.z), -sin(aOrientation.z), cos(aOrientation.z));\r\n\r\nvoid main() {\r\n  vec2 pos = aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0\/(1.0+exp(aDepth.x) ), 1) );\r\n  vColor = aColor;\r\n}\r\n";
-
-
-var COLOR_FRAGMENT_SHADER = "";
-
-
-/*
-attribute vec2 aPosition;
-attribute vec3 aOrientation;
-attribute vec2 aDepth;
-attribute vec2 aTextureCoord;
-
-varying mediump vec2 vTextureCoord;
-
-uniform vec4 uViewport;
-uniform mediump vec2 uTextureDimensions;
-
-mat4 viewportScale = mat4(2.0 / uViewport.z, 0, 0, 0,    0, -2.0 / uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);
-vec4 viewportTranslation = vec4(uViewport.xy, 0, 0);
-
-vec2 entityOrigin = aOrientation.xy;
-mat2 entityRotationMatrix = mat2(cos(aOrientation.z), sin(aOrientation.z), -sin(aOrientation.z), cos(aOrientation.z));
-
-void main() {
-  vec2 pos = aPosition;
-  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;
-  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aDepth.x) ), 1) );
-  vTextureCoord = aTextureCoord;
-}
-
-*/
-
-var SPRITE_VERTEX_SHADER = 
-  "attribute vec2 aPosition;\r\nattribute vec3 aOrientation;\r\nattribute vec2 aDepth;\r\nattribute vec2 aTextureCoord;\r\n\r\nvarying mediump vec2 vTextureCoord;\r\n\r\nuniform vec4 uViewport;\r\nuniform mediump vec2 uTextureDimensions;\r\n\r\nmat4 viewportScale = mat4(2.0 \/ uViewport.z, 0, 0, 0,    0, -2.0 \/ uViewport.w, 0,0,    0, 0,1,0,    -1,+1,0,1);\r\nvec4 viewportTranslation = vec4(uViewport.xy, 0, 0);\r\n\r\nvec2 entityOrigin = aOrientation.xy;\r\nmat2 entityRotationMatrix = mat2(cos(aOrientation.z), sin(aOrientation.z), -sin(aOrientation.z), cos(aOrientation.z));\r\n\r\nvoid main() {\r\n  vec2 pos = aPosition;\r\n  pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;\r\n  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0\/(1.0+exp(aDepth.x) ), 1) );\r\n  vTextureCoord = aTextureCoord;\r\n}";
-
-/*
-    varying mediump vec2 vTextureCoord;
-      
-    uniform sampler2D uSampler;
-    uniform mediump vec2 uTextureDimensions;
-
-    void main(void) {
-      highp vec2 coord =   vTextureCoord / uTextureDimensions;
-      gl_FragColor = texture2D(uSampler, coord);
-    }
-*/
-
-
-var SPRITE_FRAGMENT_SHADER = 
-  "    varying mediump vec2 vTextureCoord;\r\n      \r\n    uniform sampler2D uSampler;\r\n    uniform mediump vec2 uTextureDimensions;\r\n\r\n    void main(void) {\r\n      highp vec2 coord =   vTextureCoord \/ uTextureDimensions;\r\n      gl_FragColor = texture2D(uSampler, coord);\r\n    }";
+var SPRITE_VERTEX_SHADER = fs.readFileSync(__dirname + '/shaders/sprite.vert', 'utf8');
+var SPRITE_FRAGMENT_SHADER = fs.readFileSync(__dirname + '/shaders/sprite.frag', 'utf8');
 
 
 
@@ -233,12 +160,7 @@ Crafty.c("TestColor", {
 
 
 
-  _fragmentShader: 
-    "precision mediump float;"
-    + "varying lowp vec4 vColor;"
-    + "void main(void) {"
-    + "  gl_FragColor = vColor;"
-    + "}",
+  _fragmentShader: COLOR_FRAGMENT_SHADER,
 
   _vertexShader: COLOR_VERTEX_SHADER,
 
