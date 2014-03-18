@@ -17,5 +17,5 @@ void main() {
   vec2 pos = aPosition;
   pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;
   gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aDepth.x) ), 1) );
-  vColor = aColor;
+  vColor = vec4(aColor.rgb, aColor.a*aDepth.y);
 }
