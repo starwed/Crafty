@@ -83,7 +83,7 @@ RenderProgram.prototype = {
 
     addIndices: function(offset){
         var index = this.index, l = this.index_pointer;
-        console.log(offset, this.index_pointer);
+        //console.log(offset, this.index_pointer);
         index[0+l] = 0 + offset;
         index[1+l] = 1 + offset;
         index[2+l] = 2 + offset;
@@ -103,7 +103,7 @@ RenderProgram.prototype = {
         gl.drawElements(gl.TRIANGLES, this.index_pointer, gl.UNSIGNED_SHORT, 0);
         //console.log("Batch info\n", this.index_pointer)
         //console.log(this.index)
-        
+        return
 
         console.log("First row of ", this.name);
         
@@ -250,6 +250,7 @@ Crafty.c("WebGL", {
         
         this._changed = true;
         webgl.add(this);
+        webgl.register(this);
 
         this.bind("Change", function (e) {
             //flag if changed
@@ -261,11 +262,16 @@ Crafty.c("WebGL", {
         });
 
         this.bind("Remove", function () {
-            webgl.entities--;
-            this._changed = true;
-            webgl.add(this);
+            
         });
 
+    },
+
+    remove: function(){
+        webgl.entities--;
+        this._changed = true;
+        webgl.add(this);
+        webgl.unregister(this);
     },
 
     /**@
@@ -356,7 +362,7 @@ Crafty.c("WebGL", {
         );
 
         prog.writeVector("aDepth",
-            this._z,
+            this._globalZ,
             this._alpha
         );
 
@@ -364,8 +370,7 @@ Crafty.c("WebGL", {
         this.trigger("Draw", this.drawVars);
 
         // Register the vertex groups to be drawn, referring to this entities position in the big buffer
-        var offset = this._glNum * 4;
-        prog.addIndices(offset);
+        prog.addIndices(prog.el_offset);
         
         return this;
     },
@@ -590,6 +595,10 @@ Crafty.extend({
             gl.uniform4f(shaderProgram.viewport, viewport._x, viewport._y, viewport._width/viewport._scale, viewport._height/viewport._scale);
         },
 
+        zsort: function(a, b) {
+                return a._globalZ - b._globalZ;
+        },
+
         render: function(rect){
             //console.log("Rendering webgl context")
             rect = rect || Crafty.viewport.rect();
@@ -621,21 +630,36 @@ Crafty.extend({
 
             var batchCount = 0;
             shaderProgram = null;
-            for (; i < l; i++) {
+
+
+            var visible_gl = [];
+            //First build sorted list of visible entities
+            for (i=0; i < l; i++) {
                 current = q[i];
                 if (current._visible && current.__c.WebGL) {
-                    if (shaderProgram !== current.program){
-                      if (shaderProgram !== null){
-                        shaderProgram.renderBatch();
-                        batchCount++;
-                      }
-                      shaderProgram = current.program;
-                      shaderProgram.index_pointer = 0;
-                      shaderProgram.switchTo();
-                    }
-                    current.draw();
-                    current._changed = false;
+                    visible_gl.push(current);
+                    console.log(current.__c)
+                    console.log(current._globalZ);
+
                 }
+            }
+            visible_gl.sort(this.zsort);
+            console.log("visible elements", visible_gl.length)
+            var l = visible_gl.length;
+            for (i=0; i < l; i++) {
+                current = visible_gl[i];
+                console.log(current.__c)
+                if (shaderProgram !== current.program){
+                  if (shaderProgram !== null){
+                    shaderProgram.renderBatch();
+                    batchCount++;
+                  }
+                  shaderProgram = current.program;
+                  shaderProgram.index_pointer = 0;
+                  shaderProgram.switchTo();
+                }
+                current.draw();
+                current._changed = false;
             }
 
             if (shaderProgram !== null){
