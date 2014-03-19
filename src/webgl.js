@@ -7,7 +7,7 @@ var fs = require('fs');
 
 
 var COLOR_VERTEX_SHADER = fs.readFileSync(__dirname + '/shaders/color.vert', 'utf8');
-var COLOR_FRAGMENT_SHADER = fs.readFileSync(__dirname + '/shaders/color.frag', 'utf8');;
+var COLOR_FRAGMENT_SHADER = fs.readFileSync(__dirname + '/shaders/color.frag', 'utf8');
 
 
 var SPRITE_VERTEX_SHADER = fs.readFileSync(__dirname + '/shaders/sprite.vert', 'utf8');
@@ -24,7 +24,7 @@ RenderProgram = function(context, shader){
     this._indexBuffer = context.createBuffer();
     this._attribute_table = {};
     this._elementCount = 0;
-}
+};
 
 RenderProgram.prototype = {
     setAttributes: function(attributes){
@@ -70,7 +70,7 @@ RenderProgram.prototype = {
     bindTexture: function(texture_obj) {
         // Only needs to be done once
         if (this.texture_obj !== undefined)
-            return
+            return;
         var gl = this.context;
         gl.useProgram(this.shader);
         // Set the texture buffer to use
@@ -78,7 +78,7 @@ RenderProgram.prototype = {
         // Set the image dimensions
         gl.uniform2f(gl.getUniformLocation(this.shader, "uTextureDimensions"), texture_obj.width, texture_obj.height);
         
-        this.texture_obj = texture_obj;  
+        this.texture_obj = texture_obj;
     },
 
     addIndices: function(offset){
@@ -97,7 +97,7 @@ RenderProgram.prototype = {
     renderBatch: function(){
         var gl = this.context;
         gl.bindBuffer(gl.ARRAY_BUFFER, this._kingBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this._bufferArray, gl.STATIC_DRAW); 
+        gl.bufferData(gl.ARRAY_BUFFER, this._bufferArray, gl.STATIC_DRAW);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.index, gl.STATIC_DRAW);
         gl.drawElements(gl.TRIANGLES, this.index_pointer, gl.UNSIGNED_SHORT, 0);
@@ -105,12 +105,12 @@ RenderProgram.prototype = {
         //console.log(this.index)
         
 
-        console.log("First row of ", this.name)
+        console.log("First row of ", this.name);
         
         for(var off =0; off<12; off++){
             var rw = [];
             for (var i=0; i<this.stride; i++)
-                rw.push(this._bufferArray[i+off*this.stride])
+                rw.push(this._bufferArray[i+off*this.stride]);
             console.log(rw);
         }
 
@@ -130,12 +130,12 @@ RenderProgram.prototype = {
         for (var r=0; r<4 ; r++)
             for (var c=0; c<a.width; c++){
                 //console.log("Data info", r, c, "index", offset+stride*r+c);
-                data[offset + stride*r + c] = arguments[ (a.width*r + c)%l + 1];    
+                data[offset + stride*r + c] = arguments[ (a.width*r + c)%l + 1];
             }
       }
 
      
-}
+};
 
 
 
@@ -342,7 +342,7 @@ Crafty.c("WebGL", {
         prog.setCurrentElement(this);
         // Write position; x, y, w, h
         prog.writeVector("aPosition",
-            this._x, this._y, 
+            this._x, this._y,
             this._x , this._y + this._h,
             this._x + this._w, this._y,
             this._x + this._w, this._y + this._h
@@ -355,7 +355,7 @@ Crafty.c("WebGL", {
             this._rotation
         );
 
-        prog.writeVector("aDepth", 
+        prog.writeVector("aDepth",
             this._z,
             this._alpha
         );
@@ -375,7 +375,7 @@ Crafty.c("WebGL", {
         this.program = this.webgl.initProgram(compName, f_src, v_src, attributes);
         // Needs to know where in the big array we are!
         this._glNum = this.program._elementCount++;
-        console.log("Established", compName, this._glNum)
+        console.log("Established", compName, this._glNum);
         // Shader program means ready
         this.ready = true;
     }
@@ -401,7 +401,16 @@ Crafty.extend({
         entities: 0,
         changed_objects: [],
         add: function(e){
-        	this.changed_objects.push(e);
+            this.changed_objects.push(e);
+        },
+        registered_objects: [],
+        register: function(e){
+            this.registered_objects.push(e);
+        },
+        unregister: function(e){
+            // splice out
+            var i = this.registered_objects.indexOf(e);
+            this.registered_objects.splice(i, 1);
         },
         /**@
          * #Crafty.canvas._glCanvas
@@ -410,7 +419,6 @@ Crafty.extend({
          * WebGL Canvas element
          */
 
-        programs: {},
 
         compileShader: function (src, type){
             var gl = this.context;
@@ -419,7 +427,7 @@ Crafty.extend({
             gl.compileShader(shader);
             if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
               throw(gl.getShaderInfoLog(shader));
-            };
+            }
             return shader;
         },
 
@@ -529,18 +537,18 @@ Crafty.extend({
 
             // Equivalent of initGL in sample prog
             var gl;
-    		    try {
-    		      gl = c.getContext("webgl") || c.getContext("experimental-webgl");
-    		      gl.viewportWidth = c.width;
-    		      gl.viewportHeight = c.height;
-    		    } catch(e) {
-                    //Do nothing!
-    		    }
+            try {
+                gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+                gl.viewportWidth = c.width;
+                gl.viewportHeight = c.height;
+            } catch(e) {
+                //Do nothing!
+            }
 
-    		    if (!gl) {
-    		      Crafty.trigger("NoWebGL");
-              return;
-    		    }
+            if (!gl) {
+                Crafty.trigger("NoWebGL");
+                return;
+            }
             this.context = gl;
             this._canvas = c;
 
@@ -556,9 +564,9 @@ Crafty.extend({
             var webgl = this;
             Crafty.uniqueBind("RenderScene", webgl.render);
 
-            Crafty.uniqueBind("ViewportResize", webgl._resize)
+            Crafty.uniqueBind("ViewportResize", webgl._resize);
             
-            Crafty.uniqueBind("InvalidateViewport", function(){webgl.dirtyViewport = true;})
+            Crafty.uniqueBind("InvalidateViewport", function(){webgl.dirtyViewport = true;});
             this.dirtyViewport = true;
 
             console.log("webgl inited");
@@ -601,7 +609,7 @@ Crafty.extend({
             //We don't set the perspective because the default is what we WANT -- no depth 
 
             //Set the viewport uniform variables
-            var shaderProgram;            
+            var shaderProgram;
             var programs = webgl.programs;
             if (webgl.dirtyViewport){
               for (var comp in programs){
@@ -624,7 +632,7 @@ Crafty.extend({
                       shaderProgram = current.program;
                       shaderProgram.index_pointer = 0;
                       shaderProgram.switchTo();
-                    } 
+                    }
                     current.draw();
                     current._changed = false;
                 }
@@ -634,7 +642,7 @@ Crafty.extend({
               shaderProgram.renderBatch();
               batchCount++;
             }
-            console.log("Batches: " + batchCount)
+            console.log("Batches: " + batchCount);
             
         }
 
