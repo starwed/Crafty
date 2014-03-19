@@ -1,6 +1,6 @@
 attribute vec2 aPosition;
 attribute vec3 aOrientation;
-attribute vec2 aDepth;
+attribute vec4 aExtra;
 attribute vec2 aTextureCoord;
 
 varying mediump vec3 vTextureCoord;
@@ -17,6 +17,6 @@ mat2 entityRotationMatrix = mat2(cos(aOrientation.z), sin(aOrientation.z), -sin(
 void main() {
   vec2 pos = aPosition;
   pos = entityRotationMatrix * (pos - entityOrigin) + entityOrigin ;
-  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aDepth.x) ), 1) );
-  vTextureCoord = vec3(aTextureCoord, aDepth.y);
+  gl_Position = viewportScale * (viewportTranslation + vec4(pos, 1.0/(1.0+exp(aExtra.x) ), 1) );
+  vTextureCoord = vec3(aTextureCoord, aExtra.y);
 }

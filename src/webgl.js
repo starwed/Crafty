@@ -143,7 +143,7 @@ Crafty.c("TestColor", {
   _GL_attributes:  [
         {name:"aPosition", width: 2},
         {name:"aOrientation", width: 3},
-        {name:"aDepth", width:2},
+        {name:"aExtra", width:4},
         {name:"aColor",  width: 4}
   ],
   init: function(){
@@ -195,7 +195,7 @@ Crafty.c("GLSprite", {
   _GL_attributes:  [
         {name:"aPosition", width: 2},
         {name:"aOrientation", width: 3},
-        {name:"aDepth", width:2},
+        {name:"aExtra", width:4},
         {name:"aTextureCoord",  width: 2}
   ],
   init: function(){
@@ -330,14 +330,13 @@ Crafty.c("WebGL", {
         co.h = h || coord[3];
 
         // Handle flipX, flipY
-        if (this._flipX || this._flipY) {
-           
+        if (this._flipX ) {
+           co.x = co.x+co.w;
+           co.w = - co.w;
         }
-
-
-        //set alpha
-        if (this._alpha < 1.0) {
-           
+        if (this._flipY ) {
+           co.y = co.y+co.h;
+           co.h = - co.h;
         }
 
         //Draw entity
@@ -361,9 +360,11 @@ Crafty.c("WebGL", {
             this._rotation
         );
 
-        prog.writeVector("aDepth",
+        prog.writeVector("aExtra",
             this._globalZ,
-            this._alpha
+            this._alpha,
+            this._flipX,
+            this._flipY
         );
 
         // This should only need to handle *specific* attributes!
@@ -599,6 +600,8 @@ Crafty.extend({
                 return a._globalZ - b._globalZ;
         },
 
+        // Hold an array ref to avoid garbage
+        visible_gl: [],
         render: function(rect){
             //console.log("Rendering webgl context")
             rect = rect || Crafty.viewport.rect();
@@ -632,23 +635,20 @@ Crafty.extend({
             shaderProgram = null;
 
 
-            var visible_gl = [];
+            var visible_gl = webgl.visible_gl;
+            visible_gl.length = 0;
             //First build sorted list of visible entities
             for (i=0; i < l; i++) {
                 current = q[i];
                 if (current._visible && current.__c.WebGL) {
                     visible_gl.push(current);
-                    console.log(current.__c)
-                    console.log(current._globalZ);
 
                 }
             }
-            visible_gl.sort(this.zsort);
-            console.log("visible elements", visible_gl.length)
+            visible_gl.sort(webgl.zsort);
             var l = visible_gl.length;
             for (i=0; i < l; i++) {
                 current = visible_gl[i];
-                console.log(current.__c)
                 if (shaderProgram !== current.program){
                   if (shaderProgram !== null){
                     shaderProgram.renderBatch();
