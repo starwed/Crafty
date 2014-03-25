@@ -24,7 +24,7 @@ RenderProgramWrapper = function(context, shader){
     this._indexArray = new Uint16Array(600);
     this._indexBuffer = context.createBuffer();
     this._attribute_table = {};
-    this._maxElement = 0;
+    this._registrySize = 0;
 };
 
 RenderProgramWrapper.prototype = {
@@ -50,9 +50,9 @@ RenderProgramWrapper.prototype = {
     },
 
     registerEntity: function(e){
-        if (this._arrayHoles.length === 0){
-            e._glBufferIndex = this._maxElement;
-            this._maxElement++;
+        if (this._arrayHoles.length === 0) {
+            e._glBufferIndex = this._registrySize;
+            this._registrySize++;
         } else {
             e._glBufferIndex = this._arrayHoles.pop();
         }
@@ -71,9 +71,10 @@ RenderProgramWrapper.prototype = {
         this._arrayHoles.length = 0;
     },
 
-    setCurrentElement: function(el){
-        this.el_offset = el._glBufferIndex*4;
-        this.el = el;
+    setCurrentEntity: function(ent){
+        // offset is 4 * buffer index, because each entity has 4 vertices
+        this.ent_offset = ent._glBufferIndex*4;
+        this.ent = ent;
     },
 
     switchTo: function(){
@@ -133,7 +134,7 @@ RenderProgramWrapper.prototype = {
     writeVector: function (name, x, y){
     //console.log(arguments);
         var a = this._attribute_table[name];
-        var offset = a.offset+this.el_offset*this.stride, stride = this.stride;
+        var offset = a.offset+this.ent_offset*this.stride, stride = this.stride;
         var l = (arguments.length-1);
         var data = this._attributeArray;
         //console.log("---\n", name, stride, offset, this.el_offset);
@@ -147,8 +148,6 @@ RenderProgramWrapper.prototype = {
                 data[offset + stride*r + c] = arguments[ (a.width*r + c)%l + 1];
             }
       }
-
-     
 };
 
 
@@ -242,22 +241,42 @@ Crafty.c("GLSprite", {
 
 
 
-// This will totally assume, for now, that gl-matrix is available
+
+/**@
+ * #WebGL
+ * @category Graphics
+ * @trigger Draw - when the entity is ready to be drawn to the stage - {type: "canvas", pos, co, ctx}
+ * @trigger NoCanvas - if the browser does not support canvas
+ *
+ * When this component is added to an entity it will be drawn to the global webgl canvas element. The canvas element (and hence any WebGL entity) is always rendered below any DOM entities.
+ *
+ * Crafty.webgl.init() will be automatically called if it is not called already to initialize the canvas element.
+ *
+ * Create a webgl entity like this
+ * ~~~
+ * var myEntity = Crafty.e("2D, WebGL, Tint")
+ *      .color(1, 1, 0, 0)
+ *      .attr({x: 13, y: 37, w: 42, h: 42});
+ *~~~
+ */
+
 Crafty.c("WebGL", {
+    /**@
+     * #.context
+     * @comp WebGL
+     * 
+     * The webgl context this entity will be rendered to.
+     */
     init: function () {
         if (!Crafty.webgl.context) {
             Crafty.webgl.init();
         }
-
         var webgl = this.webgl = Crafty.webgl;
         var gl = webgl.context;
 
         //increment the amount of canvas objs
         this._changed = true;
-
         this.bind("Change", this._glChange);
-
-
     },
 
     remove: function(){
@@ -272,18 +291,7 @@ Crafty.c("WebGL", {
         }
     },
 
-    /**@
-     * #.draw
-     * @comp WebGL
-     * @sign public this .draw([[Context ctx, ]Number x, Number y, Number w, Number h])
-     * @param ctx - Canvas 2D context if drawing on another canvas is required
-     * @param x - X offset for drawing a segment
-     * @param y - Y offset for drawing a segment
-     * @param w - Width of the segment to draw
-     * @param h - Height of the segment to draw
-     *
-     * Method to draw the entity on the canvas element. Can pass rect values for redrawing a segment of the entity.
-     */
+    
 
     // Cache the various objects and arrays used in draw
     drawVars: {
@@ -301,6 +309,18 @@ Crafty.c("WebGL", {
 
     },
 
+    /**@
+     * #.draw
+     * @comp WebGL
+     * @sign public this .draw([[Context ctx, ]Number x, Number y, Number w, Number h])
+     * @param ctx - Optionally supply a different r 2D context if drawing on another canvas is required
+     * @param x - X offset for drawing a segment
+     * @param y - Y offset for drawing a segment
+     * @param w - Width of the segment to draw
+     * @param h - Height of the segment to draw
+     *
+     * Method to draw the entity on the webgl canvas element. Rather then rendering directly, it writes relevent information into a buffer to allow batch rendering.
+     */
     draw: function (ctx, x, y, w, h) {
 
         if (!this.ready) return;
@@ -344,7 +364,7 @@ Crafty.c("WebGL", {
         var prog = this.drawVars.program = this.program;
 
         // The program might need to refer to the current element's index
-        prog.setCurrentElement(this);
+        prog.setCurrentEntity(this);
         // Write position; x, y, w, h
         prog.writeVector("aPosition",
             this._x, this._y,
@@ -373,7 +393,7 @@ Crafty.c("WebGL", {
         this.trigger("Draw", this.drawVars);
 
         // Register the vertex groups to be drawn, referring to this entities position in the big buffer
-        prog.addIndices(prog.el_offset);
+        prog.addIndices(prog.ent_offset);
         
         return this;
     },
@@ -394,7 +414,7 @@ Crafty.c("WebGL", {
  * #Crafty.webgl
  * @category Graphics
  *
- * Collection of methods to handle webgl contexts
+ * Collection of methods to handle webgl contexts.
  */
 Crafty.extend({
 
@@ -404,7 +424,6 @@ Crafty.extend({
          * @comp Crafty.webgl
          *
          * This will return the context of the webgl canvas element.
-         * FIXME The value returned from `Crafty.canvas._canvas.getContext('2d')`.
          */
         context: null,
         changed_objects: [],
@@ -516,13 +535,12 @@ Crafty.extend({
          * #Crafty.webgl.init
          * @comp Crafty.webgl
          * @sign public void Crafty.webgl.init(void)
-         * @trigger NoWebGL - triggered if `Crafty.support.webgl` is false FIXME actually implement!
+         * @trigger NoWebGL - triggered if `Crafty.support.webgl` is false
          *
-         * Creates a `canvas` element inside `Crafty.stage.elem`. Must be called
-         * before any entities with the WebGL component can be drawn.
+         * Creates a `canvas` element inside `Crafty.stage.elem`. 
          *
          * This method will automatically be called by any "WebGL" component if no `Crafty.webgl.context` is
-         * found.
+         * found, so it is not neccessary to call this manually.
          */
         init: function () {
 
@@ -585,10 +603,11 @@ Crafty.extend({
             c.height = Crafty.viewport.height;
 
             var gl = Crafty.webgl.context;
-            gl.viewportWidth = c.widtxh;
+            gl.viewportWidth = c.width;
             gl.viewportHeight = c.height;
         },
 
+        // convenicne to sort array by global Z
         zsort: function(a, b) {
                 return a._globalZ - b._globalZ;
         },
@@ -606,7 +625,6 @@ Crafty.extend({
             // Set viewport and clear it
             gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
 
             //Set the viewport uniform variables used by each registered program
             var programs = webgl.programs;
