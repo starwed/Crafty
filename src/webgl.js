@@ -199,49 +199,6 @@ Crafty.c("TestColor", {
 
 
 
-
-Crafty.c("GLSprite", {
-  _GL_attributes:  [
-        {name:"aPosition", width: 2},
-        {name:"aOrientation", width: 3},
-        {name:"aExtra", width:4},
-        {name:"aTextureCoord",  width: 2}
-  ],
-  init: function(){
-      if (this.has("WebGL")){
-        this._establishShader(this.__image, this._fragmentShader, this._vertexShader, this._GL_attributes);
-        this.program.setTexture( this.webgl.makeTexture(this.__image, this.img) );
-      }
-      this.bind("Draw", this._drawSprite);
-  },
-
-  remove: function(){
-        this.unbind("Draw", this._drawSprite);
-        if (this.program){
-            this.program.unregisterEntity(this);
-        }
-  },
-
-  _fragmentShader: SPRITE_FRAGMENT_SHADER,
-
-  _vertexShader: SPRITE_VERTEX_SHADER,
-
-  _drawSprite: function(drawVars){
-    var prog = drawVars.program;
-    var co = drawVars.co;
-    // Write texture coordinates
-    prog.writeVector("aTextureCoord",
-        co.x, co.y,
-        co.x, co.y + co.h,
-        co.x + co.w, co.y,
-        co.x + co.w, co.y + co.h
-    );
-  }
-});
-
-
-
-
 /**@
  * #WebGL
  * @category Graphics

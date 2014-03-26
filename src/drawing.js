@@ -74,15 +74,34 @@ Crafty.c("Tint", {
 
     init: function () {
         var draw = function d(e) {
-            var context = e.ctx || Crafty.canvas.context;
-
-            context.fillStyle = this._color || "rgba(0,0,0, 0)";
-            context.fillRect(e.pos._x, e.pos._y, e.pos._w, e.pos._h);
+            
         };
 
         this.bind("Draw", draw).bind("RemoveComponent", function (id) {
             if (id === "Tint") this.unbind("Draw", draw);
         });
+    },
+
+    remove: function() {
+
+
+    },
+
+    _drawTint: function(e) {
+        if (e.type === "canvas") {
+            var context = e.ctx || Crafty.canvas.context;
+
+            context.fillStyle = this._color || "rgba(0,0,0, 0)";
+            context.fillRect(e.pos._x, e.pos._y, e.pos._w, e.pos._h);
+        } else if (e.type === "webgl") {
+            var prog = e.program;
+            prog.writeVector("aColor",
+                this._red,
+                this._green,
+                this._blue,
+                1
+            );
+        }
     },
 
     /**@
