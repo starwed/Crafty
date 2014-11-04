@@ -123,6 +123,19 @@
 
   });
 
+  test("bind to an event in response to that same event", function() {
+    var first = Crafty.e("test"),
+      triggered = 0;
+    function increment(){ triggered++; }
+    first.bind("myevent", function() {
+      increment();
+      first.bind("myevent", increment);
+    });
+    first.trigger("myevent");
+    strictEqual(triggered, 1, "event added in response to an event should not be triggered by that same event");
+
+  });
+
   test("unbind", function() {
     var first = Crafty.e("test");
     first.bind("myevent", function() {
