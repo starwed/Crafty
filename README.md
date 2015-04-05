@@ -1,6 +1,6 @@
 # Crafty JS [![Build Status](https://travis-ci.org/craftyjs/Crafty.png?branch=develop)](https://travis-ci.org/craftyjs/Crafty)
 
-TESTINNNNNNG!
+Fix the test.
 
 
 Crafty is a JavaScript game library that can help you create games in a structured way…
