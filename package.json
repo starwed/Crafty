@@ -30,7 +30,7 @@
     "javascript"
   ],
   "scripts": {
-    "test": "grunt check"
+    "test": "grunt"
   },
   "jsfiddle": "disable",
   "homepage": "https://github.com/craftyjs/Crafty",
