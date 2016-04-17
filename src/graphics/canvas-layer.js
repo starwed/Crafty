@@ -9,8 +9,16 @@ var Crafty = require('../core/core.js');
  *
  * Mostly contains private methods to draw entities on a canvas element.
  */
-Crafty.canvasLayerObject = {
+Crafty._registerLayerTemplate("Canvas", {
     type: "Canvas",
+    
+    options: {
+        xResponse: 1,
+        yResponse: 1,
+        scaleResponse: 1,
+        z: 0
+    },
+    
     _dirtyRects: [],
     _changedObjs: [],
     layerCount: 0,
@@ -101,6 +109,7 @@ Crafty.canvasLayerObject = {
         c.style.position = 'absolute';
         c.style.left = "0px";
         c.style.top = "0px";
+        c.style.zIndex = this.options.z;
 
         Crafty.stage.elem.appendChild(c);
         this.context = c.getContext('2d');
@@ -138,10 +147,15 @@ Crafty.canvasLayerObject = {
         if (!l && !dirtyViewport) {
             return;
         }
-
-        if (dirtyViewport) {
+        
+        // Set the camera transforms from the combination of the current viewport parameters and this layers 
+        var cameraOptions = this.options;
+        if (dirtyViewport && cameraOptions) {
             var view = Crafty.viewport;
-            ctx.setTransform(view._scale, 0, 0, view._scale, Math.round(view._x*view._scale), Math.round(view._y*view._scale) );
+            var scale = Math.pow(Crafty.viewport._scale, cameraOptions.scaleResponse); 
+            var dx = view._x * scale * cameraOptions.xResponse;
+            var dy = view._y * scale * cameraOptions.yResponse;
+            ctx.setTransform(scale, 0, 0, scale, Math.round(dx), Math.round(dy) );
         }
 
         //if the amount of changed objects is over 60% of the total objects
@@ -362,4 +376,4 @@ Crafty.canvasLayerObject = {
         context.msImageSmoothingEnabled = !enabled;
     }
 
-};
+});

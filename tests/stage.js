@@ -53,8 +53,7 @@
     var flag = 0;
     var e = Crafty("2D, Canvas");
     
-    var layer = Crafty.s("CanvasLayer");
-    layer.init();
+    var layer = Crafty.s("DefaultCanvasLayer");
     
     var w = Crafty.viewport.width;
 
