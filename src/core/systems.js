@@ -25,7 +25,7 @@ Crafty._systems = {};
  * @param name - The system to return
  * @returns The referenced system.  If the system has not been initialized, it will be before it is returned.
  *
- * Objects which handle entities might want to subscribe to the event system without being entities themselves.  
+ * Objects which handle entities might want to subscribe to the event system without being entities themselves.
  * When you declare a system with a template object, all the methods and properties of that template are copied to a new object.
  * This new system will automatically have the following event related methods, which function like those of components: `.bind()`, `unbind()`, `trigger()`, `one()`, `uniqueBind()`, `destroy()`.
  * Much like components, you can also provide `init()` and `remove()` methods, as well as an `events` parameter for automatically binding to events.
@@ -49,27 +49,18 @@ Crafty.s = function(name, obj, options, lazy) {
     }
 };
 
-
-// merge() and optionMerge() are internal helper functions for now
-// If it turns out this would be useful elsewhere, they should be moved out to core?
-function merge(defaults, specific){
-    // Return defaults if specific is not defined
-    if (typeof specific === "undefined") return defaults;
-    // Return specified values if no further merging is required
-    if (typeof specific !== "object" || typeof defaults === "undefined") return specific;
-    // Merge default values into specific using recursion
-    for (var key in defaults){
-        specific[key] = merge(defaults[key], specific[key]);
-    }
-    return specific;
-}
-
 function optionMerge(defaults, specific){
-    // Deep copy the objects, then merge them
-    // This merge treats `null` as a specified value
-    defaults = Crafty.clone(defaults);
-    specific = Crafty.clone(specific);
-    return merge(defaults, specific);
+    var options = {};
+    // Copy all the specified keys, then all the default keys that aren't specified
+    for (var key in specific) {
+        options[key] = specific[key];
+    }
+    for (var key in defaults) {
+        if (!(key in specific)) {
+            options[key] = defaults[key];
+        }
+    } 
+    return options;
 }
 
 
