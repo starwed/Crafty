@@ -2,11 +2,31 @@ var Crafty = require('../core/core.js');
 
 Crafty.extend({
     _drawLayerTemplates: {},
-    
-    _registerLayerTemplate: function(type, layerTemplate) {
+
+    _registerLayerTemplate: function (type, layerTemplate) {
         this._drawLayerTemplates[type] = layerTemplate;
+        
+        this._drawLayerTemplates[type]._viewportRect = this._commonLayerProperties.viewportRect;
     },
-    
+
+    _commonLayerProperties: {
+        // Based on the camera options, find the Crafty coordinates corresponding to the layer's position in the viewport
+        viewportRect: function () {
+            var options = this.options;
+            var rect = {};
+            var scale = Math.pow(Crafty.viewport._scale, options.scaleResponse);
+            var viewport = Crafty.viewport;
+            rect._scale = scale;
+            rect._w = viewport._width / scale;
+            rect._h = viewport._height / scale;
+            rect._x = (-viewport._x + rect._w/2) * options.xResponse - rect._w/2;
+            rect._y = (-viewport._y + rect._h/2) * options.yResponse - rect._h/2;
+            
+            
+            return rect;
+        }
+    },
+
     /**@
      * #Crafty.createLayer
      * @category Graphics
@@ -48,17 +68,18 @@ Crafty.extend({
     createLayer: function createLayer(name, type, options) {
         var layerTemplate = this._drawLayerTemplates[type];
         Crafty.s(name, layerTemplate, options);
+        //Crafty.s(name)._rect = {};
         Crafty.c(name, {
-            init: function() {
+            init: function () {
                 this.requires("Renderable");
-                
+
                 // Flag to indicate that the base component doesn't need to attach a layer
                 this._customLayer = true;
                 this.requires(layerTemplate.type);
                 this._attachToLayer(Crafty.s(name));
             },
-            
-            remove: function() {
+
+            remove: function () {
                 this._detachFromLayer();
             }
         });

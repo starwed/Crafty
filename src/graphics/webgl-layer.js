@@ -154,13 +154,8 @@ RenderProgramWrapper.prototype = {
     setViewportUniforms: function(viewport, cameraOptions) {
         var gl = this.context;
         gl.useProgram(this.shader);
-        var scale = Math.pow(viewport._scale, cameraOptions.scaleResponse); 
-        //var dx = view._x * scale * cameraOptions.xResponse;
-        //var dy = view._y * scale * cameraOptions.yResponse;
-        var sx = cameraOptions.xResponse;
-        var sy = cameraOptions.yResponse;
-        
-        gl.uniform4f(this.shader.viewport, sx * viewport._x, sy * viewport._y, viewport._width / scale, viewport._height / scale);
+        var scale = viewport._scale; 
+        gl.uniform4f(this.shader.viewport, -viewport._x, -viewport._y, viewport._w , viewport._h );
     },
 
     // Fill in the attribute with the given arguments, cycling through the data if necessary
@@ -255,7 +250,7 @@ Crafty._registerLayerTemplate("WebGL", {
             program.name = name;
             program.initAttributes(shader.attributeList);
             program.draw = shader.drawCallback;
-            program.setViewportUniforms(Crafty.viewport, this.options);
+            program.setViewportUniforms(this._viewportRect(), this.options);
             this.programs[name] = program;
         }
         return this.programs[name];
@@ -364,7 +359,7 @@ Crafty._registerLayerTemplate("WebGL", {
 
     // Render any entities associated with this context; called in response to a draw event
     render: function(rect) {
-        rect = rect || Crafty.viewport.rect();
+        rect = rect || this._viewportRect();
         var gl = this.context;
 
         // Set viewport and clear it
@@ -374,8 +369,9 @@ Crafty._registerLayerTemplate("WebGL", {
         //Set the viewport uniform variables used by each registered program
         var programs = this.programs;
         if (this.dirtyViewport) {
+            var view = this._viewportRect();
             for (var comp in programs) {
-                programs[comp].setViewportUniforms(Crafty.viewport, this.options);
+                programs[comp].setViewportUniforms(view, this.options);
             }
             this.dirtyViewport = false;
         }

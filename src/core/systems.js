@@ -55,7 +55,7 @@ function optionMerge(defaults, specific){
     for (var key in specific) {
         options[key] = specific[key];
     }
-    for (var key in defaults) {
+    for (key in defaults) {
         if (!(key in specific)) {
             options[key] = defaults[key];
         }

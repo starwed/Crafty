@@ -182,9 +182,9 @@ Crafty._registerLayerTemplate("Canvas", {
      *
      * @see Canvas#.draw
      */
-    _drawDirty: function () {
-
-        var i, j, q, rect,len, obj,
+    _drawDirty: function (view) {
+        view = view || this._viewportRect();
+        var i, j, q, rects,len, obj,
             changed = this._changedObjs,
             l = changed.length,
             dirty = this._dirtyRects,
@@ -193,7 +193,10 @@ Crafty._registerLayerTemplate("Canvas", {
             ctx = this.context,
             dupes = [],
             objs = [];
-
+        
+        // Canvas works better with integral coordinates where possible
+        view = rectManager.integerBounds(view);
+        
         // Calculate _dirtyRects from all changed objects, then merge some overlapping regions together
         for (i = 0; i < l; i++) {
             this._createDirty(changed[i]);
@@ -211,14 +214,10 @@ Crafty._registerLayerTemplate("Canvas", {
             if (!rect) continue;
 
             // Find the smallest rectangle with integer coordinates that encloses rect
-            rect._w = rect._x + rect._w;
-            rect._h = rect._y + rect._h;
-            rect._x = (rect._x > 0) ? (rect._x|0) : (rect._x|0) - 1;
-            rect._y = (rect._y > 0) ? (rect._y|0) : (rect._y|0) - 1;
-            rect._w -= rect._x;
-            rect._h -= rect._y;
-            rect._w = (rect._w === (rect._w|0)) ? rect._w : (rect._w|0) + 1;
-            rect._h = (rect._h === (rect._h|0)) ? rect._h : (rect._h|0) + 1;
+            rect = rectManager.integerBounds(rect);
+
+            // If a dirty rect doesn't overlap with the viewport, skip to the next one
+            if (!overlap(rect, view)) continue;
 
             //search for ents under dirty rect
             q = Crafty.map.search(rect, false);
@@ -281,7 +280,8 @@ Crafty._registerLayerTemplate("Canvas", {
      * - If rect is provided, redraw within the rect
      */
     _drawAll: function (rect) {
-        rect = rect || Crafty.viewport.rect();
+        rect = rect || this._viewportRect();
+        rect = Crafty.rectManager.integerBounds(rect);
         var q = Crafty.map.search(rect),
             i = 0,
             l = q.length,
