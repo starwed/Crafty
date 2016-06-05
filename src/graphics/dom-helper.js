@@ -89,13 +89,14 @@ Crafty.extend({
          * the coordinates that you might apply to an entity), by taking into account
          * where the stage is within the screen, what the current viewport is, etc.
          */
-        translate: function (clientX, clientY) {
+        translate: function (clientX, clientY, layer) {
             var doc = document.documentElement;
             var body = document.body;
-
+            if (layer) console.log(JSON.stringify(layer));
+            var view = layer ? layer._viewportRect() : Crafty.viewport;
             return {
-                x: (clientX - Crafty.stage.x + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 )) / Crafty.viewport._scale - Crafty.viewport._x,
-                y: (clientY - Crafty.stage.y + ( doc && doc.scrollTop  || body && body.scrollTop  || 0 )) / Crafty.viewport._scale - Crafty.viewport._y
+                x: (clientX - Crafty.stage.x + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 )) / view._scale - view._x,
+                y: (clientY - Crafty.stage.y + ( doc && doc.scrollTop  || body && body.scrollTop  || 0 )) / view._scale - view._y
             };
         }
     }

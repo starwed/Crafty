@@ -51,11 +51,13 @@ Crafty._registerLayerTemplate("DOM", {
         this.uniqueBind("InvalidateViewport", function() {
             this._dirtyViewport = true;
         });
+        Crafty._addDrawLayerInstance(this);
     },
 
     // Cleanup the DOM when the layer is destroyed
     remove: function() {
         this._div.parentNode.removeChild(this._div);
+        Crafty._removeDrawLayerInstance(this);
     },
 
     // Handle whether images should be smoothed or not

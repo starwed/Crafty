@@ -2,11 +2,30 @@ var Crafty = require('../core/core.js');
 
 Crafty.extend({
     _drawLayerTemplates: {},
+    _drawLayers: [],
+    _addDrawLayerInstance: function (layer) {
+        console.log("Adding draw layer " + layer.name);
+        if (!layer._viewportRect) console.log("WTF???");
+        Crafty._drawLayers.push(layer);
+        console.log(Crafty._drawLayers.length);
+        
+        //this._drawLayers.sort(function (a, b) { return a.options.z - b.options.z; });
+    },
+    
+    _removeDrawLayerInstance: function (layer) {
+        console.log("Removing draw layer " + layer.name);
+        var i = this._drawLayers.indexOf(layer);
+        if (i>=0){
+            this._drawLayers.splice(i, 1);
+        }            
+        this._drawLayers.sort(function (a, b) { return a.options.z - b.options.z; });
+    },
 
     _registerLayerTemplate: function (type, layerTemplate) {
         this._drawLayerTemplates[type] = layerTemplate;
-        
-        this._drawLayerTemplates[type]._viewportRect = this._commonLayerProperties.viewportRect;
+        layerTemplate._viewportRect = this._commonLayerProperties.viewportRect;
+        // A tracker for whether any elements in this layer need to listen to mouse/touch events
+        layerTemplate._pointerEntities = 0;
     },
 
     _commonLayerProperties: {
@@ -19,10 +38,8 @@ Crafty.extend({
             rect._scale = scale;
             rect._w = viewport._width / scale;
             rect._h = viewport._height / scale;
-            rect._x = (-viewport._x + rect._w/2) * options.xResponse - rect._w/2;
-            rect._y = (-viewport._y + rect._h/2) * options.yResponse - rect._h/2;
-            
-            
+            rect._x = (-viewport._x + rect._w / 2) * options.xResponse - rect._w / 2;
+            rect._y = (-viewport._y + rect._h / 2) * options.yResponse - rect._h / 2;
             return rect;
         }
     },
@@ -35,9 +52,9 @@ Crafty.extend({
      * @param name - the name that will refer to the layer
      * @param type - the type of the draw layer to create ('DOM', 'Canvas', or 'WebGL')
      * @param options - this will override the default values of each layer
-     * 
+     *
      * Creates a new instance of the specified type of layer.  The options (and their default values) are
-     * 
+     *
      * ```
      * {
      *   xResponse: 1,  // How the layer will pan in response to the viewport x position
@@ -46,18 +63,18 @@ Crafty.extend({
      *   z: 0 // The zIndex of the layer relative to other layers
      * }
      * ```
-     * 
+     *
      * Crafty will automatically define three built-in layers: "DefaultDOMLayer", DefaultCanvasLayer",  and "DefaultWebGLLayer".
      * They will have `z` values of `30`, `20`, and `10` respectively, and will be initialized if a "DOM", "Canvas" or "WebGL" component
      * is added to an element not attached to any user-specified layer.
-     * 
+     *
      * @example
      * ```
      * Crafty.s("MyCanvasLayer", "Canvas")
      * Crafty.e("2D, MyCanvasLayer, Color");
      * ```
      * Define a custom canvas layer, then create an entity that uses the custom layer to render.
-     * 
+     *
      * * @example
      * ```
      * Crafty.s("UILayer", "DOM", {scaleResponse: 0, xResponse: 0, yResponse: 0})

@@ -132,12 +132,15 @@ Crafty._registerLayerTemplate("Canvas", {
         this.bind("InvalidateViewport", function () {
             this._dirtyViewport = true;
         });
+        
+        Crafty._addDrawLayerInstance(this);
     },
 
     // When the system is destroyed, remove related resources
     remove: function() {
 
         this._canvas.parentNode.removeChild(this._canvas);
+        Crafty._removeDrawLayerInstance(this);
     },
 
     _render: function() {

@@ -321,11 +321,13 @@ Crafty._registerLayerTemplate("WebGL", {
         this.dirtyViewport = true;
 
         this.texture_manager = new Crafty.TextureManager(gl, this);
+        Crafty._addDrawLayerInstance(this);
     },
 
     // Cleanup the DOM when the system is destroyed
     remove: function() {
         this._canvas.parentNode.removeChild(this._canvas);
+        Crafty._removeDrawLayerInstance(this);
     },
 
     // Called when the viewport resizes
