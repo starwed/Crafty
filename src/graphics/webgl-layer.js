@@ -154,7 +154,6 @@ RenderProgramWrapper.prototype = {
     setViewportUniforms: function(viewport, cameraOptions) {
         var gl = this.context;
         gl.useProgram(this.shader);
-        var scale = viewport._scale; 
         gl.uniform4f(this.shader.viewport, -viewport._x, -viewport._y, viewport._w , viewport._h );
     },
 

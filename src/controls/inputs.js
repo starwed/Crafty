@@ -29,8 +29,8 @@ Crafty.extend({
      * ~~~
      * @see Mouse, Crafty.mouseButtons, Crafty.mouseDispatch
      */
-    lastEvent: null,
 
+    lastEvent: null,
     /**@
      * #Crafty.keydown
      * @category Input
@@ -148,7 +148,7 @@ Crafty.extend({
         Crafty.lastEvent = e;
 
         var tar = e.target ? e.target : e.srcElement,
-            closest,
+            result, closest,
             pos = Crafty.domHelper.translate(e.clientX, e.clientY),
             x, y,
             type = e.type;
@@ -160,10 +160,11 @@ Crafty.extend({
             e.mouseButton = (e.which < 2) ? Crafty.mouseButtons.LEFT : ((e.which === 2) ? Crafty.mouseButtons.MIDDLE : Crafty.mouseButtons.RIGHT);
         }
 
-        e.realX = x = Crafty.mousePos.x = pos.x;
-        e.realY = y = Crafty.mousePos.y = pos.y;
+        x = Crafty.mousePos.x = pos.x;
+        y = Crafty.mousePos.y = pos.y;
 
-        closest = Crafty.findClosestEntityByComponent("Mouse", e.clientX, e.ClientY, tar);
+        result = Crafty.findClosestEntityByComponent("Mouse", e, tar);
+        result.closest;
 
         //found closest object to mouse
         if (closest) {
@@ -344,7 +345,7 @@ Crafty.extend({
         fingerDownIndexById: function (idToFind) {
             for (var i = 0, l = this.fingers.length; i < l; i++) {
                 var id = this.fingers[i].identifier;
-                if (id == idToFind) {
+                if (id === idToFind) {
                     return i;
                 }
             }
@@ -355,7 +356,7 @@ Crafty.extend({
             for (var i = 0, l = this.fingers.length; i < l; i++) {
                 var ent = this.fingers[i].entity;
 
-                if (ent == entityToFind) {
+                if (ent === entityToFind) {
                     return i;
                 }
             }
@@ -428,9 +429,11 @@ Crafty.extend({
      *     closestText = Crafty.findClosestEntityByComponent("Text", coords.x, coords.y);
      * ~~~
      */
-    findClosestEntityByComponent: function (comp, x, y, target) {
+    findPointerEventTargetByComponent: function (comp, e, target) {
         var tar = target ? target : Crafty.stage.elem,
-            closest, current, q, l, i, pos, maxz = -Infinity;
+            closest, current, q, l, i, pos, layerPos, maxz = -Infinity;
+        var x = e.clientX;
+        var y = e.clientY;
 
         //if it's a DOM element with component we are done
         if (tar.nodeName !== "CANVAS") {
@@ -438,17 +441,23 @@ Crafty.extend({
                 tar = tar.parentNode;
             }
             var ent = Crafty(parseInt(tar.id.replace('ent', ''), 10));
-            if (ent.__c[comp] && ent.isAt(x, y)) {
+            pos = Crafty.domHelper.translate(x, y, ent._drawLayer);
+            if (ent.__c[comp] && ent.isAt(pos.x, pos.y)) {
                 closest = ent;
+                layerPos = pos
             }
         }
 
         //else we search for an entity with component
         if (!closest) {
+
+            // Loop through each layer
             for (var layerIndex in Crafty._drawLayers) {
                 var layer = Crafty._drawLayers[layerIndex];
-                // Skip a layer if it has no entities listening for events
+
+                // Skip a layer if it has no entities listening for pointer events
                 if (layer._pointerEntities <= 0) continue;
+
                 // Get the position in this layer
                 pos = Crafty.domHelper.translate(x, y, layer);
                 q = Crafty.map.search({
@@ -460,13 +469,19 @@ Crafty.extend({
 
                 for (i = 0, l = q.length; i < l; ++i) {
                     current = q[i];
-                    if (current._visible && current._drawLayer == layer && current._globalZ > maxz &&
+                    if (current._visible && current._drawLayer === layer && current._globalZ > maxz &&
                         current.__c[comp] && current.isAt(pos.x, pos.y)) {
                         maxz = current._globalZ;
                         closest = current;
+                        layerPos = pos;
                     }
                 }
             }
+
+            // Now we need to search for entities WITHOUT a layer as well!
+            // This handles clickable objects without a render layer associated
+            // Possibly remove this in the future -- it would be a breaking change, 
+            // but pointer events mostly make sense in a renderable context
             pos = Crafty.domHelper.translate(x, y);
             q = Crafty.map.search({
                 _x: pos.x,
@@ -481,14 +496,14 @@ Crafty.extend({
                     current.__c[comp] && !current._drawLayer && current.isAt(pos.x, pos.y)) {
                     maxz = current._globalZ;
                     closest = current;
+                    layerPos = pos;
                 }
             }
         }
         
-        // Need to search for entities WITHOUT a layer as well!
-        
-
-
+        // Update the event coordinates and return the event target
+        e.realX = layerPos.x;
+        e.realY = layerPos.y;
         return closest;
     },
 
@@ -627,7 +642,7 @@ Crafty.extend({
         //prevent bubbling up for all keys except backspace and F1-F12.
         //Among others this prevent the arrow keys from scrolling the parent page
         //of an iframe hosting the game
-        if (Crafty.selected && !(e.key === 8 || e.key >= 112 && e.key <= 135)) {
+        if (Crafty.selected && !(e.k  ey === 8 || e.key >= 112 && e.key <= 135)) {
             if (original.stopPropagation) original.stopPropagation();
             else original.cancelBubble = true;
 
@@ -1056,4 +1071,3 @@ Crafty.c("Keyboard", {
         return !!Crafty.keydown[key];
     }
 });
-

@@ -4,12 +4,8 @@ Crafty.extend({
     _drawLayerTemplates: {},
     _drawLayers: [],
     _addDrawLayerInstance: function (layer) {
-        console.log("Adding draw layer " + layer.name);
-        if (!layer._viewportRect) console.log("WTF???");
         Crafty._drawLayers.push(layer);
-        console.log(Crafty._drawLayers.length);
-        
-        //this._drawLayers.sort(function (a, b) { return a.options.z - b.options.z; });
+        this._drawLayers.sort(function (a, b) { return a.options.z - b.options.z; });
     },
     
     _removeDrawLayerInstance: function (layer) {

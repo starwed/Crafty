@@ -187,7 +187,7 @@ Crafty._registerLayerTemplate("Canvas", {
      */
     _drawDirty: function (view) {
         view = view || this._viewportRect();
-        var i, j, q, rects,len, obj,
+        var i, j, q, rect,len, obj,
             changed = this._changedObjs,
             l = changed.length,
             dirty = this._dirtyRects,
@@ -295,11 +295,9 @@ Crafty._registerLayerTemplate("Canvas", {
 
         //sort the objects by the global Z
         q.sort(this._sort);
-        //console.log("\n--\n" + q.length + " to draw for layer " + this.name);
         for (; i < l; i++) {
             current = q[i];
             if (current._visible && current._drawContext === this.context) {
-                //console.log(i + " drawn");
                 current.draw(this.context);
                 current._changed = false;
             }

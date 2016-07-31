@@ -86,7 +86,7 @@ Crafty._registerLazySystem = function(name, obj, options) {
 
 // Each system has its properties and methods copied onto an object of this type
 Crafty.CraftySystem = (function() {
-    systemID = 1;
+    var systemID = 1;
     return function(name, template, options) {
         this.name = name;
         if (!template) return this;
