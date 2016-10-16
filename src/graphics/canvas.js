@@ -96,10 +96,14 @@ Crafty.c("Canvas", {
 
         // rotate the context about this entity's origin
         if (this._rotation !== 0) {
-            context.translate(this._origin.x + this._x, this._origin.y + this._y);
-            pos._x = -this._origin.x;
-            pos._y = -this._origin.y;
-            context.rotate((this._rotation % 360) * (Math.PI / 180));
+            var a = (this._rotation % 360) * (Math.PI / 180);
+            var c_a = Math.cos(a);
+            var s_a = Math.sin(a);
+            var dx = this._origin.x + this._x;
+            var dy = this._origin.y + this._y;
+            context.transform(c_a, s_a, -s_a, c_a, 
+                dx * (1-c_a) + dy * s_a,
+                dy * (1-c_a) - dx * s_a);
         }
 
         // We realize a flipped entity by scaling the context in the opposite direction, then adjusting the position coordinates to match
