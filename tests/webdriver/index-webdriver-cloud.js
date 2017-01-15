@@ -30,7 +30,7 @@ exports.config = {
                 capabilities.browserName, capabilities.version, capabilities.platform
             );
         });
-
+        console.log("<><><> capable browsers", browsers);
         return browsers;
     })(),
     updateJob: true,

@@ -281,7 +281,7 @@ module.exports = function (grunt) {
         var branch =  process.env.TRAVIS_BRANCH;
         if (process.env.TRAVIS && branch === "open-sauce-testing" &&
             process.env.SAUCE_USERNAME && process.env.SAUCE_ACCESS_KEY)
-            grunt.task.run('connect', 'test-cloud-browser', 'test-cloud-webdriver');
+            grunt.task.run('connect', 'test-cloud-webdriver');
     });
 
 

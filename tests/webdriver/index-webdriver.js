@@ -330,10 +330,11 @@ function addTestSpecificCommands(client, QUnit, runId) {
                     "</script>"                                                             + EOL +
                     "</body>"                                                               + EOL +
                     "</html>"                                                               + EOL;
-
+            console.log("<><><> wrote " + testName`` + " is " + testFilePath);
             return qfs.write(testFilePath, testFile, 'w+')
                     .then(this.url.bind(this, testFilePath));
         } else {
+            console.log("<><><> returned URL to " + testPath + currentTestPath + '.html');;
             return this.url(testPath + currentTestPath + '.html');
         }
     });
