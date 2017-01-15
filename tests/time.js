@@ -140,6 +140,7 @@
   test("curTime", 1, function() {
     var startTime, lastKnownTime;
     var framesTriggered = 0;
+    
     Crafty.e("").bind("EnterFrame", function(params) {
       framesTriggered++;
       if (!startTime) {
@@ -148,8 +149,12 @@
         lastKnownTime = params.gameTime;
       }
     });
-
+    // Step before waiting
+    // There are problems in some simulators that this avoids.
+    Crafty.timer.step();
     setTimeout(function() {
+      // Step after waiting
+      Crafty.timer.step();
       var endTime = lastKnownTime;
 
       ok(endTime > startTime, "After " + framesTriggered + " frames triggered, EndTime " + endTime + " must be larger than StartTime " + startTime);
