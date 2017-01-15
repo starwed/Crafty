@@ -21,4 +21,5 @@ env:
   - secure: iGO+VCkCq/26Dqrc6+G1nX8Dk+tTqhcINuiIVhxGtMARcY+WIzcyEK/cfXRaLnvIzIxQ0xUoGGnM9xe4DQT8L+BGzo8AGnVbzxITzceWTlhsFepcbOTgqOg0ZGMxQVQ6VBh888Cdks8KsOgtTNhzd+oVgcStsyxZPCVD/7VgNTE=
 
 addons:
-  sauce_connect: true
+  sauce_connect:
+    no_ssl_bump_domains: all
