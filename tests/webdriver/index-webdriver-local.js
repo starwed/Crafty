@@ -1,7 +1,7 @@
 exports.config = {
     specs: require('./index-webdriver.js').specs(),
     framework: 'qunit',
-    baseUrl: './',
+    baseUrl: '.',
 
     capabilities: [{
         browserName: 'phantomjs',

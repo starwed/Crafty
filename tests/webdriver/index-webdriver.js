@@ -314,7 +314,7 @@ function addTestSpecificCommands(client, QUnit, runId) {
         }
 
         if (typeof testScript === 'string') {
-            var testFilePath = resultPath + (testName || currentTestName) + '.html',
+            var testFilePath = "/" + resultPath + (testName || currentTestName) + '.html',
                 testFile = "<!DOCTYPE html>"                                                + EOL +
                     "<html>"                                                                + EOL +
                     "<head>"                                                                + EOL +
