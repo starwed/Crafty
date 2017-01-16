@@ -314,9 +314,9 @@ function addTestSpecificCommands(client, QUnit, runId) {
             testName = undefined;
         }
 
-        console.log("\n<> Running " + (testName || currentTestName)  + " for " 
-            + this.desiredCapabilities.browserName + " / " + this.desiredCapabilities.platformName + " / "
-            + this.desiredCapabilities.deviceName);
+        console.log("\n<> Running " + (testName || currentTestName)  + " for " +
+            this.desiredCapabilities.browserName + " / " + this.desiredCapabilities.platformName + " / " +
+            this.desiredCapabilities.deviceName);
 
         if (typeof testScript === 'string') {
             var testFilePath = "/" + resultPath + (testName || currentTestName) + '.html',
