@@ -15,7 +15,7 @@ var tests = {
     'template-multi': true,
     'color/color-dom': true,
     'color/color-canvas': true,
-    'color/color-webgl': function(browserName) { return browserName !== 'phantomjs'; }
+    'color/color-webgl': function(browserName) { return browserName !== 'phantomjs' && false; }
 };
 exports.specs = function() {
     return Object.keys(tests).map(function(t) {
