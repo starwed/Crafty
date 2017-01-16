@@ -17,6 +17,11 @@ var tests = {
     'color/color-canvas': true,
     'color/color-webgl': function(browserName) { return browserName !== 'phantomjs' && false; }
 };
+
+exports.plugins = {                
+    'wdio-screenshot': {}
+};
+
 exports.specs = function() {
     return Object.keys(tests).map(function(t) {
         return 'tests/webdriver/' + t + '.js';
@@ -67,21 +72,21 @@ function addGenericCommands(client) {
 
     // WEBDRIVER COMMAND: CROPPED SCREENSHOT
     client.addCommand("saveCroppedScreenshot", function(filePath, bounds) {
-        if (arguments.length === 1)
-            return this.saveScreenshot(filePath);
+        //if (arguments.length === 1)
+            return this.saveDocumentScreenshot(filePath);
 
-        return this.saveScreenshot().then(function(screenshotBuffer, response) {
-            return jimp.read(screenshotBuffer).then(function(screenshot) {
-                var deferred = q.defer();
-                var x = bounds.x > 0 ? Math.min(bounds.x, screenshot.bitmap.width - 1) : 0,
-                    y = bounds.y > 0 ? Math.min(bounds.y, screenshot.bitmap.height - 1) : 0,
-                    w = bounds.w > 0 ? Math.min(bounds.w, screenshot.bitmap.width - x) : screenshot.bitmap.width - x,
-                    h = bounds.h > 0 ? Math.min(bounds.h, screenshot.bitmap.height - y) : screenshot.bitmap.height - y;
+        // return this.saveDocumentScreenshot().then(function(screenshotBuffer, response) {
+        //     return jimp.read(screenshotBuffer).then(function(screenshot) {
+        //         var deferred = q.defer();
+        //         var x = bounds.x > 0 ? Math.min(bounds.x, screenshot.bitmap.width - 1) : 0,
+        //             y = bounds.y > 0 ? Math.min(bounds.y, screenshot.bitmap.height - 1) : 0,
+        //             w = bounds.w > 0 ? Math.min(bounds.w, screenshot.bitmap.width - x) : screenshot.bitmap.width - x,
+        //             h = bounds.h > 0 ? Math.min(bounds.h, screenshot.bitmap.height - y) : screenshot.bitmap.height - y;
 
-                screenshot.crop(x, y, w, h).write(filePath, deferred.makeNodeResolver());
-                return deferred.promise;
-            });
-        });
+        //         screenshot.crop(x, y, w, h).write(filePath, deferred.makeNodeResolver());
+        //         return deferred.promise;
+        //     });
+        // });
     });
 
     // WEBDRIVER COMMAND: IMAGE COMPARE
@@ -166,28 +171,28 @@ function addBrowserSpecificCommands(client, capabilities) {
 
     // WEBDRIVER COMMAND: NORMALIZED SCREENSHOT - ROTATE CCW 90°, CROP TO DOCUMENT REGION, SCALE UP, CROP TO BOUNDS
     var rotatedCrop = rotatedCrops[getRunId(capabilities)];
-    if (rotatedCrop) {
-        client.addCommand("saveNormalizedScreenshot", function(filePath, bounds) {
-            return this.saveScreenshot().then(function(screenshotBuffer, response) {
-                return jimp.read(screenshotBuffer).then(function(screenshot) {
-                    var deferred = q.defer();
-                    var x = bounds.x > 0 ? Math.min(bounds.x, rotatedCrop.stretchW - 1) : 0,
-                        y = bounds.y > 0 ? Math.min(bounds.y, rotatedCrop.stretchH - 1) : 0,
-                        w = bounds.w > 0 ? Math.min(bounds.w, rotatedCrop.stretchW - x) : rotatedCrop.stretchW - x,
-                        h = bounds.h > 0 ? Math.min(bounds.h, rotatedCrop.stretchH - y) : rotatedCrop.stretchH - y;
+    // if (rotatedCrop) {
+    //     client.addCommand("saveNormalizedScreenshot", function(filePath, bounds) {
+    //         return this.saveScreenshot().then(function(screenshotBuffer, response) {
+    //             return jimp.read(screenshotBuffer).then(function(screenshot) {
+    //                 var deferred = q.defer();
+    //                 var x = bounds.x > 0 ? Math.min(bounds.x, rotatedCrop.stretchW - 1) : 0,
+    //                     y = bounds.y > 0 ? Math.min(bounds.y, rotatedCrop.stretchH - 1) : 0,
+    //                     w = bounds.w > 0 ? Math.min(bounds.w, rotatedCrop.stretchW - x) : rotatedCrop.stretchW - x,
+    //                     h = bounds.h > 0 ? Math.min(bounds.h, rotatedCrop.stretchH - y) : rotatedCrop.stretchH - y;
 
-                    screenshot
-                        .rotate(270)
-                        .crop(rotatedCrop.x, rotatedCrop.y, rotatedCrop.w, rotatedCrop.h)
-                        .cover(rotatedCrop.stretchW, rotatedCrop.stretchH)
-                        .crop(x, y, w, h)
-                        .write(filePath, deferred.makeNodeResolver());
+    //                 screenshot
+    //                     .rotate(270)
+    //                     .crop(rotatedCrop.x, rotatedCrop.y, rotatedCrop.w, rotatedCrop.h)
+    //                     .cover(rotatedCrop.stretchW, rotatedCrop.stretchH)
+    //                     .crop(x, y, w, h)
+    //                     .write(filePath, deferred.makeNodeResolver());
 
-                    return deferred.promise;
-                });
-            });
-        }, true);
-    }
+    //                 return deferred.promise;
+    //             });
+    //         });
+    //     }, true);
+    //}
 
     // WEBDRIVER COMMAND: NORMALIZED KEYPRESS - trigger synthethic event
     if (capabilities.browserName in {'safari': 0, 'MicrosoftEdge': 0, 'iphone': 0}) {
@@ -317,6 +322,7 @@ function addTestSpecificCommands(client, QUnit, runId) {
         console.log("\n<> Running " + (testName || currentTestName)  + " for " +
             this.desiredCapabilities.browserName + " / " + this.desiredCapabilities.platformName + " / " +
             this.desiredCapabilities.deviceName);
+        console.log("<>" + runId);
 
         if (typeof testScript === 'string') {
             var testFilePath = "/" + resultPath + (testName || currentTestName) + '.html',
