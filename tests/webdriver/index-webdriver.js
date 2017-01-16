@@ -3,7 +3,6 @@ var fs = require('fs'),
     q = require('q'),
     qfs = require('q-io/fs'),
     EOL = require('os').EOL,
-    jimp = require('jimp'),
     resemble = require('node-resemble-js');
 
 
@@ -151,9 +150,9 @@ function addGenericCommands(client) {
 
 
 // NON-STANDARD SCREENSHOT REGIONS PER PLATFORM
-var rotatedCrops = {};
-rotatedCrops[getRunId({"browserName": "android", "version": "4.1", "platform": "Linux"})] = { x: 0, y: 98, w: 261, h: 196, stretchW: 320, stretchH: 240 };
-rotatedCrops[getRunId({"browserName": "android", "version": "5.1", "platform": "Linux"})] = { x: 0, y: 110, w: 261, h: 196, stretchW: 320, stretchH: 240 };
+// var rotatedCrops = {};
+// rotatedCrops[getRunId({"browserName": "android", "version": "4.1", "platform": "Linux"})] = { x: 0, y: 98, w: 261, h: 196, stretchW: 320, stretchH: 240 };
+// rotatedCrops[getRunId({"browserName": "android", "version": "5.1", "platform": "Linux"})] = { x: 0, y: 110, w: 261, h: 196, stretchW: 320, stretchH: 240 };
 // TODO: iphone 8.4 emulator currently changing screenshot region constantly, readd to supported-browsers and observe region in future
 //rotatedCrops[getRunId({"browserName": "iphone", "version": "8.4", "platform": "OS X 10.10"})] = { x: 0, y: 420, w: 217, h: 162, stretchW: 320, stretchH: 240 };
 /*{
@@ -170,7 +169,7 @@ var viewportStage = 'cr-stage';
 function addBrowserSpecificCommands(client, capabilities) {
 
     // WEBDRIVER COMMAND: NORMALIZED SCREENSHOT - ROTATE CCW 90°, CROP TO DOCUMENT REGION, SCALE UP, CROP TO BOUNDS
-    var rotatedCrop = rotatedCrops[getRunId(capabilities)];
+    //var rotatedCrop = rotatedCrops[getRunId(capabilities)];
     // if (rotatedCrop) {
     //     client.addCommand("saveNormalizedScreenshot", function(filePath, bounds) {
     //         return this.saveScreenshot().then(function(screenshotBuffer, response) {
