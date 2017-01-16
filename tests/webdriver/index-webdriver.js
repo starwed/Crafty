@@ -308,10 +308,15 @@ function addTestSpecificCommands(client, QUnit, runId) {
 
     // WEBDRIVER COMMAND: TEST PAGE URL SHORTCUT
     client.addCommand("testUrl", function(testName, testScript) {
+        
         if (typeof testName === 'string' && typeof testScript === 'undefined') {
             testScript = testName;
             testName = undefined;
         }
+
+        console.log("\n<> Running " + (testName || currentTestName)  + " for " 
+            + this.desiredCapabilities.browserName + " / " + this.desiredCapabilities.platformName + " / "
+            + this.desiredCapabilities.deviceName);
 
         if (typeof testScript === 'string') {
             var testFilePath = "/" + resultPath + (testName || currentTestName) + '.html',
@@ -330,11 +335,11 @@ function addTestSpecificCommands(client, QUnit, runId) {
                     "</script>"                                                             + EOL +
                     "</body>"                                                               + EOL +
                     "</html>"                                                               + EOL;
-            console.log("<><><> wrote " + (testName  || currentTestName ) + " is " + testFilePath);
+            //console.log("<><><> wrote " + (testName  || currentTestName ) + " is " + testFilePath);
             return qfs.write("." + testFilePath, testFile, 'w+')
                     .then(this.url.bind(this, testFilePath));
         } else { 
-            console.log("<><><> returned URL to " + testPath + currentTestPath + '.html');
+            //console.log("<><><> returned URL to " + testPath + currentTestPath + '.html');
             return this.url(testPath + currentTestPath + '.html');
         }
     });
