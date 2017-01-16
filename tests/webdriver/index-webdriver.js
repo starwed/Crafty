@@ -9,10 +9,10 @@ var fs = require('fs'),
 
 // ADD ALL TESTS & RUN CONDITIONS HERE
 var tests = {
-    'template-generic': true,
-    'template-local': true,
-    'template-crafty': true,
-    'template-multi': true,
+    'template-generic': false,
+    'template-local': false,
+    'template-crafty': false,
+    'template-multi': false,
     'color/color-dom': true,
     'color/color-canvas': true,
     'color/color-webgl': function(browserName) { return browserName !== 'phantomjs' && false; }
@@ -27,7 +27,7 @@ exports.exclude = function(browserName, version, platform) {
         runCondition;
     for (var test in tests) {
         runCondition = tests[test];
-        if (runCondition !== true && !runCondition(browserName, version, platform))
+        if (runCondition !== true && (runCondition === false || !runCondition(browserName, version, platform)))
             excluded.push('tests/webdriver/' + test + '.js');
     }
     return excluded;
