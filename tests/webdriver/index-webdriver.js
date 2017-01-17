@@ -9,10 +9,11 @@ var fs = require('fs'),
 
 // ADD ALL TESTS & RUN CONDITIONS HERE
 var tests = {
-    'template-multi': function(browserName) { return browserName === 'phantomjs'; },
+    'template-multi': function(browserName) { return true; },
     'color/color-dom': true,
     'color/color-canvas': true,
-    'color/color-webgl': function(browserName) { return browserName !== 'phantomjs'; }
+    // neither phantomjs nor open sauce support webgl right now
+    'color/color-webgl': function(browserName) { return false; }
 };
 
 exports.plugins = {                
