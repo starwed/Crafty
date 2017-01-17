@@ -71,21 +71,21 @@ function addGenericCommands(client) {
 
     // WEBDRIVER COMMAND: CROPPED SCREENSHOT
     client.addCommand("saveCroppedScreenshot", function(filePath, bounds) {
-        //if (arguments.length === 1)
-            return this.saveDocumentScreenshot(filePath);
+        if (arguments.length === 1)
+            return this.saveScreenshot(filePath);
 
-        // return this.saveDocumentScreenshot().then(function(screenshotBuffer, response) {
-        //     return jimp.read(screenshotBuffer).then(function(screenshot) {
-        //         var deferred = q.defer();
-        //         var x = bounds.x > 0 ? Math.min(bounds.x, screenshot.bitmap.width - 1) : 0,
-        //             y = bounds.y > 0 ? Math.min(bounds.y, screenshot.bitmap.height - 1) : 0,
-        //             w = bounds.w > 0 ? Math.min(bounds.w, screenshot.bitmap.width - x) : screenshot.bitmap.width - x,
-        //             h = bounds.h > 0 ? Math.min(bounds.h, screenshot.bitmap.height - y) : screenshot.bitmap.height - y;
+        return this.saveScreenshot().then(function(screenshotBuffer, response) {
+            return jimp.read(screenshotBuffer).then(function(screenshot) {
+                var deferred = q.defer();
+                var x = bounds.x > 0 ? Math.min(bounds.x, screenshot.bitmap.width - 1) : 0,
+                    y = bounds.y > 0 ? Math.min(bounds.y, screenshot.bitmap.height - 1) : 0,
+                    w = bounds.w > 0 ? Math.min(bounds.w, screenshot.bitmap.width - x) : screenshot.bitmap.width - x,
+                    h = bounds.h > 0 ? Math.min(bounds.h, screenshot.bitmap.height - y) : screenshot.bitmap.height - y;
 
-        //         screenshot.crop(x, y, w, h).write(filePath, deferred.makeNodeResolver());
-        //         return deferred.promise;
-        //     });
-        // });
+                screenshot.crop(x, y, w, h).write(filePath, deferred.makeNodeResolver());
+                return deferred.promise;
+            });
+        });
     });
 
     // WEBDRIVER COMMAND: IMAGE COMPARE
@@ -150,11 +150,11 @@ function addGenericCommands(client) {
 
 
 // NON-STANDARD SCREENSHOT REGIONS PER PLATFORM
-// var rotatedCrops = {};
-// rotatedCrops[getRunId({"browserName": "android", "version": "4.1", "platform": "Linux"})] = { x: 0, y: 98, w: 261, h: 196, stretchW: 320, stretchH: 240 };
-// rotatedCrops[getRunId({"browserName": "android", "version": "5.1", "platform": "Linux"})] = { x: 0, y: 110, w: 261, h: 196, stretchW: 320, stretchH: 240 };
+var rotatedCrops = {};
+rotatedCrops[getRunId({"browserName": "android", "version": "4.1", "platform": "Linux"})] = { x: 0, y: 98, w: 261, h: 196, stretchW: 320, stretchH: 240 };
+rotatedCrops[getRunId({"browserName": "android", "version": "5.1", "platform": "Linux"})] = { x: 0, y: 110, w: 261, h: 196, stretchW: 320, stretchH: 240 };
 // TODO: iphone 8.4 emulator currently changing screenshot region constantly, readd to supported-browsers and observe region in future
-//rotatedCrops[getRunId({"browserName": "iphone", "version": "8.4", "platform": "OS X 10.10"})] = { x: 0, y: 420, w: 217, h: 162, stretchW: 320, stretchH: 240 };
+rotatedCrops[getRunId({"browserName": "iphone", "version": "8.4", "platform": "OS X 10.10"})] = { x: 0, y: 420, w: 217, h: 162, stretchW: 320, stretchH: 240 };
 /*{
     "browserName": "iphone",
     "version": "8.4",
@@ -169,29 +169,29 @@ var viewportStage = 'cr-stage';
 function addBrowserSpecificCommands(client, capabilities) {
 
     // WEBDRIVER COMMAND: NORMALIZED SCREENSHOT - ROTATE CCW 90°, CROP TO DOCUMENT REGION, SCALE UP, CROP TO BOUNDS
-    //var rotatedCrop = rotatedCrops[getRunId(capabilities)];
-    // if (rotatedCrop) {
-    //     client.addCommand("saveNormalizedScreenshot", function(filePath, bounds) {
-    //         return this.saveScreenshot().then(function(screenshotBuffer, response) {
-    //             return jimp.read(screenshotBuffer)   .then(function(screenshot) {
-    //                 var deferred = q.defer();
-    //                 var x = bounds.x > 0 ? Math.min(bounds.x, rotatedCrop.stretchW - 1) : 0,
-    //                     y = bounds.y > 0 ? Math.min(bounds.y, rotatedCrop.stretchH - 1) : 0,
-    //                     w = bounds.w > 0 ? Math.min(bounds.w, rotatedCrop.stretchW - x) : rotatedCrop.stretchW - x,
-    //                     h = bounds.h > 0 ? Math.min(bounds.h, rotatedCrop.stretchH - y) : rotatedCrop.stretchH - y;
+    var rotatedCrop = rotatedCrops[getRunId(capabilities)];
+    if (rotatedCrop) {
+        client.addCommand("saveNormalizedScreenshot", function(filePath, bounds) {
+            return this.saveScreenshot().then(function(screenshotBuffer, response) {
+                return jimp.read(screenshotBuffer)   .then(function(screenshot) {
+                    var deferred = q.defer();
+                    var x = bounds.x > 0 ? Math.min(bounds.x, rotatedCrop.stretchW - 1) : 0,
+                        y = bounds.y > 0 ? Math.min(bounds.y, rotatedCrop.stretchH - 1) : 0,
+                        w = bounds.w > 0 ? Math.min(bounds.w, rotatedCrop.stretchW - x) : rotatedCrop.stretchW - x,
+                        h = bounds.h > 0 ? Math.min(bounds.h, rotatedCrop.stretchH - y) : rotatedCrop.stretchH - y;
 
-    //                 screenshot
-    //                     .rotate(270)
-    //                     .crop(rotatedCrop.x, rotatedCrop.y, rotatedCrop.w, rotatedCrop.h)
-    //                     .cover(rotatedCrop.stretchW, rotatedCrop.stretchH)
-    //                     .crop(x, y, w, h)
-    //                     .write(filePath, deferred.makeNodeResolver());
+                    screenshot
+                        .rotate(270)
+                        .crop(rotatedCrop.x, rotatedCrop.y, rotatedCrop.w, rotatedCrop.h)
+                        .cover(rotatedCrop.stretchW, rotatedCrop.stretchH)
+                        .crop(x, y, w, h)
+                        .write(filePath, deferred.makeNodeResolver());
 
-    //                 return deferred.promise;
-    //             });
-    //         });
-    //     }, true);
-    //}
+                    return deferred.promise;
+                });
+            });
+        }, true);
+    }
 
     // WEBDRIVER COMMAND: NORMALIZED KEYPRESS - trigger synthethic event
     if (capabilities.browserName in {'safari': 0, 'MicrosoftEdge': 0, 'iphone': 0}) {
