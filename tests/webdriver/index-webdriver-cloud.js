@@ -45,5 +45,9 @@ exports.config = {
     after: require('./index-webdriver.js').after,
     onComplete: require('./index-webdriver.js').onComplete,
 
-    plugins: require('./index-webdriver.js').plugins
+    plugins: require('./index-webdriver.js').plugins,
+    services: ['firefox-profile'],
+    firefoxProfile: {
+        "focusmanager.testmode": true
+    }
 };
