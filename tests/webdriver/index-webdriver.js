@@ -9,13 +9,10 @@ var fs = require('fs'),
 
 // ADD ALL TESTS & RUN CONDITIONS HERE
 var tests = {
-    'template-generic': false,
-    'template-local': false,
-    'template-crafty': false,
-    'template-multi': false,
+    'template-multi': function(browserName) { return browserName === 'phantomjs'; },
     'color/color-dom': true,
     'color/color-canvas': true,
-    'color/color-webgl': function(browserName) { return browserName !== 'phantomjs' && false; }
+    'color/color-webgl': function(browserName) { return browserName !== 'phantomjs'; }
 };
 
 exports.plugins = {                
@@ -152,6 +149,9 @@ function addGenericCommands(client) {
 
 // NON-STANDARD SCREENSHOT REGIONS PER PLATFORM
 var rotatedCrops = {};
+
+// These platforms are no longer used, and the updated versions require different regions
+// TODO: update them and add the new platforms back to supported-platforms-webdriver
 rotatedCrops[getRunId({"browserName": "android", "version": "4.1", "platform": "Linux"})] = { x: 0, y: 98, w: 261, h: 196, stretchW: 320, stretchH: 240 };
 rotatedCrops[getRunId({"browserName": "android", "version": "5.1", "platform": "Linux"})] = { x: 0, y: 110, w: 261, h: 196, stretchW: 320, stretchH: 240 };
 // TODO: iphone 8.4 emulator currently changing screenshot region constantly, readd to supported-browsers and observe region in future
@@ -319,13 +319,10 @@ function addTestSpecificCommands(client, QUnit, runId) {
             testName = undefined;
         }
 
-        console.log("\n<> Running " + (testName || currentTestName)  + " for " +
-            this.desiredCapabilities.browserName + " / " + this.desiredCapabilities.platformName + " / " +
-            this.desiredCapabilities.deviceName);
-        console.log("<>" + runId);
+        console.log("\n# Starting " + (testName || currentTestName)  + "test for " + runId);
 
         if (typeof testScript === 'string') {
-            var testFilePath = "/" + resultPath + (testName || currentTestName) + '.html',
+            var testFilePath = resultPath + (testName || currentTestName) + '.html',
                 testFile = "<!DOCTYPE html>"                                                + EOL +
                     "<html>"                                                                + EOL +
                     "<head>"                                                                + EOL +
@@ -341,11 +338,9 @@ function addTestSpecificCommands(client, QUnit, runId) {
                     "</script>"                                                             + EOL +
                     "</body>"                                                               + EOL +
                     "</html>"                                                               + EOL;
-            //console.log("<><><> wrote " + (testName  || currentTestName ) + " is " + testFilePath);
-            return qfs.write("." + testFilePath, testFile, 'w+')
-                    .then(this.url.bind(this, testFilePath));
+            return qfs.write("./" + testFilePath, testFile, 'w+')
+                    .then(this.url.bind(this, "/" + testFilePath));
         } else { 
-            //console.log("<><><> returned URL to " + testPath + currentTestPath + '.html');
             return this.url(testPath + currentTestPath + '.html');
         }
     });
