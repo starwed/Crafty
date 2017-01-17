@@ -3,6 +3,7 @@ var fs = require('fs'),
     q = require('q'),
     qfs = require('q-io/fs'),
     EOL = require('os').EOL,
+    jimp = require('jimp'),
     resemble = require('node-resemble-js');
 
 
