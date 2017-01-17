@@ -43,5 +43,7 @@ exports.config = {
     onPrepare: require('./index-webdriver.js').onPrepare,
     before: require('./index-webdriver.js').before,
     after: require('./index-webdriver.js').after,
-    onComplete: require('./index-webdriver.js').onComplete
+    onComplete: require('./index-webdriver.js').onComplete,
+
+    plugins: require('./index-webdriver.js').plugins
 };
