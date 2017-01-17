@@ -15,6 +15,11 @@
     "platform": "Windows XP"
   },
   {
+    "browserName": "firefox",
+    "version": "latest",
+    "platform": "Windows 7"
+  },
+  {
     "browserName": "chrome",
     "version": "beta",
     "platform": "Windows 10"
