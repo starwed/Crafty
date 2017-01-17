@@ -2,7 +2,7 @@
 // Helper functions //
 //////////////////////
 
-var global = typeof global !== 'undefined' ? global : window;
+var global = typeof GLOBAL !== 'undefined' ? GLOBAL : window;
 
 global.resetStage = function() {
   Crafty.viewport.reset();
@@ -72,6 +72,6 @@ QUnit.done(function (test_results) {
   test_results.tests = tests;
   if (typeof window !== "undefined")
     window.global_test_results = test_results;
-  else if (typeof global !== "undefined")
-    global.global_test_results = test_results;
+  else if (typeof GLOBAL !== "undefined")
+    GLOBAL.global_test_results = test_results;
 });
