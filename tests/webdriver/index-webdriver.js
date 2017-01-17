@@ -10,7 +10,7 @@ var fs = require('fs'),
 // ADD ALL TESTS & RUN CONDITIONS HERE
 var tests = {
     // Problems with input capture in firefox driver
-    'template-multi': function(browserName) { return browserName !== "firefox" },
+    'template-multi': function(browserName) { return browserName !== "firefox"; },
     'color/color-dom': true,
     'color/color-canvas': true,
     // neither phantomjs nor open sauce support webgl right now
@@ -47,13 +47,13 @@ function getRunId(capabilities) {
 // =====
 exports.onPrepare = function() {};
 exports.before = function() { // BEFORE RUNNING ANY TESTS, WITH GLOBALS AVAILABLE
-    var capabilities = GLOBAL.browser.desiredCapabilities;
+    var capabilities = global.browser.desiredCapabilities;
 
     //TODO retry commands with webbriverio/lib/helpers.js/staleElementRetry if need arises (StaleElementReference)
-    addGenericCommands(GLOBAL.browser);
-    addBrowserSpecificCommands(GLOBAL.browser, capabilities);
-    addTestSpecificCommands(GLOBAL.browser, GLOBAL.QUnit, getRunId(capabilities));
-    return setBrowserSpecificConfig(GLOBAL.browser, capabilities);
+    addGenericCommands(global.browser);
+    addBrowserSpecificCommands(global.browser, capabilities);
+    addTestSpecificCommands(global.browser, global.QUnit, getRunId(capabilities));
+    return setBrowserSpecificConfig(global.browser, capabilities);
 };
 exports.after = function(failures, pid) {};
 exports.onComplete = function() {};
