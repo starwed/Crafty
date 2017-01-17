@@ -9,7 +9,8 @@ var fs = require('fs'),
 
 // ADD ALL TESTS & RUN CONDITIONS HERE
 var tests = {
-    'template-multi': function(browserName) { return true; },
+    // Problems with input capture in firefox driver
+    'template-multi': function(browserName) { return browserName !== "firefox" },
     'color/color-dom': true,
     'color/color-canvas': true,
     // neither phantomjs nor open sauce support webgl right now
