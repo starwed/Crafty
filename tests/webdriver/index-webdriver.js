@@ -173,7 +173,7 @@ function addBrowserSpecificCommands(client, capabilities) {
     // if (rotatedCrop) {
     //     client.addCommand("saveNormalizedScreenshot", function(filePath, bounds) {
     //         return this.saveScreenshot().then(function(screenshotBuffer, response) {
-    //             return jimp.read(screenshotBuffer).then(function(screenshot) {
+    //             return jimp.read(screenshotBuffer)   .then(function(screenshot) {
     //                 var deferred = q.defer();
     //                 var x = bounds.x > 0 ? Math.min(bounds.x, rotatedCrop.stretchW - 1) : 0,
     //                     y = bounds.y > 0 ? Math.min(bounds.y, rotatedCrop.stretchH - 1) : 0,

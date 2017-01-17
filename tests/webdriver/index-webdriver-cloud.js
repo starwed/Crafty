@@ -21,7 +21,7 @@ exports.config = {
             'public': 'public'
         };
 
-        var browsers = require('../../supported-browsers.json');
+        var browsers = require('../../supported-browsers-webdriver.json');
         browsers.forEach(function(capabilities) {
             for (var k in baseCapabilities)
                 capabilities[k] = baseCapabilities[k];
