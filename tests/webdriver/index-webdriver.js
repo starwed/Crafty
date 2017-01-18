@@ -17,10 +17,6 @@ var tests = {
     'color/color-webgl': function(browserName) { return false; }
 };
 
-exports.plugins = {                
-    'wdio-screenshot': {}
-};
-
 exports.specs = function() {
     return Object.keys(tests).map(function(t) {
         return 'tests/webdriver/' + t + '.js';
@@ -321,7 +317,7 @@ function addTestSpecificCommands(client, QUnit, runId) {
             testName = undefined;
         }
 
-        console.log("\n# Starting " + (testName || currentTestName)  + "test for " + runId);
+        console.log("\n# Starting " + (testName || currentTestName)  + " test for " + runId);
 
         if (typeof testScript === 'string') {
             var testFilePath = resultPath + (testName || currentTestName) + '.html',
