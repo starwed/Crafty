@@ -259,8 +259,8 @@ Crafty._registerLayerTemplate("WebGL", {
 
     // Make a texture out of the given image element
     // The url is just used as a unique ID
-    makeTexture: function(url, image, repeating) {
-        return this.texture_manager.makeTexture(url, image, repeating);
+    makeTexture: function(url, image, repeating, tag) {
+        return this.texture_manager.makeTexture(url, image, repeating, tag);
     },
 
     init: function() {

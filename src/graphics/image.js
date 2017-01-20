@@ -82,18 +82,21 @@ Crafty.c("Image", {
      *
      * @see Crafty.sprite
      */
-    image: function (url, repeat) {
+    _imageScale: 1,
+    _preImage: null,
+    image: function (url, repeat, scale) {
+        delete this._scaledImage;
         this.__image = url;
         this._repeat = repeat || "no-repeat";
-
-        this.img = Crafty.asset(url);
-        if (!this.img) {
-            this.img = new Image();
-            Crafty.asset(url, this.img);
-            this.img.src = url;
+        this._imageScale = scale || 1;
+        this._baseImg = Crafty.asset(url);
+        if (!this._baseImg) {
+            this._baseImg = new Image();
+            this._baseImg.src = url;
+            Crafty.asset(url, this._baseImg);
             var self = this;
 
-            this.img.onload = function () {
+            this._baseImg.onload = function () {
                 self._setupImage(self._drawLayer);
             };
         } else {
@@ -105,15 +108,37 @@ Crafty.c("Image", {
         return this;
     },
 
+    _createScaledImage: function(img, scale) {
+        var tempCanvas = document.createElement("canvas");
+        var ctx = tempCanvas.getContext("2d");
+        var w = tempCanvas.width = img.width * scale;
+        var h = tempCanvas.height = img.height * scale;
+        ctx.drawImage(img,0,0,w, h);
+        var scaledImage = new Image();
+        scaledImage.src = tempCanvas.toDataURL();
+        scaledImage.width = w;
+        scaledImage.height = h;
+        return scaledImage;
+    },
+
     // called on image change or layer attachment
     _setupImage: function(layer){
-        if (!this.img || !layer) return;
-        
+        if (!this._baseImg || !layer) return;
+        if (this._imageScale === 1) {
+            this.img = this._baseImg;
+        } else {
+            // Right now, generate this every time
+            // In the future, 
+            this.img = this._createScaledImage(this._baseImg, this._imageScale);
+        }
         if (layer.type === "Canvas") {
             this._pattern = this._drawContext.createPattern(this.img, this._repeat);
         } else if (layer.type === "WebGL") {
-            this._establishShader("image:" + this.__image, Crafty.defaultShader("Image"));
-            this.program.setTexture( this._drawLayer.makeTexture(this.__image, this.img, (this._repeat!=="no-repeat")));
+            var prefix = "image-scale(" + this._imageScale + "):";
+            console.log("made, ", prefix);
+            this._establishShader(prefix + this.__image, Crafty.defaultShader("Image"));
+            var texture = this._drawLayer.makeTexture(this.__image, this.img, (this._repeat!=="no-repeat"), prefix);
+            this.program.setTexture(texture);
         }
 
         if (this._repeat === "no-repeat") {
@@ -139,8 +164,8 @@ Crafty.c("Image", {
             context.fillRect(0, 0, e.pos._w, e.pos._h);
             context.restore();
         } else if (e.type === "DOM") {
-            if (this.__image) {
-              e.style.backgroundImage = "url(" + this.__image + ")";
+            if (this.img.src) {
+              e.style.backgroundImage = "url(" + this.img.src + ")";
               e.style.backgroundRepeat = this._repeat;
             }
         } else if (e.type === "webgl") {

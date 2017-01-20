@@ -32,16 +32,19 @@ TextureManager.prototype = {
 
     // creates a texture out of the given image and repeating state
     // The url is just used to generate a unique id for the texture
-    makeTexture: function(url, image, repeating) {
+    // The tag is used to augment the url for use as an identifier
+    makeTexture: function(url, image, repeating, tag) {
         // gl is the context, webgl is the Crafty object containing prefs/etc
         // var gl = this.gl;
         var webgl = this.webgl;
 
         // Check whether a texture that matches the one requested already exists
-        var id =  "texture-(r:" + repeating + ")-" + url;
+        console.log("tag", tag);
+        var id = "texture-(r:" + repeating + ")-" + (tag || "") + url;
+        console.log("Checking texture " + id);
         if (typeof this.registered_textures[id] !== 'undefined')
             return this.registered_textures[id];
-
+        console.log("Not found, creating " + id);
         // Create a texture, bind it to the next available unit
         var t = new TextureWrapper(this, id);
         this.registered_textures[id] = t;
