@@ -36,7 +36,7 @@
     Crafty.paths({images: "assets/"});
     
     var assets_to_load = {
-      "images": ["100x100.png", "100x100.png", "100x100.jpeg"],
+      "images": ["100x100.png", "100x100.png", "100x100.jpeg", "nonexistant.png"],
       "sprites": {
         "craftyLogo.png": {
           "tile" : 147,
@@ -50,12 +50,12 @@
 
     Crafty.load(assets_to_load, function() {
         Crafty.removeAssets(assets_to_load);
-        ok(checkItems() === 3 && wereItemsRemoved(), 'all assets have been successfully loaded, and then successfully removed');
+        ok(checkItems() === 4 && wereItemsRemoved(), 'all assets have been successfully loaded, and then successfully removed');
         start();
       }, function(data) {
         items.push(data);
       }, function(error) {
-        strictEqual(error.src, 'assets/100x100.png', 'duplicate asset reported as error of load operation');
+        strictEqual(error.src, 'assets/nonexistant.png', 'duplicate asset reported as error of load operation');
       }
     );
   });

@@ -235,6 +235,7 @@ module.exports = {
      * @see Crafty.imageWhitelist
      * @see Crafty.removeAssets
      */
+    _assetWrappers: {},
     load: function (data, oncomplete, onprogress, onerror) {
 
         if (Array.isArray(data)) {
@@ -248,40 +249,10 @@ module.exports = {
             total = (data.audio ? Object.keys(data.audio).length : 0) +
                 (data.images ? Object.keys(data.images).length : 0) +
                 (data.sprites ? Object.keys(data.sprites).length : 0),
-            current, fileUrl, obj, type, asset,
-            paths = Crafty.paths(),
-            getExt = function(f) {
-                return f.substr(f.lastIndexOf('.') + 1).toLowerCase();
-            },
-            getFilePath = function(type,f) {
-                return (f.search("://") === -1 ? (type === "audio" ? paths.audio + f : paths.images + f) : f);
-            },
-            // returns null if 'a' is not already a loaded asset, obj otherwise
-            isAsset = function(a) {
-                return Crafty.asset(a) || null;
-            },
-            isSupportedAudio = function(f) {
-                return Crafty.support.audio && Crafty.audio.supports(getExt(f));
-            },
-            isValidImage = function(f) {
-                return Crafty.imageWhitelist.indexOf(getExt(f)) !== -1;
-            },
-            onImgLoad = function(obj,url) {
-                obj.onload = pro;
-                if (Crafty.support.prefix === 'webkit')
-                    obj.src = ""; // workaround for webkit bug
-                obj.src = url;
-            };
+            current, type, asset;
 
-        //Progress function
-
+        // Progress function
         function pro() {
-            var src = this.src;
-
-            //Remove events cause audio trigger this event more than once(depends on browser)
-            if (this.removeEventListener)
-                this.removeEventListener('canplaythrough', pro, false);
-
             j++;
             //if progress callback, give information of assets loaded, total and percent
             if (onprogress)
@@ -289,23 +260,22 @@ module.exports = {
                     loaded: j,
                     total: total,
                     percent: (j / total * 100),
-                    src: src
+                    name: this._name,
+                    src: this._url
                 });
 
             if (j === total && oncomplete) oncomplete();
         }
         //Error function
-
         function err() {
-            var src = this.src;
             if (onerror)
                 onerror({
                     loaded: j,
                     total: total,
                     percent: (j / total * 100),
-                    src: src
+                    src: this._url,
+                    name: this._name
                 });
-
             j++;
             if (j === total && oncomplete) oncomplete();
         }
@@ -314,49 +284,18 @@ module.exports = {
             for(asset in data[type]) {
                 if (!data[type].hasOwnProperty(asset))
                     continue; // maintain compatibility to other frameworks while iterating array
-
                 current = data[type][asset];
-                obj = null;
-
-                if (type === "audio") {
-                    if (typeof current === "object") {
-                        var files = [];
-                        for (var i in current) {
-                            fileUrl = getFilePath(type, current[i]);
-                            if (!isAsset(fileUrl) && isSupportedAudio(current[i]) && !Crafty.audio.sounds[asset])
-                                files.push(fileUrl);
-                        }
-                        if (files.length > 0)
-                            obj = Crafty.audio.add(asset, files);
-                    } else if (typeof current === "string") {
-                        fileUrl = getFilePath(type, current);
-                        if (!isAsset(fileUrl) && isSupportedAudio(current) && !Crafty.audio.sounds[asset])
-                            obj = Crafty.audio.add(asset, fileUrl);
-                    }
-                    //extract actual audio obj if audio creation was successfull
-                    if (obj)
-                        obj = obj.obj;
-
-                    //addEventListener is supported on IE9 , Audio as well
-                    if (obj && obj.addEventListener)
-                        obj.addEventListener('canplaythrough', pro, false);
-                } else {
-                    asset = (type === "sprites" ? asset : current);
-                    fileUrl = getFilePath(type, asset);
-                    if (!isAsset(fileUrl) && isValidImage(asset)) {
-                        obj = new Image();
-                        if (type === "sprites")
-                            Crafty.sprite(current.tile, current.tileh, fileUrl, current.map,
-                              current.paddingX, current.paddingY, current.paddingAroundBorder);
-                        Crafty.asset(fileUrl, obj);
-                        onImgLoad(obj, fileUrl);
-                    }
-                }
-
-                if (obj) {
-                    obj.onerror = err;
-                } else {
-                    err.call({src: fileUrl});
+                switch(type) {
+                    case "audio":
+                        this._assetWrappers[asset] = new Crafty.AudioAssetWrapper(asset, current, pro, err);
+                        break;
+                    case "images":
+                        // Assumes that the images object is an array, not an object
+                        this._assetWrappers[asset] = new Crafty.ImageAssetWrapper(current, current, pro, err);    
+                        break;
+                    case "sprites":
+                        this._assetWrappers[asset] = new Crafty.SpriteAssetWrapper(asset, current, pro, err);  
+                        break;
                 }
             }
         }

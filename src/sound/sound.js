@@ -93,8 +93,13 @@ Crafty.extend({
          * Creates an audio asset with the given id and resource.  `Crafty.audio.add` is a more flexible interface that allows cross-browser compatibility.
          *
          * If the sound file extension is not supported, returns false; otherwise, returns the audio asset.
+         * 
+         * If a sound with that id already exists, that asset will be returned instead
          */
         create: function (id, path) {
+            if (this.sounds[id]) {
+                return this.sounds[id]
+            }
             //check extension, return if not supported
             var ext = path.substr(path.lastIndexOf('.') + 1).toLowerCase();
             if (!this.supports(ext))
@@ -108,7 +113,6 @@ Crafty.extend({
             audio.src = path;
 
             //create an asset and metadata for the audio element
-            Crafty.asset(path, audio);
             this.sounds[id] = {
                 obj: audio,
                 played: 0,
@@ -137,7 +141,8 @@ Crafty.extend({
          *
          * Passing an array of URLs will determine which format the browser can play and select it over any other.
          *
-         * Accepts an object where the key is the audio name and
+         * Accepts an object where th
+         * e key is the audio name and
          * either a URL or an Array of URLs (to determine which type to use).
          *
          * The ID you use will be how you refer to that sound when using `Crafty.audio.play`.

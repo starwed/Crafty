@@ -2,6 +2,7 @@ var Crafty = require('./core/core');
 
 Crafty.easing = require('./core/animation');
 Crafty.extend(require('./core/extensions'));
+require('./core/assets');
 Crafty.extend(require('./core/loader'));
 Crafty.c('Model', require('./core/model'));
 Crafty.extend(require('./core/scenes'));
