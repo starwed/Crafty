@@ -1,11 +1,12 @@
-var Crafty = require('../core/core.js');
+var Crafty = require("../core/core.js");
 
 try {
-  var storage = (typeof window !== "undefined" && window.localStorage) || (new require('node-localstorage').LocalStorage('./localStorage'));
-} catch(e) {
+  var storage =
+    (typeof window !== "undefined" && window.localStorage) ||
+    new require("node-localstorage").LocalStorage("./localStorage");
+} catch (e) {
   var storage = null;
 }
-
 
 /**@
  * #Storage
@@ -70,27 +71,26 @@ try {
 var store = function(key, value) {
   var _value = value;
 
-  if(!storage) {
-    Crafty.error("Local storage is not accessible.  (Perhaps you are including crafty.js cross-domain?)");
+  if (!storage) {
+    Crafty.error(
+      "Local storage is not accessible.  (Perhaps you are including crafty.js cross-domain?)"
+    );
     return false;
   }
 
-  if(arguments.length === 1) {
+  if (arguments.length === 1) {
     try {
       return JSON.parse(storage.getItem(key));
-    }
-    catch (e) {
+    } catch (e) {
       return storage.getItem(key);
     }
   } else {
-    if(typeof value === "object") {
+    if (typeof value === "object") {
       _value = JSON.stringify(value);
     }
 
     storage.setItem(key, _value);
-    
   }
-
 };
 /**@
  * #Crafty.storage.remove
@@ -112,8 +112,10 @@ var store = function(key, value) {
  *
  */
 store.remove = function(key) {
-  if(!storage){
-    Crafty.error("Local storage is not accessible.  (Perhaps you are including crafty.js cross-domain?)");
+  if (!storage) {
+    Crafty.error(
+      "Local storage is not accessible.  (Perhaps you are including crafty.js cross-domain?)"
+    );
     return;
   }
   storage.removeItem(key);

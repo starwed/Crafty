@@ -1,7 +1,7 @@
-var Crafty = require('../core/core.js');
+var Crafty = require("../core/core.js");
 
 Crafty.extend({
-    /**@
+  /**@
      * #Crafty.pixelart
      * @category Graphics
      * @kind Method
@@ -38,9 +38,9 @@ Crafty.extend({
      * Crafty.e("2D, Canvas, sprite1");
      * ~~~
      */
-    _pixelartEnabled: false,
-    pixelart: function(enabled) {
-        Crafty._pixelartEnabled = enabled;
-        Crafty.trigger("PixelartSet", enabled);
-    }
+  _pixelartEnabled: false,
+  pixelart: function(enabled) {
+    Crafty._pixelartEnabled = enabled;
+    Crafty.trigger("PixelartSet", enabled);
+  }
 });

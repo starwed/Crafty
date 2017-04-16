@@ -1,7 +1,4 @@
-var Crafty = require('../core/core.js'),
-    HashMap = require('./spatial-grid.js');
-
-
+var Crafty = require("../core/core.js"), HashMap = require("./spatial-grid.js");
 
 /**@
  * #Crafty.map
@@ -13,10 +10,10 @@ var Crafty = require('../core/core.js'),
  */
 Crafty.map = new HashMap();
 var M = Math,
-    //Mc = M.cos,
-    //Ms = M.sin,
-    PI = M.PI,
-    DEG_TO_RAD = PI / 180;
+  //Mc = M.cos,
+  //Ms = M.sin,
+  PI = M.PI,
+  DEG_TO_RAD = PI / 180;
 
 /**@
  * #2D
@@ -30,7 +27,7 @@ var M = Math,
  * @trigger Reorder - when the entity's z index has changed
  */
 Crafty.c("2D", {
-    /**@
+  /**@
      * #.x
      * @comp 2D
      * @kind Property
@@ -40,8 +37,8 @@ Crafty.c("2D", {
      * use the `._x` property.
      * @see ._setter2d
      */
-    _x: 0,
-    /**@
+  _x: 0,
+  /**@
      * #.y
      * @kind Property
      * 
@@ -51,8 +48,8 @@ Crafty.c("2D", {
      * use the `._y` property.
      * @see ._setter2d
      */
-    _y: 0,
-    /**@
+  _y: 0,
+  /**@
      * #.w
      * @comp 2D
      * @kind Property
@@ -64,8 +61,8 @@ Crafty.c("2D", {
      * Changing this value is not recommended as canvas has terrible resize quality and DOM will just clip the image.
      * @see ._setter2d
      */
-    _w: 0,
-    /**@
+  _w: 0,
+  /**@
      * #.h
      * @comp 2D
      * @kind Property
@@ -77,9 +74,9 @@ Crafty.c("2D", {
      * Changing this value is not recommended as canvas has terrible resize quality and DOM will just clip the image.
      * @see ._setter2d
      */
-    _h: 0,
+  _h: 0,
 
-    /**@
+  /**@
      * #.z
      * @comp 2D
      * @kind Property
@@ -95,18 +92,18 @@ Crafty.c("2D", {
      * `z` is required to be an integer, e.g. `z=11.2` is not allowed.
      * @see ._attr
      */
-    _z: 0,
+  _z: 0,
 
-    /**@
+  /**@
      * #._globalZ
      * @comp 2D
      * @kind Property
      * 
      * When two entities overlap, the one with the larger `_globalZ` will be on top of the other.
      */
-    _globalZ: null,
+  _globalZ: null,
 
-    /**@
+  /**@
      * #.rotation
      * @comp 2D
      * @kind Property
@@ -130,157 +127,156 @@ Crafty.c("2D", {
      *
      * @see ._setter2d, .origin
      */
-    _rotation: 0,
+  _rotation: 0,
 
-    _origin: null,
-    _mbr: null,
-    _entry: null,
-    _children: null,
-    _parent: null,
+  _origin: null,
+  _mbr: null,
+  _entry: null,
+  _children: null,
+  _parent: null,
 
-    // Setup   all the properties that we need to define
-    properties: {
-        x: {
-            set: function (v) {
-                this._setter2d('_x', v);
-            },
-            get: function () {
-                return this._x;
-            },
-            configurable: true,
-            enumerable: true
-        },
-        _x: {enumerable:false},
-
-        y: {
-            set: function (v) {
-                this._setter2d('_y', v);
-            },
-            get: function () {
-                return this._y;
-            },
-            configurable: true,
-            enumerable: true
-        },
-        _y: {enumerable:false},
-
-        w: {
-            set: function (v) {
-                this._setter2d('_w', v);
-            },
-            get: function () {
-                return this._w;
-            },
-            configurable: true,
-            enumerable: true
-        },
-        _w: {enumerable:false},
-
-        h: {
-            set: function (v) {
-                this._setter2d('_h', v);
-            },
-            get: function () {
-                return this._h;
-            },
-            configurable: true,
-            enumerable: true
-        },
-        _h: {enumerable:false},
-
-        z: {
-            set: function (v) {
-                this._setter2d('_z', v);
-            },
-            get: function () {
-                return this._z;
-            },
-            configurable: true,
-            enumerable: true
-        },
-        _z: {enumerable:false},
-
-        rotation: {
-            set: function (v) {
-                this._setter2d('_rotation', v);
-            },
-            get: function () {
-                return this._rotation;
-            },
-            configurable: true,
-            enumerable: true
-        },
-        _rotation: {enumerable:false}
+  // Setup   all the properties that we need to define
+  properties: {
+    x: {
+      set: function(v) {
+        this._setter2d("_x", v);
+      },
+      get: function() {
+        return this._x;
+      },
+      configurable: true,
+      enumerable: true
     },
+    _x: { enumerable: false },
 
-    init: function () {
-        this._globalZ = this[0];
-        this._origin = {
-            x: 0,
-            y: 0
-        };
+    y: {
+      set: function(v) {
+        this._setter2d("_y", v);
+      },
+      get: function() {
+        return this._y;
+      },
+      configurable: true,
+      enumerable: true
+    },
+    _y: { enumerable: false },
 
-        // offsets for the basic bounding box
-        this._bx1 = 0;
-        this._bx2 = 0;
-        this._by1 = 0;
-        this._by2 = 0;
+    w: {
+      set: function(v) {
+        this._setter2d("_w", v);
+      },
+      get: function() {
+        return this._w;
+      },
+      configurable: true,
+      enumerable: true
+    },
+    _w: { enumerable: false },
 
+    h: {
+      set: function(v) {
+        this._setter2d("_h", v);
+      },
+      get: function() {
+        return this._h;
+      },
+      configurable: true,
+      enumerable: true
+    },
+    _h: { enumerable: false },
+
+    z: {
+      set: function(v) {
+        this._setter2d("_z", v);
+      },
+      get: function() {
+        return this._z;
+      },
+      configurable: true,
+      enumerable: true
+    },
+    _z: { enumerable: false },
+
+    rotation: {
+      set: function(v) {
+        this._setter2d("_rotation", v);
+      },
+      get: function() {
+        return this._rotation;
+      },
+      configurable: true,
+      enumerable: true
+    },
+    _rotation: { enumerable: false }
+  },
+
+  init: function() {
+    this._globalZ = this[0];
+    this._origin = {
+      x: 0,
+      y: 0
+    };
+
+    // offsets for the basic bounding box
+    this._bx1 = 0;
+    this._bx2 = 0;
+    this._by1 = 0;
+    this._by2 = 0;
+
+    this._children = [];
+
+    //insert self into the HashMap
+    this._entry = Crafty.map.insert(this);
+
+    //when object changes, update HashMap
+    this.bind("Move", function(e) {
+      // Choose the largest bounding region that exists
+      var area = this._cbr || this._mbr || this;
+      this._entry.update(area);
+      // Move children (if any) by the same amount
+      if (this._children.length > 0) {
+        this._cascade(e);
+      }
+    });
+
+    this.bind("Rotate", function(e) {
+      // Choose the largest bounding region that exists
+      var old = this._cbr || this._mbr || this;
+      this._entry.update(old);
+      // Rotate children (if any) by the same amount
+      if (this._children.length > 0) {
+        this._cascade(e);
+      }
+    });
+
+    //when object is removed, remove from HashMap and destroy attached children
+    this.bind("Remove", function() {
+      if (this._children) {
+        for (var i = 0; i < this._children.length; i++) {
+          // delete the child's _parent link, or else the child will splice itself out of
+          // this._children while destroying itself (which messes up this for-loop iteration).
+          delete this._children[i]._parent;
+
+          // Destroy child if possible (It's not always possible, e.g. the polygon attached
+          // by areaMap has no .destroy(), it will just get garbage-collected.)
+          if (this._children[i].destroy) {
+            this._children[i].destroy();
+          }
+        }
         this._children = [];
+      }
 
-        //insert self into the HashMap
-        this._entry = Crafty.map.insert(this);
+      if (this._parent) {
+        this._parent.detach(this);
+      }
 
-        //when object changes, update HashMap
-        this.bind("Move", function (e) {
-            // Choose the largest bounding region that exists
-            var area = this._cbr || this._mbr || this;
-            this._entry.update(area);
-            // Move children (if any) by the same amount
-            if (this._children.length > 0) {
-                this._cascade(e);
-            }
-        });
+      Crafty.map.remove(this._entry);
 
-        this.bind("Rotate", function (e) {
-            // Choose the largest bounding region that exists
-            var old = this._cbr || this._mbr || this;
-            this._entry.update(old);
-            // Rotate children (if any) by the same amount
-            if (this._children.length > 0) {
-                this._cascade(e);
-            }
-        });
+      this.detach();
+    });
+  },
 
-        //when object is removed, remove from HashMap and destroy attached children
-        this.bind("Remove", function () {
-            if (this._children) {
-                for (var i = 0; i < this._children.length; i++) {
-                    // delete the child's _parent link, or else the child will splice itself out of
-                    // this._children while destroying itself (which messes up this for-loop iteration).
-                    delete this._children[i]._parent;
-
-                    // Destroy child if possible (It's not always possible, e.g. the polygon attached
-                    // by areaMap has no .destroy(), it will just get garbage-collected.)
-                    if (this._children[i].destroy) {
-                        this._children[i].destroy();
-                    }
-                }
-                this._children = [];
-            }
-
-            if (this._parent) {
-                this._parent.detach(this);
-            }
-
-            Crafty.map.remove(this._entry);
-
-            this.detach();
-        });
-    },
-
-
-    /**@
+  /**@
      * #.offsetBoundary
      * @comp 2D
      * @kind Method
@@ -299,124 +295,118 @@ Crafty.c("2D", {
      *
      * You would most likely use this function to ensure that custom canvas rendering beyond the extent of the entity's normal bounds is not clipped.
      */
-    offsetBoundary: function(x1, y1, x2, y2){
-        if (arguments.length === 1)
-            y1 = x2 = y2 = x1;
-        this._bx1 = x1;
-        this._bx2 = x2;
-        this._by1 = y1;
-        this._by2 = y2;
-        this.trigger("BoundaryOffset");
-        this._calculateMBR();
-        return this;
-    },
+  offsetBoundary: function(x1, y1, x2, y2) {
+    if (arguments.length === 1) y1 = x2 = y2 = x1;
+    this._bx1 = x1;
+    this._bx2 = x2;
+    this._by1 = y1;
+    this._by2 = y2;
+    this.trigger("BoundaryOffset");
+    this._calculateMBR();
+    return this;
+  },
 
-    /**
+  /**
      * Calculates the MBR when rotated some number of radians about an origin point o.
      * Necessary on a rotation, or a resize
      */
 
-    _calculateMBR: function () {
-        var ox = this._origin.x + this._x,
-            oy = this._origin.y + this._y,
-            rad = -this._rotation * DEG_TO_RAD;
-        // axis-aligned (unrotated) coordinates, relative to the origin point
-        var dx1 = this._x - this._bx1 - ox,
-            dx2 = this._x + this._w + this._bx2 - ox,
-            dy1 = this._y - this._by1 - oy,
-            dy2 = this._y + this._h + this._by2 - oy;
+  _calculateMBR: function() {
+    var ox = this._origin.x + this._x,
+      oy = this._origin.y + this._y,
+      rad = -this._rotation * DEG_TO_RAD;
+    // axis-aligned (unrotated) coordinates, relative to the origin point
+    var dx1 = this._x - this._bx1 - ox,
+      dx2 = this._x + this._w + this._bx2 - ox,
+      dy1 = this._y - this._by1 - oy,
+      dy2 = this._y + this._h + this._by2 - oy;
 
-        var ct = Math.cos(rad),
-            st = Math.sin(rad);
-        // Special case 90 degree rotations to prevent rounding problems
-        ct = (ct < 1e-10 && ct > -1e-10) ? 0 : ct;
-        st = (st < 1e-10 && st > -1e-10) ? 0 : st;
+    var ct = Math.cos(rad), st = Math.sin(rad);
+    // Special case 90 degree rotations to prevent rounding problems
+    ct = ct < 1e-10 && ct > -1e-10 ? 0 : ct;
+    st = st < 1e-10 && st > -1e-10 ? 0 : st;
 
-        // Calculate the new points relative to the origin, then find the new (absolute) bounding coordinates!
-        var x0 =   dx1 * ct + dy1 * st,
-            y0 = - dx1 * st + dy1 * ct,
-            x1 =   dx2 * ct + dy1 * st,
-            y1 = - dx2 * st + dy1 * ct,
-            x2 =   dx2 * ct + dy2 * st,
-            y2 = - dx2 * st + dy2 * ct,
-            x3 =   dx1 * ct + dy2 * st,
-            y3 = - dx1 * st + dy2 * ct,
-            minx = Math.floor(Math.min(x0, x1, x2, x3) + ox),
-            miny = Math.floor(Math.min(y0, y1, y2, y3) + oy),
-            maxx = Math.ceil(Math.max(x0, x1, x2, x3) + ox),
-            maxy = Math.ceil(Math.max(y0, y1, y2, y3) + oy);
-        if (!this._mbr) {
-            this._mbr = {
-                _x: minx,
-                _y: miny,
-                _w: maxx - minx,
-                _h: maxy - miny
-            };
-        } else {
-            this._mbr._x = minx;
-            this._mbr._y = miny;
-            this._mbr._w = maxx - minx;
-            this._mbr._h = maxy - miny;
-        }
+    // Calculate the new points relative to the origin, then find the new (absolute) bounding coordinates!
+    var x0 = dx1 * ct + dy1 * st,
+      y0 = -dx1 * st + dy1 * ct,
+      x1 = dx2 * ct + dy1 * st,
+      y1 = -dx2 * st + dy1 * ct,
+      x2 = dx2 * ct + dy2 * st,
+      y2 = -dx2 * st + dy2 * ct,
+      x3 = dx1 * ct + dy2 * st,
+      y3 = -dx1 * st + dy2 * ct,
+      minx = Math.floor(Math.min(x0, x1, x2, x3) + ox),
+      miny = Math.floor(Math.min(y0, y1, y2, y3) + oy),
+      maxx = Math.ceil(Math.max(x0, x1, x2, x3) + ox),
+      maxy = Math.ceil(Math.max(y0, y1, y2, y3) + oy);
+    if (!this._mbr) {
+      this._mbr = {
+        _x: minx,
+        _y: miny,
+        _w: maxx - minx,
+        _h: maxy - miny
+      };
+    } else {
+      this._mbr._x = minx;
+      this._mbr._y = miny;
+      this._mbr._w = maxx - minx;
+      this._mbr._h = maxy - miny;
+    }
 
-        // If a collision hitbox exists AND sits outside the entity, find a bounding box for both.
-        // `_cbr` contains information about a bounding circle of the hitbox. 
-        // The bounds of `_cbr` will be the union of the `_mbr` and the bounding box of that circle.
-        // This will not be a minimal region, but since it's only used for the broad phase pass it's good enough. 
-        //
-        // cbr is calculated by the `_checkBounds` method of the "Collision" component
-        if (this._cbr) {
-            var cbr = this._cbr;
-            var cx = cbr.cx, cy = cbr.cy, r = cbr.r;
-            var cx2 = ox + (cx + this._x - ox) * ct + (cy + this._y - oy) * st;
-            var cy2 = oy - (cx + this._x - ox) * st + (cy + this._y - oy) * ct;
-            cbr._x = Math.min(cx2 - r, minx);
-            cbr._y = Math.min(cy2 - r, miny);
-            cbr._w = Math.max(cx2 + r, maxx) - cbr._x;
-            cbr._h = Math.max(cy2 + r, maxy) - cbr._y;
-        }
+    // If a collision hitbox exists AND sits outside the entity, find a bounding box for both.
+    // `_cbr` contains information about a bounding circle of the hitbox.
+    // The bounds of `_cbr` will be the union of the `_mbr` and the bounding box of that circle.
+    // This will not be a minimal region, but since it's only used for the broad phase pass it's good enough.
+    //
+    // cbr is calculated by the `_checkBounds` method of the "Collision" component
+    if (this._cbr) {
+      var cbr = this._cbr;
+      var cx = cbr.cx, cy = cbr.cy, r = cbr.r;
+      var cx2 = ox + (cx + this._x - ox) * ct + (cy + this._y - oy) * st;
+      var cy2 = oy - (cx + this._x - ox) * st + (cy + this._y - oy) * ct;
+      cbr._x = Math.min(cx2 - r, minx);
+      cbr._y = Math.min(cy2 - r, miny);
+      cbr._w = Math.max(cx2 + r, maxx) - cbr._x;
+      cbr._h = Math.max(cy2 + r, maxy) - cbr._y;
+    }
+  },
 
-    },
-
-    /**
+  /**
      * Handle changes that need to happen on a rotation
      */
-    _rotate: function (v) {
-        //var theta = -1 * (v % 360); //angle always between 0 and 359
-        var difference = this._rotation - v;
-        // skip if there's no rotation!
-        if (difference === 0)
-            return;
-        else
-            this._rotation = v;
+  _rotate: function(v) {
+    //var theta = -1 * (v % 360); //angle always between 0 and 359
+    var difference = this._rotation - v;
+    // skip if there's no rotation!
+    if (difference === 0) return;
+    else this._rotation = v;
 
-        //Calculate the new MBR
-        var //rad = theta * DEG_TO_RAD,
-            o = {
-                x: this._origin.x + this._x,
-                y: this._origin.y + this._y
-            };
+    //Calculate the new MBR
+    var //rad = theta * DEG_TO_RAD,
+    o = {
+      x: this._origin.x + this._x,
+      y: this._origin.y + this._y
+    };
 
-        this._calculateMBR();
+    this._calculateMBR();
 
+    //trigger "Rotate" event
+    var drad = difference * DEG_TO_RAD,
+      // ct = Math.cos(rad),
+      // st = Math.sin(rad),
+      cos = Math.cos(drad),
+      sin = Math.sin(drad);
 
-        //trigger "Rotate" event
-        var drad = difference * DEG_TO_RAD,
-            // ct = Math.cos(rad),
-            // st = Math.sin(rad),
-            cos = Math.cos(drad),
-            sin = Math.sin(drad);
+    this.trigger("Rotate", {
+      cos: -1e-10 < cos && cos < 1e-10 ? 0 : cos, // Special case 90 degree rotations to prevent rounding problems
+      sin: -1e-10 < sin && sin < 1e-10 ? 0 : sin, // Special case 90 degree rotations to prevent rounding problems
+      deg: difference,
+      rad: drad,
+      o: o
+    });
+  },
 
-        this.trigger("Rotate", {
-            cos: (-1e-10 < cos && cos < 1e-10) ? 0 : cos, // Special case 90 degree rotations to prevent rounding problems
-            sin: (-1e-10 < sin && sin < 1e-10) ? 0 : sin, // Special case 90 degree rotations to prevent rounding problems
-            deg: difference,
-            rad: drad,
-            o: o
-        });
-    },
-
-    /**@
+  /**@
      * #.area
      * @comp 2D
      * @kind Method
@@ -424,11 +414,11 @@ Crafty.c("2D", {
      * @sign public Number .area(void)
      * Calculates the area of the entity
      */
-    area: function () {
-        return this._w * this._h;
-    },
+  area: function() {
+    return this._w * this._h;
+  },
 
-    /**@
+  /**@
      * #.intersect
      * @comp 2D
      * @kind Method
@@ -443,24 +433,28 @@ Crafty.c("2D", {
      *
      * Determines if this entity intersects a rectangle.  If the entity is rotated, its MBR is used for the test.
      */
-    intersect: function (x, y, w, h) {
-        var rect, mbr = this._mbr || this;
-        if (typeof x === "object") {
-            rect = x;
-        } else {
-            rect = {
-                _x: x,
-                _y: y,
-                _w: w,
-                _h: h
-            };
-        }
+  intersect: function(x, y, w, h) {
+    var rect, mbr = this._mbr || this;
+    if (typeof x === "object") {
+      rect = x;
+    } else {
+      rect = {
+        _x: x,
+        _y: y,
+        _w: w,
+        _h: h
+      };
+    }
 
-        return mbr._x < rect._x + rect._w && mbr._x + mbr._w > rect._x &&
-            mbr._y < rect._y + rect._h && mbr._y + mbr._h > rect._y;
-    },
+    return (
+      mbr._x < rect._x + rect._w &&
+      mbr._x + mbr._w > rect._x &&
+      mbr._y < rect._y + rect._h &&
+      mbr._y + mbr._h > rect._y
+    );
+  },
 
-    /**@
+  /**@
      * #.within
      * @comp 2D
      * @kind Method
@@ -475,24 +469,28 @@ Crafty.c("2D", {
      *
      * Determines if this current entity is within another rectangle.
      */
-    within: function (x, y, w, h) {
-        var rect, mbr = this._mbr || this;
-        if (typeof x === "object") {
-            rect = x;
-        } else {
-            rect = {
-                _x: x,
-                _y: y,
-                _w: w,
-                _h: h
-            };
-        }
+  within: function(x, y, w, h) {
+    var rect, mbr = this._mbr || this;
+    if (typeof x === "object") {
+      rect = x;
+    } else {
+      rect = {
+        _x: x,
+        _y: y,
+        _w: w,
+        _h: h
+      };
+    }
 
-        return rect._x <= mbr._x && rect._x + rect._w >= mbr._x + mbr._w &&
-            rect._y <= mbr._y && rect._y + rect._h >= mbr._y + mbr._h;
-    },
+    return (
+      rect._x <= mbr._x &&
+      rect._x + rect._w >= mbr._x + mbr._w &&
+      rect._y <= mbr._y &&
+      rect._y + rect._h >= mbr._y + mbr._h
+    );
+  },
 
-    /**@
+  /**@
      * #.contains
      * @comp 2D
      * @kind Method
@@ -507,24 +505,28 @@ Crafty.c("2D", {
      *
      * Determines if the rectangle is within the current entity.  If the entity is rotated, its MBR is used for the test.
      */
-    contains: function (x, y, w, h) {
-        var rect, mbr = this._mbr || this;
-        if (typeof x === "object") {
-            rect = x;
-        } else {
-            rect = {
-                _x: x,
-                _y: y,
-                _w: w,
-                _h: h
-            };
-        }
+  contains: function(x, y, w, h) {
+    var rect, mbr = this._mbr || this;
+    if (typeof x === "object") {
+      rect = x;
+    } else {
+      rect = {
+        _x: x,
+        _y: y,
+        _w: w,
+        _h: h
+      };
+    }
 
-        return rect._x >= mbr._x && rect._x + rect._w <= mbr._x + mbr._w &&
-            rect._y >= mbr._y && rect._y + rect._h <= mbr._y + mbr._h;
-    },
+    return (
+      rect._x >= mbr._x &&
+      rect._x + rect._w <= mbr._x + mbr._w &&
+      rect._y >= mbr._y &&
+      rect._y + rect._h <= mbr._y + mbr._h
+    );
+  },
 
-    /**@
+  /**@
      * #.pos
      * @comp 2D
      * @kind Method
@@ -538,16 +540,16 @@ Crafty.c("2D", {
      * @note The keys have an underscore prefix. This is due to the x, y, w, h properties
      * being setters and getters that wrap the underlying properties with an underscore (_x, _y, _w, _h).
      */
-    pos: function (pos) {
-        pos = pos || {};
-        pos._x = (this._x);
-        pos._y = (this._y);
-        pos._w = (this._w);
-        pos._h = (this._h);
-        return pos;
-    },
+  pos: function(pos) {
+    pos = pos || {};
+    pos._x = this._x;
+    pos._y = this._y;
+    pos._w = this._w;
+    pos._h = this._h;
+    return pos;
+  },
 
-    /**@
+  /**@
      * #.mbr
      * @comp 2D
      * @kind Method
@@ -565,20 +567,20 @@ Crafty.c("2D", {
      *
      * @see .pos
      */
-    mbr: function (mbr) {
-        mbr = mbr || {};
-        if (!this._mbr) {
-            return this.pos(mbr);
-        } else {
-            mbr._x = (this._mbr._x);
-            mbr._y = (this._mbr._y);
-            mbr._w = (this._mbr._w);
-            mbr._h = (this._mbr._h);
-            return mbr;
-        }
-    },
+  mbr: function(mbr) {
+    mbr = mbr || {};
+    if (!this._mbr) {
+      return this.pos(mbr);
+    } else {
+      mbr._x = this._mbr._x;
+      mbr._y = this._mbr._y;
+      mbr._w = this._mbr._w;
+      mbr._h = this._mbr._h;
+      return mbr;
+    }
+  },
 
-    /**@
+  /**@
      * #.isAt
      * @comp 2D
      * @kind Method
@@ -592,18 +594,19 @@ Crafty.c("2D", {
      *
      * The given point is tested against the first of the following that exists: a mapArea associated with "Mouse", the hitarea associated with "Collision", or the object's MBR.
      */
-    isAt: function (x, y) {
-        if (this.mapArea) {
-            return this.mapArea.containsPoint(x, y);
-        } else if (this.map) {
-            return this.map.containsPoint(x, y);
-        }
-        var mbr = this._mbr || this;
-        return mbr._x <= x && mbr._x + mbr._w >= x &&
-            mbr._y <= y && mbr._y + mbr._h >= y;
-    },
+  isAt: function(x, y) {
+    if (this.mapArea) {
+      return this.mapArea.containsPoint(x, y);
+    } else if (this.map) {
+      return this.map.containsPoint(x, y);
+    }
+    var mbr = this._mbr || this;
+    return (
+      mbr._x <= x && mbr._x + mbr._w >= x && mbr._y <= y && mbr._y + mbr._h >= y
+    );
+  },
 
-    /**@
+  /**@
      * #.move
      * @comp 2D
      * @kind Method
@@ -614,16 +617,16 @@ Crafty.c("2D", {
      *
      * Quick method to move the entity in a direction (n, s, e, w, ne, nw, se, sw) by an amount of pixels.
      */
-    move: function (dir, by) {
-        if (dir.charAt(0) === 'n') this.y -= by;
-        if (dir.charAt(0) === 's') this.y += by;
-        if (dir === 'e' || dir.charAt(1) === 'e') this.x += by;
-        if (dir === 'w' || dir.charAt(1) === 'w') this.x -= by;
+  move: function(dir, by) {
+    if (dir.charAt(0) === "n") this.y -= by;
+    if (dir.charAt(0) === "s") this.y += by;
+    if (dir === "e" || dir.charAt(1) === "e") this.x += by;
+    if (dir === "w" || dir.charAt(1) === "w") this.x -= by;
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.shift
      * @comp 2D
      * @kind Method
@@ -637,16 +640,16 @@ Crafty.c("2D", {
      * Shift or move the entity by an amount. Use negative values
      * for an opposite direction.
      */
-    shift: function (x, y, w, h) {
-        if (x) this.x += x;
-        if (y) this.y += y;
-        if (w) this.w += w;
-        if (h) this.h += h;
+  shift: function(x, y, w, h) {
+    if (x) this.x += x;
+    if (y) this.y += y;
+    if (w) this.w += w;
+    if (h) this.h += h;
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #._cascade
      * @comp 2D
      * @kind Method
@@ -660,33 +663,30 @@ Crafty.c("2D", {
      * internally for ensuring that when a parent moves, the child also
      * moves in the same way.
      */
-    _cascade: function (e) {
-        if (!e) return; //no change in position
-        var i = 0,
-            children = this._children,
-            l = children.length,
-            obj;
-        //rotation
-        if (("cos" in e) || ("sin" in e)) {
-            for (; i < l; ++i) {
-                obj = children[i];
-                if ('rotate' in obj) obj.rotate(e);
-            }
-        } else {
-            //use current position
-            var dx = this._x - e._x,
-                dy = this._y - e._y,
-                dw = this._w - e._w,
-                dh = this._h - e._h;
+  _cascade: function(e) {
+    if (!e) return; //no change in position
+    var i = 0, children = this._children, l = children.length, obj;
+    //rotation
+    if ("cos" in e || "sin" in e) {
+      for (; i < l; ++i) {
+        obj = children[i];
+        if ("rotate" in obj) obj.rotate(e);
+      }
+    } else {
+      //use current position
+      var dx = this._x - e._x,
+        dy = this._y - e._y,
+        dw = this._w - e._w,
+        dh = this._h - e._h;
 
-            for (; i < l; ++i) {
-                obj = children[i];
-                obj.shift(dx, dy, dw, dh);
-            }
-        }
-    },
+      for (; i < l; ++i) {
+        obj = children[i];
+        obj.shift(dx, dy, dw, dh);
+      }
+    }
+  },
 
-    /**@
+  /**@
      * #.attach
      * @comp 2D
      * @kind Method
@@ -706,24 +706,21 @@ Crafty.c("2D", {
      * As many objects as wanted can be attached, and a hierarchy of objects is
      * possible by attaching.
      */
-    attach: function () {
-        var i = 0,
-            arg = arguments,
-            l = arguments.length,
-            obj;
-        for (; i < l; ++i) {
-            obj = arg[i];
-            if (obj._parent) {
-                obj._parent.detach(obj);
-            }
-            obj._parent = this;
-            this._children.push(obj);
-        }
+  attach: function() {
+    var i = 0, arg = arguments, l = arguments.length, obj;
+    for (; i < l; ++i) {
+      obj = arg[i];
+      if (obj._parent) {
+        obj._parent.detach(obj);
+      }
+      obj._parent = this;
+      this._children.push(obj);
+    }
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.detach
      * @comp 2D
      * @kind Method
@@ -734,29 +731,29 @@ Crafty.c("2D", {
      * Stop an entity from following the current entity. Passing no arguments will stop
      * every entity attached.
      */
-    detach: function (obj) {
-        var i;
-        //if nothing passed, remove all attached objects
-        if (!obj) {
-            for (i = 0; i < this._children.length; i++) {
-                this._children[i]._parent = null;
-            }
-            this._children = [];
-            return this;
-        }
+  detach: function(obj) {
+    var i;
+    //if nothing passed, remove all attached objects
+    if (!obj) {
+      for (i = 0; i < this._children.length; i++) {
+        this._children[i]._parent = null;
+      }
+      this._children = [];
+      return this;
+    }
 
-        //if obj passed, find the handler and unbind
-        for (i = 0; i < this._children.length; i++) {
-            if (this._children[i] === obj) {
-                this._children.splice(i, 1);
-            }
-        }
-        obj._parent = null;
+    //if obj passed, find the handler and unbind
+    for (i = 0; i < this._children.length; i++) {
+      if (this._children[i] === obj) {
+        this._children.splice(i, 1);
+      }
+    }
+    obj._parent = null;
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.origin
      * @comp 2D
      * @kind Method
@@ -794,113 +791,118 @@ Crafty.c("2D", {
      *
      * @see .rotation
      */
-    origin: function (x, y) {
-        //text based origin
-        if (typeof x === "string") {
-            if (x === "centre" || x === "center" || x.indexOf(' ') === -1) {
-                x = this._w / 2;
-                y = this._h / 2;
-            } else {
-                var cmd = x.split(' ');
-                if (cmd[0] === "top") y = 0;
-                else if (cmd[0] === "bottom") y = this._h;
-                else if (cmd[0] === "middle" || cmd[1] === "center" || cmd[1] === "centre") y = this._h / 2;
+  origin: function(x, y) {
+    //text based origin
+    if (typeof x === "string") {
+      if (x === "centre" || x === "center" || x.indexOf(" ") === -1) {
+        x = this._w / 2;
+        y = this._h / 2;
+      } else {
+        var cmd = x.split(" ");
+        if (cmd[0] === "top") y = 0;
+        else if (cmd[0] === "bottom") y = this._h;
+        else if (
+          cmd[0] === "middle" || cmd[1] === "center" || cmd[1] === "centre"
+        )
+          y = this._h / 2;
 
-                if (cmd[1] === "center" || cmd[1] === "centre" || cmd[1] === "middle") x = this._w / 2;
-                else if (cmd[1] === "left") x = 0;
-                else if (cmd[1] === "right") x = this._w;
-            }
-        }
+        if (cmd[1] === "center" || cmd[1] === "centre" || cmd[1] === "middle")
+          x = this._w / 2;
+        else if (cmd[1] === "left") x = 0;
+        else if (cmd[1] === "right") x = this._w;
+      }
+    }
 
-        this._origin.x = x;
-        this._origin.y = y;
+    this._origin.x = x;
+    this._origin.y = y;
 
-        return this;
-    },
+    return this;
+  },
 
-    /**
+  /**
      * Method for rotation rather than through a setter
      */
-    rotate: function (e) {
-        var x2, y2;
-        x2 =  (this._x + this._origin.x - e.o.x) * e.cos + (this._y + this._origin.y - e.o.y) * e.sin + (e.o.x - this._origin.x);
-        y2 =  (this._y + this._origin.y - e.o.y) * e.cos - (this._x + this._origin.x - e.o.x) * e.sin + (e.o.y - this._origin.y);
-        this._setter2d('_rotation', this._rotation - e.deg);
-        this._setter2d('_x', x2 );
-        this._setter2d('_y', y2 );
-    },
+  rotate: function(e) {
+    var x2, y2;
+    x2 =
+      (this._x + this._origin.x - e.o.x) * e.cos +
+      (this._y + this._origin.y - e.o.y) * e.sin +
+      (e.o.x - this._origin.x);
+    y2 =
+      (this._y + this._origin.y - e.o.y) * e.cos -
+      (this._x + this._origin.x - e.o.x) * e.sin +
+      (e.o.y - this._origin.y);
+    this._setter2d("_rotation", this._rotation - e.deg);
+    this._setter2d("_x", x2);
+    this._setter2d("_y", y2);
+  },
 
-    // This is a setter method for all 2D properties including
-    // x, y, w, h, and rotation.
-    _setter2d: function (name, value) {
-        // Return if there is no change
-        if (this[name] === value) {
-            return;
-        }
-        //keep a reference of the old positions
-        var old = Crafty.rectManager._pool.copy(this);
-
-        var mbr;
-        //if rotation, use the rotate method
-        if (name === '_rotation') {
-            this._rotate(value); // _rotate triggers "Rotate"
-            //set the global Z and trigger reorder just in case
-        } else if (name === '_x' || name === '_y') {
-            // mbr is the minimal bounding rectangle of the entity
-            mbr = this._mbr;
-            if (mbr) {
-                mbr[name] -= this[name] - value;
-                // cbr is a non-minmal bounding rectangle that contains both hitbox and mbr
-                // It will exist only when the collision hitbox sits outside the entity
-                if (this._cbr){
-                    this._cbr[name] -= this[name] - value;
-                }
-            }
-            this[name] = value;
-
-            this.trigger("Move", old);
-
-        } else if (name === '_h' || name === '_w') {
-            mbr = this._mbr;
-
-            var oldValue = this[name];
-            this[name] = value;
-            if (mbr) {
-                this._calculateMBR();
-            }
-            if (name === '_w') {
-                this.trigger("Resize", {
-                    axis: 'w',
-                    amount: value - oldValue
-                });
-            } else if (name === '_h') {
-                this.trigger("Resize", {
-                    axis: 'h',
-                    amount: value - oldValue
-                });
-            }
-            this.trigger("Move", old);
-
-        } else if (name === '_z') {
-            var intValue = value << 0;
-            value = value === intValue ? intValue : intValue+1;
-            this._globalZ = value * 100000 + this[0]; //magic number 10^5 is the max num of entities
-            this[name] = value;
-            this.trigger("Reorder");
-        }
-
-        //everything will assume the value
-        this[name] = value;
-
-        // flag for redraw
-        this.trigger("Invalidate");
-
-        Crafty.rectManager._pool.recycle(old);
+  // This is a setter method for all 2D properties including
+  // x, y, w, h, and rotation.
+  _setter2d: function(name, value) {
+    // Return if there is no change
+    if (this[name] === value) {
+      return;
     }
+    //keep a reference of the old positions
+    var old = Crafty.rectManager._pool.copy(this);
+
+    var mbr;
+    //if rotation, use the rotate method
+    if (name === "_rotation") {
+      this._rotate(value); // _rotate triggers "Rotate"
+      //set the global Z and trigger reorder just in case
+    } else if (name === "_x" || name === "_y") {
+      // mbr is the minimal bounding rectangle of the entity
+      mbr = this._mbr;
+      if (mbr) {
+        mbr[name] -= this[name] - value;
+        // cbr is a non-minmal bounding rectangle that contains both hitbox and mbr
+        // It will exist only when the collision hitbox sits outside the entity
+        if (this._cbr) {
+          this._cbr[name] -= this[name] - value;
+        }
+      }
+      this[name] = value;
+
+      this.trigger("Move", old);
+    } else if (name === "_h" || name === "_w") {
+      mbr = this._mbr;
+
+      var oldValue = this[name];
+      this[name] = value;
+      if (mbr) {
+        this._calculateMBR();
+      }
+      if (name === "_w") {
+        this.trigger("Resize", {
+          axis: "w",
+          amount: value - oldValue
+        });
+      } else if (name === "_h") {
+        this.trigger("Resize", {
+          axis: "h",
+          amount: value - oldValue
+        });
+      }
+      this.trigger("Move", old);
+    } else if (name === "_z") {
+      var intValue = value << 0;
+      value = value === intValue ? intValue : intValue + 1;
+      this._globalZ = value * 100000 + this[0]; //magic number 10^5 is the max num of entities
+      this[name] = value;
+      this.trigger("Reorder");
+    }
+
+    //everything will assume the value
+    this[name] = value;
+
+    // flag for redraw
+    this.trigger("Invalidate");
+
+    Crafty.rectManager._pool.recycle(old);
+  }
 });
-
-
-
 
 /**@
  * #Crafty.polygon
@@ -927,15 +929,15 @@ Crafty.c("2D", {
  * new Crafty.polygon(50, 0, 100, 100, 0, 100);
  * ~~~
  */
-Crafty.polygon = function (poly) {
-    if (arguments.length > 1) {
-        poly = Array.prototype.slice.call(arguments, 0);
-    }
-    this.points = poly;
+Crafty.polygon = function(poly) {
+  if (arguments.length > 1) {
+    poly = Array.prototype.slice.call(arguments, 0);
+  }
+  this.points = poly;
 };
 
 Crafty.polygon.prototype = {
-    /**@
+  /**@
      * #.containsPoint
      * @comp Crafty.polygon
      * @kind Method
@@ -953,20 +955,26 @@ Crafty.polygon.prototype = {
      * poly.containsPoint(0, 0); //FALSE
      * ~~~
      */
-    containsPoint: function (x, y) {
-        var p = this.points, l = p.length/2,
-            i, j, c = false;
+  containsPoint: function(x, y) {
+    var p = this.points, l = p.length / 2, i, j, c = false;
 
-        for (i = 0, j = l - 1; i < l; j = i++) {
-            if (((p[2*i+1] > y) !== (p[2*j+1] > y)) && (x < (p[2*j] - p[2*i]) * (y - p[2*i+1]) / (p[2*j+1] - p[2*i+1]) + p[2*i])) {
-                c = !c;
-            }
-        }
+    for ((i = 0), (j = l - 1); i < l; j = i++) {
+      if (
+        p[2 * i + 1] > y !== p[2 * j + 1] > y &&
+        x <
+          (p[2 * j] - p[2 * i]) *
+            (y - p[2 * i + 1]) /
+            (p[2 * j + 1] - p[2 * i + 1]) +
+            p[2 * i]
+      ) {
+        c = !c;
+      }
+    }
 
-        return c;
-    },
+    return c;
+  },
 
-    /**@
+  /**@
      * #.shift
      * @comp Crafty.polygon
      * @kind Method
@@ -984,16 +992,15 @@ Crafty.polygon.prototype = {
      * //[[55, 5, 105, 5, 5, 105];
      * ~~~
      */
-    shift: function (x, y) {
-        var i = 0, p =this.points,
-            l = p.length;
-        for (; i < l; i+=2) {
-            p[i] += x;
-            p[i+1] += y;
-        }
-    },
+  shift: function(x, y) {
+    var i = 0, p = this.points, l = p.length;
+    for (; i < l; i += 2) {
+      p[i] += x;
+      p[i + 1] += y;
+    }
+  },
 
-    /**@
+  /**@
      * #.clone
      * @comp Crafty.polygon
      * @kind Method
@@ -1009,27 +1016,24 @@ Crafty.polygon.prototype = {
      * //[55, 5, 105, 5, 5, 105], but the original polygon is unchanged
      * ~~~
      */
-    clone: function() {
-        //Shallow clone, but points should be full of Number primitives that are copied
-        return new Crafty.polygon(this.points.slice(0));
-    },
+  clone: function() {
+    //Shallow clone, but points should be full of Number primitives that are copied
+    return new Crafty.polygon(this.points.slice(0));
+  },
 
-    rotate: function (e) {
-        var i = 0, p = this.points,
-            l = p.length,
-            x, y;
+  rotate: function(e) {
+    var i = 0, p = this.points, l = p.length, x, y;
 
-        for (; i < l; i+=2) {
+    for (; i < l; i += 2) {
+      x = e.o.x + (p[i] - e.o.x) * e.cos + (p[i + 1] - e.o.y) * e.sin;
+      y = e.o.y - (p[i] - e.o.x) * e.sin + (p[i + 1] - e.o.y) * e.cos;
 
-            x = e.o.x + (p[i] - e.o.x) * e.cos + (p[i+1] - e.o.y) * e.sin;
-            y = e.o.y - (p[i] - e.o.x) * e.sin + (p[i+1] - e.o.y) * e.cos;
+      p[i] = x;
+      p[i + 1] = y;
+    }
+  },
 
-            p[i] = x;
-            p[i+1] = y;
-        }
-    },
-
-    /**@
+  /**@
      * #.intersectRay
      * @comp Crafty.polygon
      * @kind Method
@@ -1054,103 +1058,101 @@ Crafty.polygon.prototype = {
      * ~~~
      */
 
-    // Note that for the algorithm to work, the points of the polygon have to be defined
-    // either clock-wise or counter-clock-wise
-    //
-    // Segment-segment intersection is described here: http://stackoverflow.com/a/565282/3041008
-    // see dot projection: http://www.wildbunny.co.uk/blog/vector-maths-a-primer-for-games-programmers/vector/#Projection
-    //
-    // origin = {_x, _y}
-    // direction = {x, y}, must be normalized
-    // edge = end - start (of segment)
-    //
-    //
-    // # Segment - segment intersection equation
-    // origin + d * direction = start + e * edge
-    //
-    // ## Solving for d
-    // (origin + d * direction) x edge = (start + e * edge) x edge
-    // edge x edge == 0
-    // d = (start − origin) × edge / (direction × edge)
-    // d_nominator = (start - origin) x edge =
-    //      (start.x - origin.x, start.y - origin.y) x (edge.x, edge.y) =
-    //      (start.x - origin.x) * edge.y - (start.y - origin.y) * edge.x
-    // d_denominator = direction x edge =
-    //      (direction.x, direction.y) x (edge.x, edge.y) =
-    //      direction.x * edge.y - direction.y * edge.x
-    //
-    // ## Solving for e
-    // (origin + d * direction) x direction = (start + e * edge) x direction
-    // direction x direction == 0
-    // edge factor must be in interval [0, 1]
-    // e = (start − origin) × direction / (direction × edge)
-    // e_nominator = (start − origin) × direction =
-    //      (start.x - origin.x) * direction.y - (start.y - origin.y) * direction.x
-    // e_denominator = d_denominator
-    //
-    //
-    // # If segments are colinear (both nominator and denominator == 0),
-    //    then minDistance is min(d0, d1) >= 0,
-    //    get d0, d1 by doing dot projection onto normalized direction vector
-    //
-    // origin + d0*direction = start
-    // d0*direction = (start - origin)
-    // -> d0 = (start - origin) • direction =
-    //      (start.x - origin.x, start.y - origin.y) • (direction.x, direction.y) =
-    //      (start.x - origin.x) * direction.x + (start.y - origin.y) * direction.y
-    //
-    // origin + d1*direction = end
-    // d1*direction = end - origin
-    // -> d1 = (end - origin) • direction =
-    //      (end.x - origin.x, end.y - origin.y) • (direction.x, direction.y) =
-    //      (end.x - origin.x) * direction.x + (end.y - origin.y) * direction.y
-    intersectRay: function (origin, direction) {
-        var points = this.points,
-            minDistance = Infinity;
-        var d, d_nom,
-            e, e_nom,
-            denom;
+  // Note that for the algorithm to work, the points of the polygon have to be defined
+  // either clock-wise or counter-clock-wise
+  //
+  // Segment-segment intersection is described here: http://stackoverflow.com/a/565282/3041008
+  // see dot projection: http://www.wildbunny.co.uk/blog/vector-maths-a-primer-for-games-programmers/vector/#Projection
+  //
+  // origin = {_x, _y}
+  // direction = {x, y}, must be normalized
+  // edge = end - start (of segment)
+  //
+  //
+  // # Segment - segment intersection equation
+  // origin + d * direction = start + e * edge
+  //
+  // ## Solving for d
+  // (origin + d * direction) x edge = (start + e * edge) x edge
+  // edge x edge == 0
+  // d = (start − origin) × edge / (direction × edge)
+  // d_nominator = (start - origin) x edge =
+  //      (start.x - origin.x, start.y - origin.y) x (edge.x, edge.y) =
+  //      (start.x - origin.x) * edge.y - (start.y - origin.y) * edge.x
+  // d_denominator = direction x edge =
+  //      (direction.x, direction.y) x (edge.x, edge.y) =
+  //      direction.x * edge.y - direction.y * edge.x
+  //
+  // ## Solving for e
+  // (origin + d * direction) x direction = (start + e * edge) x direction
+  // direction x direction == 0
+  // edge factor must be in interval [0, 1]
+  // e = (start − origin) × direction / (direction × edge)
+  // e_nominator = (start − origin) × direction =
+  //      (start.x - origin.x) * direction.y - (start.y - origin.y) * direction.x
+  // e_denominator = d_denominator
+  //
+  //
+  // # If segments are colinear (both nominator and denominator == 0),
+  //    then minDistance is min(d0, d1) >= 0,
+  //    get d0, d1 by doing dot projection onto normalized direction vector
+  //
+  // origin + d0*direction = start
+  // d0*direction = (start - origin)
+  // -> d0 = (start - origin) • direction =
+  //      (start.x - origin.x, start.y - origin.y) • (direction.x, direction.y) =
+  //      (start.x - origin.x) * direction.x + (start.y - origin.y) * direction.y
+  //
+  // origin + d1*direction = end
+  // d1*direction = end - origin
+  // -> d1 = (end - origin) • direction =
+  //      (end.x - origin.x, end.y - origin.y) • (direction.x, direction.y) =
+  //      (end.x - origin.x) * direction.x + (end.y - origin.y) * direction.y
+  intersectRay: function(origin, direction) {
+    var points = this.points, minDistance = Infinity;
+    var d, d_nom, e, e_nom, denom;
 
-        var originX = origin._x, directionX = direction.x,
-            originY = origin._y, directionY = direction.y;
+    var originX = origin._x,
+      directionX = direction.x,
+      originY = origin._y,
+      directionY = direction.y;
 
-        var i = 0, l = points.length;
-        var startX = points[l - 2], endX, edgeX,
-            startY = points[l - 1], endY, edgeY;
-        for (; i < l; i += 2) {
-            endX = points[i];
-            endY = points[i+1];
-            edgeX = endX - startX;
-            edgeY = endY - startY;
+    var i = 0, l = points.length;
+    var startX = points[l - 2],
+      endX,
+      edgeX,
+      startY = points[l - 1],
+      endY,
+      edgeY;
+    for (; i < l; i += 2) {
+      endX = points[i];
+      endY = points[i + 1];
+      edgeX = endX - startX;
+      edgeY = endY - startY;
 
-            d_nom = (startX - originX) * edgeY      - (startY - originY) * edgeX;
-            e_nom = (startX - originX) * directionY - (startY - originY) * directionX;
-            denom = directionX * edgeY - directionY * edgeX;
+      d_nom = (startX - originX) * edgeY - (startY - originY) * edgeX;
+      e_nom = (startX - originX) * directionY - (startY - originY) * directionX;
+      denom = directionX * edgeY - directionY * edgeX;
 
-            if (denom !== 0) {
-                d = d_nom / denom;
-                e = e_nom / denom;
+      if (denom !== 0) {
+        d = d_nom / denom;
+        e = e_nom / denom;
 
-                if (e >= 0 && e <= 1 && d >= 0 && d < minDistance)
-                    minDistance = d;
+        if (e >= 0 && e <= 1 && d >= 0 && d < minDistance) minDistance = d;
+      } else if (d_nom === 0 || e_nom === 0) {
+        d = (startX - originX) * directionX + (startY - originY) * directionY;
+        if (d >= 0 && d < minDistance) minDistance = d;
 
-            } else if (d_nom === 0 || e_nom === 0) {
+        d = (endX - originX) * directionX + (endY - originY) * directionY;
+        if (d >= 0 && d < minDistance) minDistance = d;
+      }
 
-                d = (startX - originX) * directionX + (startY - originY) * directionY;
-                if (d >= 0 && d < minDistance)
-                    minDistance = d;
-
-                d = (endX - originX) * directionX + (endY - originY) * directionY;
-                if (d >= 0 && d < minDistance)
-                    minDistance = d;
-            }
-
-            startX = endX;
-            startY = endY;
-        }
-
-        return minDistance;
+      startX = endX;
+      startY = endY;
     }
+
+    return minDistance;
+  }
 };
 
 /**@
@@ -1172,24 +1174,24 @@ Crafty.polygon.prototype = {
  * When creating a circle for an entity, each point should be offset or relative from the entities `x` and `y`
  * (don't include the absolute values as it will automatically calculate this).
  */
-Crafty.circle = function (x, y, radius) {
-    this.x = x;
-    this.y = y;
-    this.radius = radius;
+Crafty.circle = function(x, y, radius) {
+  this.x = x;
+  this.y = y;
+  this.radius = radius;
 
-    // Creates an octagon that approximate the circle for backward compatibility.
-    this.points = [];
-    var theta;
+  // Creates an octagon that approximate the circle for backward compatibility.
+  this.points = [];
+  var theta;
 
-    for (var i = 0; i < 16; i+=2) {
-        theta = i * Math.PI / 8;
-        this.points[i] = this.x + (Math.sin(theta) * radius);
-        this.points[i+1] = this.y + (Math.cos(theta) * radius);
-    }
+  for (var i = 0; i < 16; i += 2) {
+    theta = i * Math.PI / 8;
+    this.points[i] = this.x + Math.sin(theta) * radius;
+    this.points[i + 1] = this.y + Math.cos(theta) * radius;
+  }
 };
 
 Crafty.circle.prototype = {
-    /**@
+  /**@
      * #.containsPoint
      * @comp Crafty.circle
      * @kind Method
@@ -1207,15 +1209,13 @@ Crafty.circle.prototype = {
      * circle.containsPoint(50, 50); //FALSE
      * ~~~
      */
-    containsPoint: function (x, y) {
-        var radius = this.radius,
-            deltaX = this.x - x,
-            deltaY = this.y - y;
+  containsPoint: function(x, y) {
+    var radius = this.radius, deltaX = this.x - x, deltaY = this.y - y;
 
-        return (deltaX * deltaX + deltaY * deltaY) < (radius * radius);
-    },
+    return deltaX * deltaX + deltaY * deltaY < radius * radius;
+  },
 
-    /**@
+  /**@
      * #.shift
      * @comp Crafty.circle
      * @kind Method
@@ -1233,54 +1233,52 @@ Crafty.circle.prototype = {
      * //{x: 5, y: 5, radius: 10};
      * ~~~
      */
-    shift: function (x, y) {
-        this.x += x;
-        this.y += y;
+  shift: function(x, y) {
+    this.x += x;
+    this.y += y;
 
-        var i = 0, p = this.points,
-            l = p.length;
-        for (; i < l; i+=2) {
-            p[i] += x;
-            p[i+1] += y;
-        }
-    },
-
-    rotate: function () {
-        // We are a circle, we don't have to rotate :)
+    var i = 0, p = this.points, l = p.length;
+    for (; i < l; i += 2) {
+      p[i] += x;
+      p[i + 1] += y;
     }
+  },
+
+  rotate: function() {
+    // We are a circle, we don't have to rotate :)
+  }
 };
 
-
-Crafty.matrix = function (m) {
-    this.mtx = m;
-    this.width = m[0].length;
-    this.height = m.length;
+Crafty.matrix = function(m) {
+  this.mtx = m;
+  this.width = m[0].length;
+  this.height = m.length;
 };
 
 Crafty.matrix.prototype = {
-    x: function (other) {
-        if (this.width !== other.height) {
-            return;
-        }
-
-        var result = [];
-        for (var i = 0; i < this.height; i++) {
-            result[i] = [];
-            for (var j = 0; j < other.width; j++) {
-                var sum = 0;
-                for (var k = 0; k < this.width; k++) {
-                    sum += this.mtx[i][k] * other.mtx[k][j];
-                }
-                result[i][j] = sum;
-            }
-        }
-        return new Crafty.matrix(result);
-    },
-
-
-    e: function (row, col) {
-        //test if out of bounds
-        if (row < 1 || row > this.mtx.length || col < 1 || col > this.mtx[0].length) return null;
-        return this.mtx[row - 1][col - 1];
+  x: function(other) {
+    if (this.width !== other.height) {
+      return;
     }
+
+    var result = [];
+    for (var i = 0; i < this.height; i++) {
+      result[i] = [];
+      for (var j = 0; j < other.width; j++) {
+        var sum = 0;
+        for (var k = 0; k < this.width; k++) {
+          sum += this.mtx[i][k] * other.mtx[k][j];
+        }
+        result[i][j] = sum;
+      }
+    }
+    return new Crafty.matrix(result);
+  },
+
+  e: function(row, col) {
+    //test if out of bounds
+    if (row < 1 || row > this.mtx.length || col < 1 || col > this.mtx[0].length)
+      return null;
+    return this.mtx[row - 1][col - 1];
+  }
 };

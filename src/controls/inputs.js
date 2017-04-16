@@ -1,13 +1,12 @@
-var Crafty = require('../core/core.js'),
-    document = window.document;
+var Crafty = require("../core/core.js"), document = window.document;
 
 Crafty.extend({
-    over: null, //object mouseover, waiting for out
-    mouseObjs: 0,
-    mousePos: {},   
-    touchObjs: 0,
+  over: null, //object mouseover, waiting for out
+  mouseObjs: 0,
+  mousePos: {},
+  touchObjs: 0,
 
-    /**@
+  /**@
      * #Crafty.lastEvent
      * @category Input
      * @kind Property
@@ -31,8 +30,8 @@ Crafty.extend({
      * @see Mouse, Crafty.mouseButtons, Crafty.mouseDispatch
      */
 
-    lastEvent: null,
-    /**@
+  lastEvent: null,
+  /**@
      * #Crafty.keydown
      * @category Input
      * @kind Property
@@ -45,9 +44,9 @@ Crafty.extend({
      * ~~~
      * @see Keyboard, Crafty.keys, Crafty.keyboardDispatch
      */
-    keydown: {},
+  keydown: {},
 
-    /**@
+  /**@
      * #Crafty.selected
      * @category Input
      * @kind Property
@@ -63,24 +62,27 @@ Crafty.extend({
      *
      * @see Crafty.stage#Crafty.stage.elem
      */
-    selected: true,
+  selected: true,
 
-    detectBlur: function (e) {
-        var selected = ((e.clientX > Crafty.stage.x && e.clientX < Crafty.stage.x + Crafty.viewport.width) &&
-            (e.clientY > Crafty.stage.y && e.clientY < Crafty.stage.y + Crafty.viewport.height));
+  detectBlur: function(e) {
+    var selected =
+      e.clientX > Crafty.stage.x &&
+      e.clientX < Crafty.stage.x + Crafty.viewport.width &&
+      (e.clientY > Crafty.stage.y &&
+        e.clientY < Crafty.stage.y + Crafty.viewport.height);
 
-        if (!Crafty.selected && selected) {
-            Crafty.trigger("CraftyFocus");
-        }
+    if (!Crafty.selected && selected) {
+      Crafty.trigger("CraftyFocus");
+    }
 
-        if (Crafty.selected && !selected) {
-            Crafty.trigger("CraftyBlur");
-        }
+    if (Crafty.selected && !selected) {
+      Crafty.trigger("CraftyBlur");
+    }
 
-        Crafty.selected = selected;
-    },
+    Crafty.selected = selected;
+  },
 
-    /**@
+  /**@
      * #Crafty.multitouch
      * @category Input
      * @kind Method
@@ -117,25 +119,25 @@ Crafty.extend({
      * @see Crafty.touchDispatch
      * @see Touch
      */
-    multitouch: function (bool) {
-        if (typeof bool !== "boolean") return this._touchHandler.multitouch;
-        this._touchHandler.multitouch = bool;
-    },
+  multitouch: function(bool) {
+    if (typeof bool !== "boolean") return this._touchHandler.multitouch;
+    this._touchHandler.multitouch = bool;
+  },
 
-    resetKeyDown: function () {
-        // Tell all the keys they're no longer held down
-        for (var k in Crafty.keys) {
-            if (Crafty.keydown[Crafty.keys[k]]) {
-                this.trigger("KeyUp", {
-                    key: Crafty.keys[k]
-                });
-            }
-        }
+  resetKeyDown: function() {
+    // Tell all the keys they're no longer held down
+    for (var k in Crafty.keys) {
+      if (Crafty.keydown[Crafty.keys[k]]) {
+        this.trigger("KeyUp", {
+          key: Crafty.keys[k]
+        });
+      }
+    }
 
-        Crafty.keydown = {};
-    },
+    Crafty.keydown = {};
+  },
 
-    /**@
+  /**@
      * #Crafty.mouseDispatch
      * @category Input
      * @private
@@ -151,91 +153,98 @@ Crafty.extend({
      *
      * @see Crafty.mouseButtons, Crafty.lastEvent, Mouse
      */
-    mouseButtonsDown: {    },
-    mouseDispatch: function (e) {
-        if (!Crafty.mouseObjs) return;
-        Crafty.lastEvent = e;
+  mouseButtonsDown: {},
+  mouseDispatch: function(e) {
+    if (!Crafty.mouseObjs) return;
+    Crafty.lastEvent = e;
 
-        var tar = e.target ? e.target : e.srcElement,
-            closest,
-            pos = Crafty.domHelper.translate(e.clientX, e.clientY),
-            type = e.type;
+    var tar = e.target ? e.target : e.srcElement,
+      closest,
+      pos = Crafty.domHelper.translate(e.clientX, e.clientY),
+      type = e.type;
 
-        //Normalize button according to http://unixpapa.com/js/mouse.html
-        if (typeof e.which === 'undefined') {
-            e.mouseButton = (e.button < 2) ? Crafty.mouseButtons.LEFT : ((e.button === 4) ? Crafty.mouseButtons.MIDDLE : Crafty.mouseButtons.RIGHT);
-        } else {
-            e.mouseButton = (e.which < 2) ? Crafty.mouseButtons.LEFT : ((e.which === 2) ? Crafty.mouseButtons.MIDDLE : Crafty.mouseButtons.RIGHT);
+    //Normalize button according to http://unixpapa.com/js/mouse.html
+    if (typeof e.which === "undefined") {
+      e.mouseButton = e.button < 2
+        ? Crafty.mouseButtons.LEFT
+        : e.button === 4
+            ? Crafty.mouseButtons.MIDDLE
+            : Crafty.mouseButtons.RIGHT;
+    } else {
+      e.mouseButton = e.which < 2
+        ? Crafty.mouseButtons.LEFT
+        : e.which === 2
+            ? Crafty.mouseButtons.MIDDLE
+            : Crafty.mouseButtons.RIGHT;
+    }
+
+    // Set the mouse position based on standard viewport coordinates
+    Crafty.mousePos.x = pos.x;
+    Crafty.mousePos.y = pos.y;
+
+    // Track button state
+    if (type === "mousedown") {
+      this.mouseButtonsDown[e.mouseButton] = true;
+    }
+    if (type === "mouseup") {
+      delete this.mouseButtonsDown[e.mouseButton];
+    }
+
+    closest = Crafty.findPointerEventTargetByComponent("Mouse", e, tar);
+    //found closest object to mouse
+    if (closest) {
+      //click must mousedown and out on tile
+      if (type === "mousedown") {
+        closest.trigger("MouseDown", e);
+      } else if (type === "mouseup") {
+        closest.trigger("MouseUp", e);
+      } else if (type === "dblclick") {
+        closest.trigger("DoubleClick", e);
+      } else if (type === "click") {
+        closest.trigger("Click", e);
+      } else if (type === "mousemove") {
+        closest.trigger("MouseMove", e);
+        if (this.over !== closest) {
+          //if new mousemove, it is over
+          if (this.over) {
+            this.over.trigger("MouseOut", e); //if over wasn't null, send mouseout
+            this.over = null;
+          }
+          this.over = closest;
+          closest.trigger("MouseOver", e);
         }
+      } else closest.trigger(type, e); //trigger whatever it is
+    } else {
+      if (type === "mousemove" && this.over) {
+        this.over.trigger("MouseOut", e);
+        this.over = null;
+      }
+      if (type === "mousedown") {
+        Crafty.viewport.mouselook("start", e);
+      } else if (type === "mousemove") {
+        Crafty.viewport.mouselook("drag", e);
+      } else if (type === "mouseup") {
+        Crafty.viewport.mouselook("stop");
+      }
 
-        // Set the mouse position based on standard viewport coordinates
-        Crafty.mousePos.x = pos.x;
-        Crafty.mousePos.y = pos.y;
+      // If nothing in particular was clicked, the controls system should get fed the event
+      if (type === "mousedown") {
+        Crafty.s("Controls").trigger("MouseDown", e);
+      } else if (type === "mouseup") {
+        Crafty.s("Controls").trigger("MouseUp", e);
+      } else if (type === "dblclick") {
+        Crafty.s("Controls").trigger("DoubleClick", e);
+      } else if (type === "click") {
+        Crafty.s("Controls").trigger("Click", e);
+      }
+    }
 
-        // Track button state
-        if (type === "mousedown") {
-            this.mouseButtonsDown[e.mouseButton] = true;
-        }
-        if (type === "mouseup") {
-            delete this.mouseButtonsDown[e.mouseButton];
-        }
+    if (type === "mousemove") {
+      this.lastEvent = e;
+    }
+  },
 
-        closest = Crafty.findPointerEventTargetByComponent("Mouse", e, tar);
-        //found closest object to mouse
-        if (closest) {
-            //click must mousedown and out on tile
-            if (type === "mousedown") {
-                closest.trigger("MouseDown", e);
-            } else if (type === "mouseup") {
-                closest.trigger("MouseUp", e);
-            } else if (type === "dblclick") {
-                closest.trigger("DoubleClick", e);
-            } else if (type === "click") {
-                closest.trigger("Click", e);
-            } else if (type === "mousemove") {
-                closest.trigger("MouseMove", e);
-                if (this.over !== closest) { //if new mousemove, it is over
-                    if (this.over) { 
-                        this.over.trigger("MouseOut", e); //if over wasn't null, send mouseout
-                        this.over = null;
-                    }
-                    this.over = closest;
-                    closest.trigger("MouseOver", e);
-                }
-            } else closest.trigger(type, e); //trigger whatever it is
-        } else {
-            if (type === "mousemove" && this.over) {
-                this.over.trigger("MouseOut", e);
-                this.over = null;
-            }
-            if (type === "mousedown") {
-                Crafty.viewport.mouselook('start', e);
-            } else if (type === "mousemove") {
-                Crafty.viewport.mouselook('drag', e);
-            } else if (type === "mouseup") {
-                Crafty.viewport.mouselook('stop');
-            }
-
-            // If nothing in particular was clicked, the controls system should get fed the event
-            if (type === "mousedown") {
-                Crafty.s("Controls").trigger("MouseDown", e);
-            } else if (type === "mouseup") {
-                Crafty.s("Controls").trigger("MouseUp", e);
-            } else if (type === "dblclick") {
-                Crafty.s("Controls").trigger("DoubleClick", e);
-            } else if (type === "click") {
-                Crafty.s("Controls").trigger("Click", e);
-            }
-        }
-
-        if (type === "mousemove") {
-            this.lastEvent = e;
-        }
-
-    },
-
-
-    /**@
+  /**@
      * #Crafty.touchDispatch
      * @category Input
      * @kind Method
@@ -263,167 +272,197 @@ Crafty.extend({
      * @see Crafty.multitouch
      * @see Touch
      */
-    touchDispatch: function (e) {
-        if (!Crafty.touchObjs && !Crafty.mouseObjs) return;
+  touchDispatch: function(e) {
+    if (!Crafty.touchObjs && !Crafty.mouseObjs) return;
 
-        if (this._touchHandler.multitouch)
-            switch (e.type) {
-                case "touchstart":
-                    this._touchHandler.handleStart(e);
-                    break;
-                case "touchmove":
-                    this._touchHandler.handleMove(e);
-                    break;
-                case "touchleave": // touchleave is treated as touchend
-                case "touchcancel": // touchcancel is treated as touchend, but triggers a TouchCancel event
-                case "touchend":
-                    this._touchHandler.handleEnd(e);
-                    break;
-            }
-        else
-            this._touchHandler.mimicMouse(e);
+    if (this._touchHandler.multitouch)
+      switch (e.type) {
+        case "touchstart":
+          this._touchHandler.handleStart(e);
+          break;
+        case "touchmove":
+          this._touchHandler.handleMove(e);
+          break;
+        case "touchleave": // touchleave is treated as touchend
+        case "touchcancel": // touchcancel is treated as touchend, but triggers a TouchCancel event
+        case "touchend":
+          this._touchHandler.handleEnd(e);
+          break;
+      }
+    else this._touchHandler.mimicMouse(e);
 
-        //Don't prevent default actions if target node is input or textarea.
-        if (e.target && e.target.nodeName !== 'INPUT' && e.target.nodeName !== 'TEXTAREA')
-            if (e.preventDefault) {
-                e.preventDefault();
+    //Don't prevent default actions if target node is input or textarea.
+    if (
+      e.target &&
+      e.target.nodeName !== "INPUT" &&
+      e.target.nodeName !== "TEXTAREA"
+    )
+      if (e.preventDefault) {
+        e.preventDefault();
+      } else {
+        e.returnValue = false;
+      }
+  },
+
+  _touchHandler: {
+    fingers: [], // keeps track of touching fingers
+    multitouch: false,
+
+    handleStart: function(e) {
+      var touches = e.changedTouches;
+      for (var i = 0, l = touches.length; i < l; i++) {
+        var idx = false, tar = e.target ? e.target : e.srcElement, closest;
+        closest = this.findClosestTouchEntity(touches[i], tar);
+
+        if (closest) {
+          closest.trigger("TouchStart", touches[i]);
+          // In case the entity was already being pressed, get the finger index
+          idx = this.fingerDownIndexByEntity(closest);
+        }
+        var touch = this.setTouch(touches[i], closest);
+        if (idx !== false && idx >= 0) {
+          // Recycling finger...
+          this.fingers[idx] = touch;
+        } else {
+          this.fingers.push(touch);
+        }
+      }
+    },
+
+    handleMove: function(e) {
+      var touches = e.changedTouches;
+      for (var i = 0, l = touches.length; i < l; i++) {
+        var idx = this.fingerDownIndexById(touches[i].identifier),
+          tar = e.target ? e.target : e.srcElement;
+        var closest = this.findClosestTouchEntity(touches[i], tar);
+
+        if (idx >= 0) {
+          var finger = this.fingers[idx];
+          if (typeof finger.entity !== "undefined")
+            if (finger.entity === closest) {
+              finger.entity.trigger("TouchMove", touches[i]);
             } else {
-                e.returnValue = false;
+              if (typeof closest === "object")
+                closest.trigger("TouchStart", touches[i]);
+              finger.entity.trigger("TouchEnd");
             }
+          finger.entity = closest;
+          finger.realX = touches[i].realX;
+          finger.realY = touches[i].realY;
+        }
+      }
     },
 
-    _touchHandler: {
-        fingers: [], // keeps track of touching fingers
-        multitouch: false,
+    handleEnd: function(e) {
+      var touches = e.changedTouches,
+        eventName = e.type === "touchcancel" ? "TouchCancel" : "TouchEnd";
+      for (var i = 0, l = touches.length; i < l; i++) {
+        var idx = this.fingerDownIndexById(touches[i].identifier);
 
-        handleStart: function (e) {
-            var touches = e.changedTouches;
-            for (var i = 0, l = touches.length; i < l; i++) {
-                var idx = false,
-                    tar = e.target ? e.target : e.srcElement,
-                    closest;
-                closest = this.findClosestTouchEntity(touches[i], tar);
-
-                if (closest) {
-                    closest.trigger("TouchStart", touches[i]);
-                    // In case the entity was already being pressed, get the finger index
-                    idx = this.fingerDownIndexByEntity(closest);
-                }
-                var touch = this.setTouch(touches[i], closest);
-                if (idx !== false && idx >= 0) {
-                    // Recycling finger...
-                    this.fingers[idx] = touch;
-                } else {
-                    this.fingers.push(touch);
-                }
-            }
-        },
-
-        handleMove: function (e) {
-            var touches = e.changedTouches;
-            for (var i = 0, l = touches.length; i < l; i++) {
-                var idx = this.fingerDownIndexById(touches[i].identifier),
-                    tar = e.target ? e.target : e.srcElement;
-                var closest = this.findClosestTouchEntity(touches[i], tar);
-
-                if (idx >= 0) {
-                    var finger = this.fingers[idx];
-                    if(typeof finger.entity !== "undefined")
-                        if (finger.entity === closest) {
-                            finger.entity.trigger("TouchMove", touches[i]);
-                        } else {
-                            if (typeof closest === "object") closest.trigger("TouchStart", touches[i]);
-                            finger.entity.trigger("TouchEnd");
-                        }
-                    finger.entity = closest;
-                    finger.realX = touches[i].realX;
-                    finger.realY = touches[i].realY;
-                }
-            }
-        },
-
-        handleEnd: function (e) {
-            var touches = e.changedTouches, 
-                eventName = e.type === "touchcancel" ? "TouchCancel" : "TouchEnd";
-            for (var i = 0, l = touches.length; i < l; i++) {
-                var idx = this.fingerDownIndexById(touches[i].identifier);
-
-                if (idx >= 0) {
-                    if (this.fingers[idx].entity)
-                        this.fingers[idx].entity.trigger(eventName);
-                    this.fingers.splice(idx, 1);
-                }
-            }
-        },
-
-        setTouch: function (touch, entity) {
-            return { identifier: touch.identifier, realX: touch.realX, realY: touch.realY, entity: entity };
-        },
-
-        findClosestTouchEntity: function (touchEvent, tar) {
-            return Crafty.findPointerEventTargetByComponent("Touch", touchEvent, tar);
-        },
-
-        fingerDownIndexById: function (idToFind) {
-            for (var i = 0, l = this.fingers.length; i < l; i++) {
-                var id = this.fingers[i].identifier;
-                if (id === idToFind) {
-                    return i;
-                }
-            }
-            return -1;
-        },
-
-        fingerDownIndexByEntity: function (entityToFind) {
-            for (var i = 0, l = this.fingers.length; i < l; i++) {
-                var ent = this.fingers[i].entity;
-
-                if (ent === entityToFind) {
-                    return i;
-                }
-            }
-            return -1;
-        },
-
-        mimicMouse: function (e) {
-            var type, first,
-                lastEvent = Crafty.lastEvent;
-            if (e.type === "touchstart") type = "mousedown";
-            else if (e.type === "touchmove") type = "mousemove";
-            else if (e.type === "touchend") type = "mouseup";
-            else if (e.type === "touchcancel") type = "mouseup";
-            else if (e.type === "touchleave") type = "mouseup";
-            if (e.touches && e.touches.length) {
-                first = e.touches[0];
-            } else if (e.changedTouches && e.changedTouches.length) {
-                first = e.changedTouches[0];
-            }
-            var simulatedEvent = document.createEvent("MouseEvent");
-            simulatedEvent.initMouseEvent(type, true, true, window, 1,
-                first.screenX,
-                first.screenY,
-                first.clientX,
-                first.clientY,
-                false, false, false, false, 0, e.relatedTarget
-            );
-            first.target.dispatchEvent(simulatedEvent);
-            // trigger click when it should be triggered
-            if (lastEvent !== null && lastEvent.type === 'mousedown' && type === 'mouseup') {
-                type = 'click';
-                simulatedEvent = document.createEvent("MouseEvent");
-                simulatedEvent.initMouseEvent(type, true, true, window, 1,
-                    first.screenX,
-                    first.screenY,
-                    first.clientX,
-                    first.clientY,
-                    false, false, false, false, 0, e.relatedTarget
-                );
-                first.target.dispatchEvent(simulatedEvent);
-            }
-        },
+        if (idx >= 0) {
+          if (this.fingers[idx].entity)
+            this.fingers[idx].entity.trigger(eventName);
+          this.fingers.splice(idx, 1);
+        }
+      }
     },
 
-    /**@
+    setTouch: function(touch, entity) {
+      return {
+        identifier: touch.identifier,
+        realX: touch.realX,
+        realY: touch.realY,
+        entity: entity
+      };
+    },
+
+    findClosestTouchEntity: function(touchEvent, tar) {
+      return Crafty.findPointerEventTargetByComponent("Touch", touchEvent, tar);
+    },
+
+    fingerDownIndexById: function(idToFind) {
+      for (var i = 0, l = this.fingers.length; i < l; i++) {
+        var id = this.fingers[i].identifier;
+        if (id === idToFind) {
+          return i;
+        }
+      }
+      return -1;
+    },
+
+    fingerDownIndexByEntity: function(entityToFind) {
+      for (var i = 0, l = this.fingers.length; i < l; i++) {
+        var ent = this.fingers[i].entity;
+
+        if (ent === entityToFind) {
+          return i;
+        }
+      }
+      return -1;
+    },
+
+    mimicMouse: function(e) {
+      var type, first, lastEvent = Crafty.lastEvent;
+      if (e.type === "touchstart") type = "mousedown";
+      else if (e.type === "touchmove") type = "mousemove";
+      else if (e.type === "touchend") type = "mouseup";
+      else if (e.type === "touchcancel") type = "mouseup";
+      else if (e.type === "touchleave") type = "mouseup";
+      if (e.touches && e.touches.length) {
+        first = e.touches[0];
+      } else if (e.changedTouches && e.changedTouches.length) {
+        first = e.changedTouches[0];
+      }
+      var simulatedEvent = document.createEvent("MouseEvent");
+      simulatedEvent.initMouseEvent(
+        type,
+        true,
+        true,
+        window,
+        1,
+        first.screenX,
+        first.screenY,
+        first.clientX,
+        first.clientY,
+        false,
+        false,
+        false,
+        false,
+        0,
+        e.relatedTarget
+      );
+      first.target.dispatchEvent(simulatedEvent);
+      // trigger click when it should be triggered
+      if (
+        lastEvent !== null &&
+        lastEvent.type === "mousedown" &&
+        type === "mouseup"
+      ) {
+        type = "click";
+        simulatedEvent = document.createEvent("MouseEvent");
+        simulatedEvent.initMouseEvent(
+          type,
+          true,
+          true,
+          window,
+          1,
+          first.screenX,
+          first.screenY,
+          first.clientX,
+          first.clientY,
+          false,
+          false,
+          false,
+          false,
+          0,
+          e.relatedTarget
+        );
+        first.target.dispatchEvent(simulatedEvent);
+      }
+    }
+  },
+
+  /**@
      * #Crafty.findPointerEventTargetByComponent
      * @category Input
      * @kind Method
@@ -448,66 +487,79 @@ Crafty.extend({
      * Updates the event object to have two additional properties, `realX` and `realY`, which correspond to the point in the Crafty layer that the event targeted.
      * 
      */
-    findPointerEventTargetByComponent: function (comp, e, target) {
-        var tar = target ? target : Crafty.stage.elem,
-            closest, current, q, l, i, pos, maxz = -Infinity;
-        var x = e.clientX;
-        var y = e.clientY;
+  findPointerEventTargetByComponent: function(comp, e, target) {
+    var tar = target ? target : Crafty.stage.elem,
+      closest,
+      current,
+      q,
+      l,
+      i,
+      pos,
+      maxz = -Infinity;
+    var x = e.clientX;
+    var y = e.clientY;
 
-        //if it's a DOM element with component we are done
-        if (tar.nodeName !== "CANVAS") {
-            while (typeof (tar.id) !== 'string' && tar.id.indexOf('ent') === -1) {
-                tar = tar.parentNode;
-            }
-            var ent = Crafty(parseInt(tar.id.replace('ent', ''), 10));
-            pos = Crafty.domHelper.translate(x, y, ent._drawLayer);
-            if (ent.__c[comp] && ent.isAt(pos.x, pos.y)) {
-                closest = ent;
-            }
+    //if it's a DOM element with component we are done
+    if (tar.nodeName !== "CANVAS") {
+      while (typeof tar.id !== "string" && tar.id.indexOf("ent") === -1) {
+        tar = tar.parentNode;
+      }
+      var ent = Crafty(parseInt(tar.id.replace("ent", ""), 10));
+      pos = Crafty.domHelper.translate(x, y, ent._drawLayer);
+      if (ent.__c[comp] && ent.isAt(pos.x, pos.y)) {
+        closest = ent;
+      }
+    }
+
+    //else we search for an entity with component
+    if (!closest) {
+      // Loop through each layer
+      for (var layerIndex in Crafty._drawLayers) {
+        var layer = Crafty._drawLayers[layerIndex];
+
+        // Skip a layer if it has no entities listening for pointer events
+        if (layer._pointerEntities <= 0) continue;
+
+        // Get the position in this layer
+        pos = Crafty.domHelper.translate(x, y, layer);
+        q = Crafty.map.search(
+          {
+            _x: pos.x,
+            _y: pos.y,
+            _w: 1,
+            _h: 1
+          },
+          false
+        );
+
+        for ((i = 0), (l = q.length); i < l; ++i) {
+          current = q[i];
+          if (
+            current._visible &&
+            current._drawLayer === layer &&
+            current._globalZ > maxz &&
+            current.__c[comp] &&
+            current.isAt(pos.x, pos.y)
+          ) {
+            maxz = current._globalZ;
+            closest = current;
+          }
         }
+      }
+    }
 
-        //else we search for an entity with component
-        if (!closest) {
+    // Find the Crafty position in the default coordinate set,
+    // disregard the fact that the pointer event was related to a specific layer.
+    pos = Crafty.domHelper.translate(x, y);
 
-            // Loop through each layer
-            for (var layerIndex in Crafty._drawLayers) {
-                var layer = Crafty._drawLayers[layerIndex];
+    // Update the event coordinates and return the event target
+    e.realX = pos.x;
+    e.realY = pos.y;
 
-                // Skip a layer if it has no entities listening for pointer events
-                if (layer._pointerEntities <= 0) continue;
+    return closest;
+  },
 
-                // Get the position in this layer
-                pos = Crafty.domHelper.translate(x, y, layer);
-                q = Crafty.map.search({
-                    _x: pos.x,
-                    _y: pos.y,
-                    _w: 1,
-                    _h: 1
-                }, false);
-
-                for (i = 0, l = q.length; i < l; ++i) {
-                    current = q[i];
-                    if (current._visible && current._drawLayer === layer && current._globalZ > maxz &&
-                        current.__c[comp] && current.isAt(pos.x, pos.y)) {
-                        maxz = current._globalZ;
-                        closest = current;
-                    }
-                }
-            }
-        }
-        
-        // Find the Crafty position in the default coordinate set,
-        // disregard the fact that the pointer event was related to a specific layer.
-        pos = Crafty.domHelper.translate(x, y);
-
-        // Update the event coordinates and return the event target
-        e.realX = pos.x;
-        e.realY = pos.y;
-            
-        return closest;
-    },
-
-    /**@
+  /**@
      * #Crafty.mouseWheelDispatch
      * @category Input
      * @kind Method
@@ -584,22 +636,26 @@ Crafty.extend({
      * });
      * ~~~
      */
-    mouseWheelDispatch: function (e) {
-        e.direction = (e.detail < 0 || e.wheelDelta > 0 || e.deltaY < 0) ? 1 : -1;
-        Crafty.trigger("MouseWheelScroll", e);
+  mouseWheelDispatch: function(e) {
+    e.direction = e.detail < 0 || e.wheelDelta > 0 || e.deltaY < 0 ? 1 : -1;
+    Crafty.trigger("MouseWheelScroll", e);
 
-        //Don't prevent default actions if target node is input or textarea.
-        if (Crafty.selected && e.target &&
-            e.target.nodeName !== 'INPUT' && e.target.nodeName !== 'TEXTAREA') {
-            if (e.preventDefault) {
-                e.preventDefault();
-            } else {
-                e.returnValue = false;
-            }
-        }
-    },
+    //Don't prevent default actions if target node is input or textarea.
+    if (
+      Crafty.selected &&
+      e.target &&
+      e.target.nodeName !== "INPUT" &&
+      e.target.nodeName !== "TEXTAREA"
+    ) {
+      if (e.preventDefault) {
+        e.preventDefault();
+      } else {
+        e.returnValue = false;
+      }
+    }
+  },
 
-    /**@
+  /**@
      * #Crafty.keyboardDispatch
      * @category Input
      * @kind Method
@@ -631,101 +687,168 @@ Crafty.extend({
      *
      * @see Crafty.keys, Crafty.keydown, Keyboard
      */
-    keyboardDispatch: function (e) {
-        // Use a Crafty-standard event object to avoid cross-browser issues
-        var original = e,
-            evnt = {},
-            props = "char charCode keyCode type shiftKey ctrlKey metaKey timestamp".split(" ");
-        for (var i = props.length; i;) {
-            var prop = props[--i];
-            evnt[prop] = original[prop];
-        }
-        evnt.which = original.charCode !== null ? original.charCode : original.keyCode;
-        evnt.key = original.keyCode || original.which;
-        evnt.originalEvent = original;
-        e = evnt;
-
-        if (e.type === "keydown") {
-            if (Crafty.keydown[e.key] !== true) {
-                Crafty.keydown[e.key] = true;
-                Crafty.trigger("KeyDown", e);
-            }
-        } else if (e.type === "keyup") {
-            delete Crafty.keydown[e.key];
-            Crafty.trigger("KeyUp", e);
-        }
-
-        //prevent default actions for all keys except backspace and F1-F12 and except actions in INPUT and TEXTAREA.
-        //prevent bubbling up for all keys except backspace and F1-F12.
-        //Among others this prevent the arrow keys from scrolling the parent page
-        //of an iframe hosting the game
-        if (Crafty.selected && !(e.key === 8 || e.key >= 112 && e.key <= 135)) {
-            if (original.stopPropagation) original.stopPropagation();
-            else original.cancelBubble = true;
-
-            //Don't prevent default actions if target node is input or textarea.
-            if (original.target && original.target.nodeName !== 'INPUT' && original.target.nodeName !== 'TEXTAREA') {
-                if (original.preventDefault) {
-                    original.preventDefault();
-                } else {
-                    original.returnValue = false;
-                }
-            }
-            return false;
-        }
+  keyboardDispatch: function(e) {
+    // Use a Crafty-standard event object to avoid cross-browser issues
+    var original = e,
+      evnt = {},
+      props = "char charCode keyCode type shiftKey ctrlKey metaKey timestamp".split(
+        " "
+      );
+    for (var i = props.length; i; ) {
+      var prop = props[--i];
+      evnt[prop] = original[prop];
     }
+    evnt.which = original.charCode !== null
+      ? original.charCode
+      : original.keyCode;
+    evnt.key = original.keyCode || original.which;
+    evnt.originalEvent = original;
+    e = evnt;
+
+    if (e.type === "keydown") {
+      if (Crafty.keydown[e.key] !== true) {
+        Crafty.keydown[e.key] = true;
+        Crafty.trigger("KeyDown", e);
+      }
+    } else if (e.type === "keyup") {
+      delete Crafty.keydown[e.key];
+      Crafty.trigger("KeyUp", e);
+    }
+
+    //prevent default actions for all keys except backspace and F1-F12 and except actions in INPUT and TEXTAREA.
+    //prevent bubbling up for all keys except backspace and F1-F12.
+    //Among others this prevent the arrow keys from scrolling the parent page
+    //of an iframe hosting the game
+    if (Crafty.selected && !(e.key === 8 || (e.key >= 112 && e.key <= 135))) {
+      if (original.stopPropagation) original.stopPropagation();
+      else original.cancelBubble = true;
+
+      //Don't prevent default actions if target node is input or textarea.
+      if (
+        original.target &&
+        original.target.nodeName !== "INPUT" &&
+        original.target.nodeName !== "TEXTAREA"
+      ) {
+        if (original.preventDefault) {
+          original.preventDefault();
+        } else {
+          original.returnValue = false;
+        }
+      }
+      return false;
+    }
+  }
 });
 
 //initialize the input events onload
-Crafty._preBind("Load", function () {
-    Crafty.addEvent(this, "keydown", Crafty.keyboardDispatch);
-    Crafty.addEvent(this, "keyup", Crafty.keyboardDispatch);
+Crafty._preBind("Load", function() {
+  Crafty.addEvent(this, "keydown", Crafty.keyboardDispatch);
+  Crafty.addEvent(this, "keyup", Crafty.keyboardDispatch);
 
-    Crafty.addEvent(this, Crafty.stage.elem, "mousedown", Crafty.mouseDispatch);
-    Crafty.addEvent(this, Crafty.stage.elem, "mouseup", Crafty.mouseDispatch);
-    Crafty.addEvent(this, document.body, "mouseup", Crafty.detectBlur);
-    Crafty.addEvent(this, window, "blur", Crafty.resetKeyDown);
-    Crafty.addEvent(this, Crafty.stage.elem, "mousemove", Crafty.mouseDispatch);
-    Crafty.addEvent(this, Crafty.stage.elem, "click", Crafty.mouseDispatch);
-    Crafty.addEvent(this, Crafty.stage.elem, "dblclick", Crafty.mouseDispatch);
+  Crafty.addEvent(this, Crafty.stage.elem, "mousedown", Crafty.mouseDispatch);
+  Crafty.addEvent(this, Crafty.stage.elem, "mouseup", Crafty.mouseDispatch);
+  Crafty.addEvent(this, document.body, "mouseup", Crafty.detectBlur);
+  Crafty.addEvent(this, window, "blur", Crafty.resetKeyDown);
+  Crafty.addEvent(this, Crafty.stage.elem, "mousemove", Crafty.mouseDispatch);
+  Crafty.addEvent(this, Crafty.stage.elem, "click", Crafty.mouseDispatch);
+  Crafty.addEvent(this, Crafty.stage.elem, "dblclick", Crafty.mouseDispatch);
 
-    Crafty.addEvent(this, Crafty.stage.elem, "touchstart", Crafty.touchDispatch);
-    Crafty.addEvent(this, Crafty.stage.elem, "touchmove", Crafty.touchDispatch);
-    Crafty.addEvent(this, Crafty.stage.elem, "touchend", Crafty.touchDispatch);
-    Crafty.addEvent(this, Crafty.stage.elem, "touchcancel", Crafty.touchDispatch);
-    Crafty.addEvent(this, Crafty.stage.elem, "touchleave", Crafty.touchDispatch);
+  Crafty.addEvent(this, Crafty.stage.elem, "touchstart", Crafty.touchDispatch);
+  Crafty.addEvent(this, Crafty.stage.elem, "touchmove", Crafty.touchDispatch);
+  Crafty.addEvent(this, Crafty.stage.elem, "touchend", Crafty.touchDispatch);
+  Crafty.addEvent(this, Crafty.stage.elem, "touchcancel", Crafty.touchDispatch);
+  Crafty.addEvent(this, Crafty.stage.elem, "touchleave", Crafty.touchDispatch);
 
-    var mouseWheelEvent = typeof document.onwheel !== 'undefined' ? 'wheel' : // modern browsers
-                            typeof document.onmousewheel !== 'undefined' ? 'mousewheel' : // old Webkit and IE
-                            'DOMMouseScroll'; // old Firefox
-    Crafty.addEvent(this, Crafty.stage.elem, mouseWheelEvent, Crafty.mouseWheelDispatch);
+  var mouseWheelEvent = typeof document.onwheel !== "undefined"
+    ? "wheel" // modern browsers
+    : typeof document.onmousewheel !== "undefined"
+        ? "mousewheel" // old Webkit and IE
+        : "DOMMouseScroll"; // old Firefox
+  Crafty.addEvent(
+    this,
+    Crafty.stage.elem,
+    mouseWheelEvent,
+    Crafty.mouseWheelDispatch
+  );
 });
 
-Crafty._preBind("CraftyStop", function () {
-    Crafty.removeEvent(this, "keydown", Crafty.keyboardDispatch);
-    Crafty.removeEvent(this, "keyup", Crafty.keyboardDispatch);
+Crafty._preBind("CraftyStop", function() {
+  Crafty.removeEvent(this, "keydown", Crafty.keyboardDispatch);
+  Crafty.removeEvent(this, "keyup", Crafty.keyboardDispatch);
 
-    if (Crafty.stage) {
-        Crafty.removeEvent(this, Crafty.stage.elem, "mousedown", Crafty.mouseDispatch);
-        Crafty.removeEvent(this, Crafty.stage.elem, "mouseup", Crafty.mouseDispatch);
-        Crafty.removeEvent(this, Crafty.stage.elem, "mousemove", Crafty.mouseDispatch);
-        Crafty.removeEvent(this, Crafty.stage.elem, "click", Crafty.mouseDispatch);
-        Crafty.removeEvent(this, Crafty.stage.elem, "dblclick", Crafty.mouseDispatch);
+  if (Crafty.stage) {
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      "mousedown",
+      Crafty.mouseDispatch
+    );
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      "mouseup",
+      Crafty.mouseDispatch
+    );
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      "mousemove",
+      Crafty.mouseDispatch
+    );
+    Crafty.removeEvent(this, Crafty.stage.elem, "click", Crafty.mouseDispatch);
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      "dblclick",
+      Crafty.mouseDispatch
+    );
 
-        Crafty.removeEvent(this, Crafty.stage.elem, "touchstart", Crafty.touchDispatch);
-        Crafty.removeEvent(this, Crafty.stage.elem, "touchmove", Crafty.touchDispatch);
-        Crafty.removeEvent(this, Crafty.stage.elem, "touchend", Crafty.touchDispatch);
-        Crafty.removeEvent(this, Crafty.stage.elem, "touchcancel", Crafty.touchDispatch);
-        Crafty.removeEvent(this, Crafty.stage.elem, "touchleave", Crafty.touchDispatch);
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      "touchstart",
+      Crafty.touchDispatch
+    );
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      "touchmove",
+      Crafty.touchDispatch
+    );
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      "touchend",
+      Crafty.touchDispatch
+    );
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      "touchcancel",
+      Crafty.touchDispatch
+    );
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      "touchleave",
+      Crafty.touchDispatch
+    );
 
-        var mouseWheelEvent = typeof document.onwheel !== 'undefined' ? 'wheel' : // modern browsers
-                                typeof document.onmousewheel !== 'undefined' ? 'mousewheel' : // old Webkit and IE
-                                'DOMMouseScroll'; // old Firefox
-        Crafty.removeEvent(this, Crafty.stage.elem, mouseWheelEvent, Crafty.mouseWheelDispatch);
-    }
+    var mouseWheelEvent = typeof document.onwheel !== "undefined"
+      ? "wheel" // modern browsers
+      : typeof document.onmousewheel !== "undefined"
+          ? "mousewheel" // old Webkit and IE
+          : "DOMMouseScroll"; // old Firefox
+    Crafty.removeEvent(
+      this,
+      Crafty.stage.elem,
+      mouseWheelEvent,
+      Crafty.mouseWheelDispatch
+    );
+  }
 
-    Crafty.removeEvent(this, document.body, "mouseup", Crafty.detectBlur);
-    Crafty.removeEvent(this, window, "blur", Crafty.resetKeyDown);
+  Crafty.removeEvent(this, document.body, "mouseup", Crafty.detectBlur);
+  Crafty.removeEvent(this, window, "blur", Crafty.resetKeyDown);
 });
 
 /**@
@@ -785,13 +908,12 @@ Crafty._preBind("CraftyStop", function () {
  * @see Crafty.touchDispatch
  */
 Crafty.c("Mouse", {
-    init: function () {
-        Crafty.mouseObjs++;
-        this.requires("AreaMap")
-            .bind("Remove", function () {
-                Crafty.mouseObjs--;
-            });
-    }
+  init: function() {
+    Crafty.mouseObjs++;
+    this.requires("AreaMap").bind("Remove", function() {
+      Crafty.mouseObjs--;
+    });
+  }
 });
 
 /**@
@@ -832,13 +954,12 @@ Crafty.c("Mouse", {
  * @see Crafty.touchDispatch
  */
 Crafty.c("Touch", {
-    init: function () {
-        Crafty.touchObjs++;
-        this.requires("AreaMap")
-            .bind("Remove", function () {
-                Crafty.touchObjs--;
-            });
-    }
+  init: function() {
+    Crafty.touchObjs++;
+    this.requires("AreaMap").bind("Remove", function() {
+      Crafty.touchObjs--;
+    });
+  }
 });
 
 /**@
@@ -853,28 +974,28 @@ Crafty.c("Touch", {
  * @see Crafty.polygon
  */
 Crafty.c("AreaMap", {
-    init: function () {
-        if (this.has("Renderable") && this._drawLayer) {
-            this._drawLayer._pointerEntities++;
-        }
-    },
+  init: function() {
+    if (this.has("Renderable") && this._drawLayer) {
+      this._drawLayer._pointerEntities++;
+    }
+  },
 
-    remove: function () {
-        if (this.has("Renderable") && this._drawLayer) {
-            this._drawLayer._pointerEntities--;
-        }
-    },
+  remove: function() {
+    if (this.has("Renderable") && this._drawLayer) {
+      this._drawLayer._pointerEntities--;
+    }
+  },
 
-    events: {
-        "LayerAttached": function (layer) {
-            layer._pointerEntities++;
-        },
-        "LayerDetached": function (layer) {
-            layer._pointerEntities--;
-        }
+  events: {
+    LayerAttached: function(layer) {
+      layer._pointerEntities++;
     },
+    LayerDetached: function(layer) {
+      layer._pointerEntities--;
+    }
+  },
 
-    /**@
+  /**@
      * #.areaMap
      * @comp AreaMap
      * @kind Method
@@ -911,24 +1032,24 @@ Crafty.c("AreaMap", {
      *
      * @see Crafty.polygon
      */
-    areaMap: function (poly) {
-        //create polygon
-        if (arguments.length > 1) {
-            //convert args to array to create polygon
-            var args = Array.prototype.slice.call(arguments, 0);
-            poly = new Crafty.polygon(args);
-        } else if (poly.constructor === Array) {
-            poly = new Crafty.polygon(poly.slice());
-        } else {
-            poly = poly.clone();
-        }
-
-        poly.shift(this._x, this._y);
-        this.mapArea = poly;
-        this.attach(this.mapArea);
-        this.trigger("NewAreaMap", poly);
-        return this;
+  areaMap: function(poly) {
+    //create polygon
+    if (arguments.length > 1) {
+      //convert args to array to create polygon
+      var args = Array.prototype.slice.call(arguments, 0);
+      poly = new Crafty.polygon(args);
+    } else if (poly.constructor === Array) {
+      poly = new Crafty.polygon(poly.slice());
+    } else {
+      poly = poly.clone();
     }
+
+    poly.shift(this._x, this._y);
+    this.mapArea = poly;
+    this.attach(this.mapArea);
+    this.trigger("NewAreaMap", poly);
+    return this;
+  }
 });
 
 /**@
@@ -944,10 +1065,12 @@ Crafty.c("AreaMap", {
  * @see Crafty.multitouch
  */
 Crafty.c("Button", {
-    init: function () {
-        var req = (!Crafty.mobile || (Crafty.mobile && !Crafty.multitouch())) ? "Mouse" : "Touch";
-        this.requires(req);
-    }
+  init: function() {
+    var req = !Crafty.mobile || (Crafty.mobile && !Crafty.multitouch())
+      ? "Mouse"
+      : "Touch";
+    this.requires(req);
+  }
 });
 
 /**@
@@ -963,37 +1086,37 @@ Crafty.c("Button", {
  * @see Mouse
  */
 Crafty.c("MouseDrag", {
-    _dragging: false,
+  _dragging: false,
 
-    init: function () {
-        this.requires("Mouse");
-        this.bind("MouseDown", this._ondown);
-    },
+  init: function() {
+    this.requires("Mouse");
+    this.bind("MouseDown", this._ondown);
+  },
 
-    remove: function () {
-        this.unbind("MouseDown", this._ondown);
-    },
+  remove: function() {
+    this.unbind("MouseDown", this._ondown);
+  },
 
-    // When dragging is enabled, this method is bound to the MouseDown crafty event
-    _ondown: function (e) {
-        if (e.mouseButton !== Crafty.mouseButtons.LEFT) return;
-        this.startDrag(e);
-    },
+  // When dragging is enabled, this method is bound to the MouseDown crafty event
+  _ondown: function(e) {
+    if (e.mouseButton !== Crafty.mouseButtons.LEFT) return;
+    this.startDrag(e);
+  },
 
-    // While a drag is occurring, this method is bound to the mousemove DOM event
-    _ondrag: function (e) {
-        // ignore invalid 0 position - strange problem on ipad
-        if (!this._dragging || e.realX === 0 || e.realY === 0) return false;
-        this.trigger("Dragging", e);
-    },
+  // While a drag is occurring, this method is bound to the mousemove DOM event
+  _ondrag: function(e) {
+    // ignore invalid 0 position - strange problem on ipad
+    if (!this._dragging || e.realX === 0 || e.realY === 0) return false;
+    this.trigger("Dragging", e);
+  },
 
-    // While a drag is occurring, this method is bound to mouseup DOM event
-    _onup: function (e) {
-        if (e.mouseButton !== Crafty.mouseButtons.LEFT) return;
-        this.stopDrag(e);
-    },
+  // While a drag is occurring, this method is bound to mouseup DOM event
+  _onup: function(e) {
+    if (e.mouseButton !== Crafty.mouseButtons.LEFT) return;
+    this.stopDrag(e);
+  },
 
-    /**@
+  /**@
      * #.startDrag
      * @comp MouseDrag
      * @kind Method
@@ -1004,19 +1127,19 @@ Crafty.c("MouseDrag", {
      *
      * @see .stopDrag
      */
-    startDrag: function (e) {
-        if (this._dragging) return;
-        this._dragging = true;
+  startDrag: function(e) {
+    if (this._dragging) return;
+    this._dragging = true;
 
-        Crafty.addEvent(this, Crafty.stage.elem, "mousemove", this._ondrag);
-        Crafty.addEvent(this, Crafty.stage.elem, "mouseup", this._onup);
+    Crafty.addEvent(this, Crafty.stage.elem, "mousemove", this._ondrag);
+    Crafty.addEvent(this, Crafty.stage.elem, "mouseup", this._onup);
 
-        // if event undefined, use the last known position of the mouse
-        this.trigger("StartDrag", e || Crafty.lastEvent);
-        return this;
-    },
+    // if event undefined, use the last known position of the mouse
+    this.trigger("StartDrag", e || Crafty.lastEvent);
+    return this;
+  },
 
-    /**@
+  /**@
      * #.stopDrag
      * @comp MouseDrag
      * @kind Method
@@ -1027,17 +1150,17 @@ Crafty.c("MouseDrag", {
      *
      * @see .startDrag
      */
-    stopDrag: function (e) {
-        if (!this._dragging) return;
-        this._dragging = false;
+  stopDrag: function(e) {
+    if (!this._dragging) return;
+    this._dragging = false;
 
-        Crafty.removeEvent(this, Crafty.stage.elem, "mousemove", this._ondrag);
-        Crafty.removeEvent(this, Crafty.stage.elem, "mouseup", this._onup);
+    Crafty.removeEvent(this, Crafty.stage.elem, "mousemove", this._ondrag);
+    Crafty.removeEvent(this, Crafty.stage.elem, "mouseup", this._onup);
 
-        // if event undefined, use the last known position of the mouse
-        this.trigger("StopDrag", e || Crafty.lastEvent);
-        return this;
-    }
+    // if event undefined, use the last known position of the mouse
+    this.trigger("StopDrag", e || Crafty.lastEvent);
+    return this;
+  }
 });
 
 /**@
@@ -1074,7 +1197,7 @@ Crafty.c("MouseDrag", {
  * @see Crafty.keyboardDispatch
  */
 Crafty.c("Keyboard", {
-    /**@
+  /**@
      * #.isDown
      * @comp Keyboard
      * @kind Method
@@ -1097,10 +1220,10 @@ Crafty.c("Keyboard", {
      *
      * @see Crafty.keys
      */
-    isDown: function (key) {
-        if (typeof key === "string") {
-            key = Crafty.keys[key];
-        }
-        return !!Crafty.keydown[key];
+  isDown: function(key) {
+    if (typeof key === "string") {
+      key = Crafty.keys[key];
     }
+    return !!Crafty.keydown[key];
+  }
 });

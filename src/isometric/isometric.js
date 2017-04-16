@@ -1,8 +1,7 @@
-var Crafty = require('../core/core.js');
-
+var Crafty = require("../core/core.js");
 
 Crafty.extend({
-    /**@
+  /**@
      * #Crafty.isometric
      * @category 2D
      * @kind CoreObject
@@ -12,18 +11,18 @@ Crafty.extend({
      * to have the grid of tile indicies for this.place aligned to the tiles
      * themselves, use DiamondIso instead.
      */
-    isometric: {
-        _tile: {
-            width: 0,
-            height: 0
-        },
-        _elements: {},
-        _pos: {
-            x: 0,
-            y: 0
-        },
-        _z: 0,
-        /**@
+  isometric: {
+    _tile: {
+      width: 0,
+      height: 0
+    },
+    _elements: {},
+    _pos: {
+      x: 0,
+      y: 0
+    },
+    _z: 0,
+    /**@
          * #Crafty.isometric.size
          * @comp Crafty.isometric
          * @kind Method
@@ -42,12 +41,12 @@ Crafty.extend({
          *
          * @see Crafty.isometric.place
          */
-        size: function (width, height) {
-            this._tile.width = width;
-            this._tile.height = height > 0 ? height : width / 2; //Setup width/2 if height isn't set
-            return this;
-        },
-        /**@
+    size: function(width, height) {
+      this._tile.width = width;
+      this._tile.height = height > 0 ? height : width / 2; //Setup width/2 if height isn't set
+      return this;
+    },
+    /**@
          * #Crafty.isometric.place
          * @comp Crafty.isometric
          * @kind Method
@@ -68,15 +67,15 @@ Crafty.extend({
          *
          * @see Crafty.isometric.size
          */
-        place: function (x, y, z, obj) {
-            var pos = this.pos2px(x, y);
-            pos.top -= z * (this._tile.height / 2);
-            obj.x = pos.left + Crafty.viewport._x;
-            obj.y = pos.top + Crafty.viewport._y;
-            obj.z += z;
-            return this;
-        },
-        /**@
+    place: function(x, y, z, obj) {
+      var pos = this.pos2px(x, y);
+      pos.top -= z * (this._tile.height / 2);
+      obj.x = pos.left + Crafty.viewport._x;
+      obj.y = pos.top + Crafty.viewport._y;
+      obj.z += z;
+      return this;
+    },
+    /**@
          * #Crafty.isometric.pos2px
          * @comp Crafty.isometric
          * @kind Method
@@ -94,13 +93,13 @@ Crafty.extend({
          * var position = iso.pos2px(100,100); //Object { left=12800, top=4800}
          * ~~~
          */
-        pos2px: function (x, y) {
-            return {
-                left: x * this._tile.width + (y & 1) * (this._tile.width / 2),
-                top: y * this._tile.height / 2
-            };
-        },
-        /**@
+    pos2px: function(x, y) {
+      return {
+        left: x * this._tile.width + (y & 1) * (this._tile.width / 2),
+        top: y * this._tile.height / 2
+      };
+    },
+    /**@
          * #Crafty.isometric.px2pos
          * @comp Crafty.isometric
          * @kind Method
@@ -119,13 +118,13 @@ Crafty.extend({
          * Crafty.log(px); //Object { x=100, y=100}
          * ~~~
          */
-        px2pos: function (left, top) {
-            return {
-                x: -Math.ceil(-left / this._tile.width - (top & 1) * 0.5),
-                y: top / this._tile.height * 2
-            };
-        },
-        /**@
+    px2pos: function(left, top) {
+      return {
+        x: -Math.ceil(-left / this._tile.width - (top & 1) * 0.5),
+        y: top / this._tile.height * 2
+      };
+    },
+    /**@
          * #Crafty.isometric.centerAt
          * @comp Crafty.isometric
          * @kind Method
@@ -146,20 +145,26 @@ Crafty.extend({
          * Crafty.log(iso.centerAt());
          * ~~~
          */
-        centerAt: function (x, y) {
-            if (typeof x === "number" && typeof y === "number") {
-                var center = this.pos2px(x, y);
-                Crafty.viewport._x = -center.left + Crafty.viewport.width / 2 - this._tile.width / 2;
-                Crafty.viewport._y = -center.top + Crafty.viewport.height / 2 - this._tile.height / 2;
-                return this;
-            } else {
-                return {
-                    top: -Crafty.viewport._y + Crafty.viewport.height / 2 - this._tile.height / 2,
-                    left: -Crafty.viewport._x + Crafty.viewport.width / 2 - this._tile.width / 2
-                };
-            }
-        },
-        /**@
+    centerAt: function(x, y) {
+      if (typeof x === "number" && typeof y === "number") {
+        var center = this.pos2px(x, y);
+        Crafty.viewport._x =
+          -center.left + Crafty.viewport.width / 2 - this._tile.width / 2;
+        Crafty.viewport._y =
+          -center.top + Crafty.viewport.height / 2 - this._tile.height / 2;
+        return this;
+      } else {
+        return {
+          top: -Crafty.viewport._y +
+            Crafty.viewport.height / 2 -
+            this._tile.height / 2,
+          left: -Crafty.viewport._x +
+            Crafty.viewport.width / 2 -
+            this._tile.width / 2
+        };
+      }
+    },
+    /**@
          * #Crafty.isometric.area
          * @comp Crafty.isometric
          * @kind Method
@@ -181,21 +186,27 @@ Crafty.extend({
          * }
          * ~~~
          */
-        area: function () {
-            //Get the center Point in the viewport
-            var center = this.centerAt();
-            var start = this.px2pos(-center.left + Crafty.viewport.width / 2, -center.top + Crafty.viewport.height / 2);
-            var end = this.px2pos(-center.left - Crafty.viewport.width / 2, -center.top - Crafty.viewport.height / 2);
-            return {
-                x: {
-                    start: start.x,
-                    end: end.x
-                },
-                y: {
-                    start: start.y,
-                    end: end.y
-                }
-            };
+    area: function() {
+      //Get the center Point in the viewport
+      var center = this.centerAt();
+      var start = this.px2pos(
+        -center.left + Crafty.viewport.width / 2,
+        -center.top + Crafty.viewport.height / 2
+      );
+      var end = this.px2pos(
+        -center.left - Crafty.viewport.width / 2,
+        -center.top - Crafty.viewport.height / 2
+      );
+      return {
+        x: {
+          start: start.x,
+          end: end.x
+        },
+        y: {
+          start: start.y,
+          end: end.y
         }
+      };
     }
+  }
 });

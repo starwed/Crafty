@@ -1,30 +1,37 @@
-var Crafty = require('../core/core.js');
-
+var Crafty = require("../core/core.js");
 
 //
 // Define some variables required for webgl
-var fs = require('fs');
+var fs = require("fs");
 
-Crafty.defaultShader("Image", new Crafty.WebGLShader(
-    fs.readFileSync(__dirname + '/shaders/sprite.vert', 'utf8'),
-    fs.readFileSync(__dirname + '/shaders/sprite.frag', 'utf8'),
+Crafty.defaultShader(
+  "Image",
+  new Crafty.WebGLShader(
+    fs.readFileSync(__dirname + "/shaders/sprite.vert", "utf8"),
+    fs.readFileSync(__dirname + "/shaders/sprite.frag", "utf8"),
     [
-        { name: "aPosition",     width: 2 },
-        { name: "aOrientation",  width: 3 },
-        { name: "aLayer",        width: 2 },
-        { name: "aTextureCoord", width: 2 }
+      { name: "aPosition", width: 2 },
+      { name: "aOrientation", width: 3 },
+      { name: "aLayer", width: 2 },
+      { name: "aTextureCoord", width: 2 }
     ],
     function(e, _entity) {
-        var pos = e.pos;
-        // Write texture coordinates
-        e.program.writeVector("aTextureCoord",
-            0, 0,
-            0, pos._h,
-            pos._w, 0,
-            pos._w, pos._h
-        );
+      var pos = e.pos;
+      // Write texture coordinates
+      e.program.writeVector(
+        "aTextureCoord",
+        0,
+        0,
+        0,
+        pos._h,
+        pos._w,
+        0,
+        pos._w,
+        pos._h
+      );
     }
-));
+  )
+);
 
 /**@
  * #Image
@@ -34,20 +41,20 @@ Crafty.defaultShader("Image", new Crafty.WebGLShader(
  * Draw an image with or without repeating (tiling).
  */
 Crafty.c("Image", {
-    _repeat: "repeat",
-    ready: false,
+  _repeat: "repeat",
+  ready: false,
 
-    init: function () {
-        this.bind("Draw", this._drawImage);
-        this.bind("LayerAttached", this._setupImage);
-    },
+  init: function() {
+    this.bind("Draw", this._drawImage);
+    this.bind("LayerAttached", this._setupImage);
+  },
 
-    remove: function() {
-        this.unbind("LayerAttached", this._setupImage);
-        this.unbind("Draw", this._drawImage);
-    },
+  remove: function() {
+    this.unbind("LayerAttached", this._setupImage);
+    this.unbind("Draw", this._drawImage);
+  },
 
-    /**@
+  /**@
      * #.image
      * @comp Image
      * @kind Method
@@ -82,70 +89,78 @@ Crafty.c("Image", {
      *
      * @see Crafty.sprite
      */
-    image: function (url, repeat) {
-        this.__image = url;
-        this._repeat = repeat || "no-repeat";
+  image: function(url, repeat) {
+    this.__image = url;
+    this._repeat = repeat || "no-repeat";
 
-        this.img = Crafty.asset(url);
-        if (!this.img) {
-            this.img = new Image();
-            Crafty.asset(url, this.img);
-            this.img.src = url;
-            var self = this;
+    this.img = Crafty.asset(url);
+    if (!this.img) {
+      this.img = new Image();
+      Crafty.asset(url, this.img);
+      this.img.src = url;
+      var self = this;
 
-            this.img.onload = function () {
-                self._setupImage(self._drawLayer);
-            };
-        } else {
-            this._setupImage(this._drawLayer);
-        }
-
-        this.trigger("Invalidate");
-
-        return this;
-    },
-
-    // called on image change or layer attachment
-    _setupImage: function(layer){
-        if (!this.img || !layer) return;
-
-        if (layer.type === "Canvas") {
-            this._pattern = this._drawContext.createPattern(this.img, this._repeat);
-        } else if (layer.type === "WebGL") {
-            this._establishShader("image:" + this.__image, Crafty.defaultShader("Image"));
-            this.program.setTexture( this._drawLayer.makeTexture(this.__image, this.img, (this._repeat!=="no-repeat")));
-        }
-
-        if (this._repeat === "no-repeat") {
-            this.w = this.w || this.img.width;
-            this.h = this.h || this.img.height;
-        }
-
-        this.ready = true;
-        this.trigger("Invalidate");
-    },
-
-    _drawImage: function(e){
-        if (e.type === "canvas") {
-            //skip if no image
-            if (!this.ready || !this._pattern) return;
-
-            var context = e.ctx;
-
-            context.fillStyle = this._pattern;
-
-            context.save();
-            context.translate(e.pos._x, e.pos._y);
-            context.fillRect(0, 0, e.pos._w, e.pos._h);
-            context.restore();
-        } else if (e.type === "DOM") {
-            if (this.__image) {
-              e.style.backgroundImage = "url(" + this.__image + ")";
-              e.style.backgroundRepeat = this._repeat;
-            }
-        } else if (e.type === "webgl") {
-          e.program.draw(e, this);
-        }
-
+      this.img.onload = function() {
+        self._setupImage(self._drawLayer);
+      };
+    } else {
+      this._setupImage(this._drawLayer);
     }
+
+    this.trigger("Invalidate");
+
+    return this;
+  },
+
+  // called on image change or layer attachment
+  _setupImage: function(layer) {
+    if (!this.img || !layer) return;
+
+    if (layer.type === "Canvas") {
+      this._pattern = this._drawContext.createPattern(this.img, this._repeat);
+    } else if (layer.type === "WebGL") {
+      this._establishShader(
+        "image:" + this.__image,
+        Crafty.defaultShader("Image")
+      );
+      this.program.setTexture(
+        this._drawLayer.makeTexture(
+          this.__image,
+          this.img,
+          this._repeat !== "no-repeat"
+        )
+      );
+    }
+
+    if (this._repeat === "no-repeat") {
+      this.w = this.w || this.img.width;
+      this.h = this.h || this.img.height;
+    }
+
+    this.ready = true;
+    this.trigger("Invalidate");
+  },
+
+  _drawImage: function(e) {
+    if (e.type === "canvas") {
+      //skip if no image
+      if (!this.ready || !this._pattern) return;
+
+      var context = e.ctx;
+
+      context.fillStyle = this._pattern;
+
+      context.save();
+      context.translate(e.pos._x, e.pos._y);
+      context.fillRect(0, 0, e.pos._w, e.pos._h);
+      context.restore();
+    } else if (e.type === "DOM") {
+      if (this.__image) {
+        e.style.backgroundImage = "url(" + this.__image + ")";
+        e.style.backgroundRepeat = this._repeat;
+      }
+    } else if (e.type === "webgl") {
+      e.program.draw(e, this);
+    }
+  }
 });

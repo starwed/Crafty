@@ -1,16 +1,15 @@
-var Crafty = require('../core/core.js'),
-    document = window.document;
+var Crafty = require("../core/core.js"), document = window.document;
 
 Crafty.extend({
-    /**@
+  /**@
      * #Crafty.domHelper
      * @kind Property
      * @category Graphics
      *
      * Collection of utilities for using the DOM.
      */
-    domHelper: {
-        /**@
+  domHelper: {
+    /**@
          * #Crafty.domHelper.innerPosition
          * @comp Crafty.domHelper
          * @sign public Object Crafty.domHelper.innerPosition(HTMLElement obj)
@@ -20,25 +19,34 @@ Crafty.extend({
          * Find a DOM elements position including
          * padding and border.
          */
-        innerPosition: function (obj) {
-            var rect = obj.getBoundingClientRect(),
-                x = rect.left + (window.pageXOffset ? window.pageXOffset : document.body.scrollLeft),
-                y = rect.top + (window.pageYOffset ? window.pageYOffset : document.body.scrollTop),
+    innerPosition: function(obj) {
+      var rect = obj.getBoundingClientRect(),
+        x =
+          rect.left +
+          (window.pageXOffset ? window.pageXOffset : document.body.scrollLeft),
+        y =
+          rect.top +
+          (window.pageYOffset ? window.pageYOffset : document.body.scrollTop),
+        //border left
+        borderX =
+          parseInt(this.getStyle(obj, "border-left-width") || 0, 10) ||
+          parseInt(this.getStyle(obj, "borderLeftWidth") || 0, 10) ||
+          0,
+        borderY =
+          parseInt(this.getStyle(obj, "border-top-width") || 0, 10) ||
+          parseInt(this.getStyle(obj, "borderTopWidth") || 0, 10) ||
+          0;
 
-                //border left
-                borderX = parseInt(this.getStyle(obj, 'border-left-width') || 0, 10) || parseInt(this.getStyle(obj, 'borderLeftWidth') || 0, 10) || 0,
-                borderY = parseInt(this.getStyle(obj, 'border-top-width') || 0, 10) || parseInt(this.getStyle(obj, 'borderTopWidth') || 0, 10) || 0;
+      x += borderX;
+      y += borderY;
 
-            x += borderX;
-            y += borderY;
+      return {
+        x: x,
+        y: y
+      };
+    },
 
-            return {
-                x: x,
-                y: y
-            };
-        },
-
-        /**@
+    /**@
          * #Crafty.domHelper.getStyle
          * @comp Crafty.domHelper
          * @kind Method
@@ -50,36 +58,37 @@ Crafty.extend({
          * Determine the value of a style on an HTML element. Notation can be
          * in either CSS or JS.
          */
-        getStyle: function (obj, prop) {
-            var result;
-            if (obj.currentStyle)
-                result = obj.currentStyle[this.camelize(prop)];
-            else if (window.getComputedStyle)
-                result = document.defaultView.getComputedStyle(obj, null).getPropertyValue(this.csselize(prop));
-            return result;
-        },
+    getStyle: function(obj, prop) {
+      var result;
+      if (obj.currentStyle) result = obj.currentStyle[this.camelize(prop)];
+      else if (window.getComputedStyle)
+        result = document.defaultView
+          .getComputedStyle(obj, null)
+          .getPropertyValue(this.csselize(prop));
+      return result;
+    },
 
-        /**
+    /**
          * Used in the Zepto framework
          *
          * Converts CSS notation to JS notation
          */
-        camelize: function (str) {
-            return str.replace(/-+(.)?/g, function (match, chr) {
-                return chr ? chr.toUpperCase() : '';
-            });
-        },
+    camelize: function(str) {
+      return str.replace(/-+(.)?/g, function(match, chr) {
+        return chr ? chr.toUpperCase() : "";
+      });
+    },
 
-        /**
+    /**
          * Converts JS notation to CSS notation
          */
-        csselize: function (str) {
-            return str.replace(/[A-Z]/g, function (chr) {
-                return chr ? '-' + chr.toLowerCase() : '';
-            });
-        },
+    csselize: function(str) {
+      return str.replace(/[A-Z]/g, function(chr) {
+        return chr ? "-" + chr.toLowerCase() : "";
+      });
+    },
 
-        /**@
+    /**@
          * #Crafty.domHelper.translate
          * @comp Crafty.domHelper
          * @kind Method
@@ -97,26 +106,42 @@ Crafty.extend({
          * 
          * If a draw layer is specified, the returned object will take into account any special scaling rules for that object.
          */
-        translate: function (clientX, clientY, layer) {
-            var doc = document.documentElement;
-            var body = document.body;
-            var view;
-            // The branch here is to deal with the fact that the viewport position is the distance TO the origin, not from
-            // But the _viewportRect is the opposite -- it uses the same convention as a rectangle that matches the viewport in that layer
-            // At some point this should be simplified, probably by altering the viewport to use the more intuitive coordinates
-            if (layer) {
-                view = layer._viewportRect();
-                return {
-                    x: (clientX - Crafty.stage.x + (doc && doc.scrollLeft || body && body.scrollLeft || 0)) / view._scale + view._x,
-                    y: (clientY - Crafty.stage.y + (doc && doc.scrollTop || body && body.scrollTop || 0)) / view._scale + view._y
-                };
-            } else {
-                view = Crafty.viewport;
-                return {
-                    x: (clientX - Crafty.stage.x + (doc && doc.scrollLeft || body && body.scrollLeft || 0)) / view._scale - view._x,
-                    y: (clientY - Crafty.stage.y + (doc && doc.scrollTop || body && body.scrollTop || 0)) / view._scale - view._y
-                };
-            }
-        }
+    translate: function(clientX, clientY, layer) {
+      var doc = document.documentElement;
+      var body = document.body;
+      var view;
+      // The branch here is to deal with the fact that the viewport position is the distance TO the origin, not from
+      // But the _viewportRect is the opposite -- it uses the same convention as a rectangle that matches the viewport in that layer
+      // At some point this should be simplified, probably by altering the viewport to use the more intuitive coordinates
+      if (layer) {
+        view = layer._viewportRect();
+        return {
+          x: (clientX -
+            Crafty.stage.x +
+            ((doc && doc.scrollLeft) || (body && body.scrollLeft) || 0)) /
+            view._scale +
+            view._x,
+          y: (clientY -
+            Crafty.stage.y +
+            ((doc && doc.scrollTop) || (body && body.scrollTop) || 0)) /
+            view._scale +
+            view._y
+        };
+      } else {
+        view = Crafty.viewport;
+        return {
+          x: (clientX -
+            Crafty.stage.x +
+            ((doc && doc.scrollLeft) || (body && body.scrollLeft) || 0)) /
+            view._scale -
+            view._x,
+          y: (clientY -
+            Crafty.stage.y +
+            ((doc && doc.scrollTop) || (body && body.scrollTop) || 0)) /
+            view._scale -
+            view._y
+        };
+      }
     }
+  }
 });

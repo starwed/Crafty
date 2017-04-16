@@ -1,8 +1,7 @@
-var Crafty = require('../core/core.js'),
-    document = window.document;
+var Crafty = require("../core/core.js"), document = window.document;
 
 Crafty.extend({
-    /**@
+  /**@
      * #Crafty.viewport
      * @category Stage
      * @kind Property
@@ -43,8 +42,8 @@ Crafty.extend({
      * Crafty.viewport.centerOn(ent, 3000);
      * ~~~
      */
-    viewport: {
-        /**@
+  viewport: {
+    /**@
          * #Crafty.viewport.clampToEntities
          * @comp Crafty.viewport
          * @kind Property
@@ -54,10 +53,10 @@ Crafty.extend({
          * viewport over areas of the game that has no entities.
          * For development it can be useful to set this to false.
          */
-        clampToEntities: true,
-        _width: 0,
-        _height: 0,
-        /**@
+    clampToEntities: true,
+    _width: 0,
+    _height: 0,
+    /**@
          * #Crafty.viewport.x
          * @comp Crafty.viewport
          * @kind Property
@@ -69,8 +68,8 @@ Crafty.extend({
          * positions are not exactly where they are on screen. To get the exact position,
          * simply add `Crafty.viewport.x` onto the entities `x` position.
          */
-        _x: 0,
-        /**@
+    _x: 0,
+    /**@
          * #Crafty.viewport.y
          * @comp Crafty.viewport
          * @kind Property
@@ -82,9 +81,9 @@ Crafty.extend({
          * positions are not exactly where they are on screen. To get the exact position,
          * simply add `Crafty.viewport.y` onto the entities `y` position.
          */
-        _y: 0,
+    _y: 0,
 
-        /**@
+    /**@
          * #Crafty.viewport._scale
          * @comp Crafty.viewport
          * @kind Property
@@ -97,9 +96,9 @@ Crafty.extend({
          * or `Crafty.viewport.zoom(...)`
          */
 
-        _scale: 1,
+    _scale: 1,
 
-        /**@
+    /**@
          * #Crafty.viewport.bounds
          * @comp Crafty.viewport
          * @kind Property
@@ -122,9 +121,9 @@ Crafty.extend({
          * Crafty.viewport.bounds = {min:{x:0, y:0}, max:{x:500, y:500}};
          * ~~~
          */
-        bounds: null,
+    bounds: null,
 
-        /**@
+    /**@
          * #Crafty.viewport.scroll
          * @comp Crafty.viewport
          * @kind Method
@@ -143,15 +142,15 @@ Crafty.extend({
          * Crafty.viewport.scroll('_x', 500);
          * ~~~
          */
-        scroll: function (axis, val) {
-            this[axis] = val;
-            Crafty.trigger("ViewportScroll");
-            Crafty.trigger("InvalidateViewport");
-        },
+    scroll: function(axis, val) {
+      this[axis] = val;
+      Crafty.trigger("ViewportScroll");
+      Crafty.trigger("InvalidateViewport");
+    },
 
-        rect_object: { _x: 0, _y: 0, _w: 0, _h: 0},
+    rect_object: { _x: 0, _y: 0, _w: 0, _h: 0 },
 
-        /**@
+    /**@
          * #Crafty.viewport.rect
          * @comp Crafty.viewport
          * @kind Method
@@ -176,16 +175,16 @@ Crafty.extend({
          * rect._h === Crafty.viewport._height / Crafty.viewport._scale
          * ~~~
          */
-        rect: function (out) {
-            out = out || this.rect_object;
-            out._x = -this._x;
-            out._y = -this._y;
-            out._w = this._width / this._scale;
-            out._h = this._height / this._scale;
-            return out;
-        },
+    rect: function(out) {
+      out = out || this.rect_object;
+      out._x = -this._x;
+      out._y = -this._y;
+      out._w = this._width / this._scale;
+      out._h = this._height / this._scale;
+      return out;
+    },
 
-        /**@ 
+    /**@ 
 
          * #Crafty.viewport.pan
          * @comp Crafty.viewport
@@ -205,51 +204,50 @@ Crafty.extend({
          * Crafty.viewport.pan(100, 100, 2000);
          * ~~~
          */
-        pan: (function () {
-            var targetX, targetY, startingX, startingY, easing;
+    pan: (function() {
+      var targetX, targetY, startingX, startingY, easing;
 
-            function enterFrame(e) {
-                easing.tick(e.dt);
-                var v = easing.value();
-                Crafty.viewport.x = (1-v) * startingX + v * targetX;
-                Crafty.viewport.y = (1-v) * startingY + v * targetY;
-                Crafty.viewport._clamp();
+      function enterFrame(e) {
+        easing.tick(e.dt);
+        var v = easing.value();
+        Crafty.viewport.x = (1 - v) * startingX + v * targetX;
+        Crafty.viewport.y = (1 - v) * startingY + v * targetY;
+        Crafty.viewport._clamp();
 
-                if (easing.complete){
-                    stopPan();
-                    Crafty.trigger("CameraAnimationDone");
-                }
-            }
+        if (easing.complete) {
+          stopPan();
+          Crafty.trigger("CameraAnimationDone");
+        }
+      }
 
-            function stopPan(){
-                Crafty.unbind("EnterFrame", enterFrame);
-            }
+      function stopPan() {
+        Crafty.unbind("EnterFrame", enterFrame);
+      }
 
-            Crafty._preBind("StopCamera", stopPan);
+      Crafty._preBind("StopCamera", stopPan);
 
-            return function (dx, dy, time, easingFn) {
-                // Cancel any current camera control
-                Crafty.trigger("StopCamera");
+      return function(dx, dy, time, easingFn) {
+        // Cancel any current camera control
+        Crafty.trigger("StopCamera");
 
-                // Handle request to reset
-                if (dx === 'reset') {
-                   return;
-                }
+        // Handle request to reset
+        if (dx === "reset") {
+          return;
+        }
 
-                startingX = Crafty.viewport._x;
-                startingY = Crafty.viewport._y;
-                targetX = startingX - dx;
-                targetY = startingY - dy;
+        startingX = Crafty.viewport._x;
+        startingY = Crafty.viewport._y;
+        targetX = startingX - dx;
+        targetY = startingY - dy;
 
-                easing = new Crafty.easing(time, easingFn);
+        easing = new Crafty.easing(time, easingFn);
 
-                // bind to event, using uniqueBind prevents multiple copies from being bound
-                Crafty.uniqueBind("EnterFrame", enterFrame);
-                       
-            };
-        })(),
+        // bind to event, using uniqueBind prevents multiple copies from being bound
+        Crafty.uniqueBind("EnterFrame", enterFrame);
+      };
+    })(),
 
-        /**@
+    /**@
          * #Crafty.viewport.follow
          * @comp Crafty.viewport
          * @kind Method
@@ -268,43 +266,54 @@ Crafty.extend({
          * Crafty.viewport.follow(ent, 0, 0);
          * ~~~
          */
-        follow: (function () {
-            var oldTarget, offx, offy;
+    follow: (function() {
+      var oldTarget, offx, offy;
 
-            function change() {
-                var scale = Crafty.viewport._scale;
-                Crafty.viewport.scroll('_x', -(this.x + (this.w / 2) - (Crafty.viewport.width / 2 / scale) - offx * scale));
-                Crafty.viewport.scroll('_y', -(this.y + (this.h / 2) - (Crafty.viewport.height / 2 / scale) - offy * scale));
-                Crafty.viewport._clamp();
-            }
+      function change() {
+        var scale = Crafty.viewport._scale;
+        Crafty.viewport.scroll(
+          "_x",
+          -(this.x +
+            this.w / 2 -
+            Crafty.viewport.width / 2 / scale -
+            offx * scale)
+        );
+        Crafty.viewport.scroll(
+          "_y",
+          -(this.y +
+            this.h / 2 -
+            Crafty.viewport.height / 2 / scale -
+            offy * scale)
+        );
+        Crafty.viewport._clamp();
+      }
 
-            function stopFollow(){
-                if (oldTarget) {
-                    oldTarget.unbind('Move', change);
-                    oldTarget.unbind('ViewportScale', change);
-                    oldTarget.unbind('ViewportResize', change);
-                }
-            }
+      function stopFollow() {
+        if (oldTarget) {
+          oldTarget.unbind("Move", change);
+          oldTarget.unbind("ViewportScale", change);
+          oldTarget.unbind("ViewportResize", change);
+        }
+      }
 
-            Crafty._preBind("StopCamera", stopFollow);
+      Crafty._preBind("StopCamera", stopFollow);
 
-            return function (target, offsetx, offsety) {
-                if (!target || !target.has('2D'))
-                    return;
-                Crafty.trigger("StopCamera");
+      return function(target, offsetx, offsety) {
+        if (!target || !target.has("2D")) return;
+        Crafty.trigger("StopCamera");
 
-                oldTarget = target;
-                offx = (typeof offsetx !== 'undefined') ? offsetx : 0;
-                offy = (typeof offsety !== 'undefined') ? offsety : 0;
+        oldTarget = target;
+        offx = typeof offsetx !== "undefined" ? offsetx : 0;
+        offy = typeof offsety !== "undefined" ? offsety : 0;
 
-                target.bind('Move', change);
-                target.bind('ViewportScale', change);
-                target.bind('ViewportResize', change);
-                change.call(target);
-            };
-        })(),
+        target.bind("Move", change);
+        target.bind("ViewportScale", change);
+        target.bind("ViewportResize", change);
+        change.call(target);
+      };
+    })(),
 
-        /**@
+    /**@
          * #Crafty.viewport.centerOn
          * @comp Crafty.viewport
          * @kind Method
@@ -321,20 +330,20 @@ Crafty.extend({
          * Crafty.viewport.centerOn(ent, 3000);
          * ~~~
          */
-        centerOn: function (targ, time) {
-            var x = targ.x + Crafty.viewport.x,
-                y = targ.y + Crafty.viewport.y,
-                mid_x = targ.w / 2,
-                mid_y = targ.h / 2,
-                cent_x = Crafty.viewport.width / 2 / Crafty.viewport._scale,
-                cent_y = Crafty.viewport.height / 2 / Crafty.viewport._scale,
-                new_x = x + mid_x - cent_x,
-                new_y = y + mid_y - cent_y;
+    centerOn: function(targ, time) {
+      var x = targ.x + Crafty.viewport.x,
+        y = targ.y + Crafty.viewport.y,
+        mid_x = targ.w / 2,
+        mid_y = targ.h / 2,
+        cent_x = Crafty.viewport.width / 2 / Crafty.viewport._scale,
+        cent_y = Crafty.viewport.height / 2 / Crafty.viewport._scale,
+        new_x = x + mid_x - cent_x,
+        new_y = y + mid_y - cent_y;
 
-            Crafty.viewport.pan(new_x, new_y, time);
-        },
+      Crafty.viewport.pan(new_x, new_y, time);
+    },
 
-        /**@
+    /**@
          * #Crafty.viewport.zoom
          * @comp Crafty.viewport
          * @kind Method
@@ -356,83 +365,83 @@ Crafty.extend({
          * Crafty.viewport.zoom(2, 100, 100, 3000);
          * ~~~
          */
-        zoom: (function () {
-            
+    zoom: (function() {
+      function stopZoom() {
+        Crafty.unbind("EnterFrame", enterFrame);
+      }
+      Crafty._preBind("StopCamera", stopZoom);
 
-            function stopZoom(){
-                Crafty.unbind("EnterFrame", enterFrame);
-            }
-            Crafty._preBind("StopCamera", stopZoom);
+      var startingZoom,
+        finalZoom,
+        finalAmount,
+        startingX,
+        finalX,
+        startingY,
+        finalY,
+        easing;
 
-            var startingZoom, finalZoom, finalAmount, startingX, finalX, startingY, finalY, easing;
+      function enterFrame(e) {
+        var amount, v;
 
-            function enterFrame(e){
-                var amount, v;
+        easing.tick(e.dt);
 
-                easing.tick(e.dt);
+        // The scaling should happen smoothly -- start at 1, end at finalAmount, and at half way scaling should be by finalAmount^(1/2)
+        // Since value goes smoothly from 0 to 1, this fufills those requirements
+        amount = Math.pow(finalAmount, easing.value());
 
-                // The scaling should happen smoothly -- start at 1, end at finalAmount, and at half way scaling should be by finalAmount^(1/2)
-                // Since value goes smoothly from 0 to 1, this fufills those requirements
-                amount = Math.pow(finalAmount, easing.value() );
+        // The viewport should move in such a way that no point reverses
+        // If a and b are the top left/bottom right of the viewport, then the below can be derived from
+        //      (a_0-b_0)/(a-b) = amount,
+        // and the assumption that both a and b have the same form
+        //      a = a_0 * (1-v) + a_f * v,
+        //      b = b_0 * (1-v) + b_f * v.
+        // This is just an arbitrary parameterization of the only sensible path for the viewport corners to take.
+        // And by symmetry they should be parameterized in the same way!  So not much choice here.
+        if (finalAmount === 1)
+          v = easing.value(); // prevent NaN!  If zoom is used this way, it'll just become a pan.
+        else v = (1 / amount - 1) / (1 / finalAmount - 1);
 
-                // The viewport should move in such a way that no point reverses
-                // If a and b are the top left/bottom right of the viewport, then the below can be derived from
-                //      (a_0-b_0)/(a-b) = amount,
-                // and the assumption that both a and b have the same form
-                //      a = a_0 * (1-v) + a_f * v,
-                //      b = b_0 * (1-v) + b_f * v.
-                // This is just an arbitrary parameterization of the only sensible path for the viewport corners to take.
-                // And by symmetry they should be parameterized in the same way!  So not much choice here.
-                if (finalAmount === 1)
-                    v = easing.value();  // prevent NaN!  If zoom is used this way, it'll just become a pan.
-                else
-                    v = (1/amount - 1 ) / (1/finalAmount - 1);
+        // Set new scale and viewport position
+        Crafty.viewport.scale(amount * startingZoom);
+        Crafty.viewport.scroll("_x", startingX * (1 - v) + finalX * v);
+        Crafty.viewport.scroll("_y", startingY * (1 - v) + finalY * v);
+        Crafty.viewport._clamp();
 
-                // Set new scale and viewport position
-                Crafty.viewport.scale( amount * startingZoom );
-                Crafty.viewport.scroll("_x", startingX * (1-v) + finalX * v );
-                Crafty.viewport.scroll("_y", startingY * (1-v) + finalY * v );
-                Crafty.viewport._clamp();
+        if (easing.complete) {
+          stopZoom();
+          Crafty.trigger("CameraAnimationDone");
+        }
+      }
 
-                if (easing.complete){
-                    stopZoom();
-                    Crafty.trigger("CameraAnimationDone");
-                }
+      return function(amt, cent_x, cent_y, time, easingFn) {
+        if (!amt) {
+          // we're resetting to defaults
+          Crafty.viewport.scale(1);
+          return;
+        }
 
+        if (arguments.length <= 2) {
+          time = cent_x;
+          cent_x = Crafty.viewport.x - Crafty.viewport.width;
+          cent_y = Crafty.viewport.y - Crafty.viewport.height;
+        }
 
-            }
+        Crafty.trigger("StopCamera");
+        startingZoom = Crafty.viewport._scale;
+        finalAmount = amt;
+        finalZoom = startingZoom * finalAmount;
 
-            return function (amt, cent_x, cent_y, time, easingFn){
-                if (!amt) { // we're resetting to defaults
-                    Crafty.viewport.scale(1);
-                    return;
-                }
+        startingX = Crafty.viewport.x;
+        startingY = Crafty.viewport.y;
+        finalX = -(cent_x - Crafty.viewport.width / (2 * finalZoom));
+        finalY = -(cent_y - Crafty.viewport.height / (2 * finalZoom));
 
-                if (arguments.length <= 2) {
-                    time = cent_x;
-                    cent_x = Crafty.viewport.x - Crafty.viewport.width;
-                    cent_y = Crafty.viewport.y - Crafty.viewport.height;
-                }
+        easing = new Crafty.easing(time, easingFn);
 
-                Crafty.trigger("StopCamera");
-                startingZoom = Crafty.viewport._scale;
-                finalAmount = amt;
-                finalZoom = startingZoom * finalAmount;
-                
-
-                startingX = Crafty.viewport.x;
-                startingY = Crafty.viewport.y;
-                finalX = - (cent_x - Crafty.viewport.width  / (2 * finalZoom) );
-                finalY = - (cent_y - Crafty.viewport.height / (2 * finalZoom) );
-
-                easing = new Crafty.easing(time, easingFn);
-
-                Crafty.uniqueBind("EnterFrame", enterFrame);
-            };
-
-            
-        })(),
-        /**@
+        Crafty.uniqueBind("EnterFrame", enterFrame);
+      };
+    })(),
+    /**@
          * #Crafty.viewport.scale
          * @comp Crafty.viewport
          * @kind Method
@@ -456,16 +465,15 @@ Crafty.extend({
          * Crafty.viewport.scale(2); // Zoom in -- all entities will appear twice as large.
          * ~~~
          */
-        scale: (function () {
-            return function (amt) {
-                this._scale = amt ? amt : 1;
-                Crafty.trigger("InvalidateViewport");
-                Crafty.trigger("ViewportScale");
+    scale: (function() {
+      return function(amt) {
+        this._scale = amt ? amt : 1;
+        Crafty.trigger("InvalidateViewport");
+        Crafty.trigger("ViewportScale");
+      };
+    })(),
 
-            };
-        })(),
-
-        /**@
+    /**@
          * #Crafty.viewport.mouselook
          * @comp Crafty.viewport
          * @kind Method
@@ -479,80 +487,95 @@ Crafty.extend({
          *
          * If the user starts a drag, "StopCamera" will be triggered, which will cancel any existing camera animations.
          */
-        mouselook: (function () {
-            var active = false,
-                dragging = false,
-                lastMouse = {};
+    mouselook: (function() {
+      var active = false, dragging = false, lastMouse = {};
 
-            return function (op, arg) {
-                if (typeof op === 'boolean') {
-                    active = op;
-                    if (active) {
-                        Crafty.mouseObjs++;
-                    } else {
-                        Crafty.mouseObjs = Math.max(0, Crafty.mouseObjs - 1);
-                    }
-                    return;
-                }
-                if (!active) return;
-                switch (op) {
-                case 'move':
-                case 'drag':
-                    if (!dragging) return;
-                    var diff = {
-                        x: arg.clientX - lastMouse.x,
-                        y: arg.clientY - lastMouse.y
-                    };
-
-                    lastMouse.x = arg.clientX;
-                    lastMouse.y = arg.clientY;
-
-                    Crafty.viewport.x += diff.x / this._scale;
-                    Crafty.viewport.y += diff.y / this._scale;
-                    Crafty.viewport._clamp();
-                    break;
-                case 'start':
-                    Crafty.trigger("StopCamera");
-                    lastMouse.x = arg.clientX;
-                    lastMouse.y = arg.clientY;
-                    dragging = true;
-                    break;
-                case 'stop':
-                    dragging = false;
-                    break;
-                }
+      return function(op, arg) {
+        if (typeof op === "boolean") {
+          active = op;
+          if (active) {
+            Crafty.mouseObjs++;
+          } else {
+            Crafty.mouseObjs = Math.max(0, Crafty.mouseObjs - 1);
+          }
+          return;
+        }
+        if (!active) return;
+        switch (op) {
+          case "move":
+          case "drag":
+            if (!dragging) return;
+            var diff = {
+              x: arg.clientX - lastMouse.x,
+              y: arg.clientY - lastMouse.y
             };
-        })(),
-        _clamp: function () {
-            // clamps the viewport to the viewable area
-            // under no circumstances should the viewport see something outside the boundary of the 'world'
-            if (!this.clampToEntities) return;
-            var bound = Crafty.clone(this.bounds) || Crafty.clone(Crafty.map.boundaries());
-            bound.max.x *= this._scale;
-            bound.min.x *= this._scale;
-            bound.max.y *= this._scale;
-            bound.min.y *= this._scale;
-            if (bound.max.x - bound.min.x > Crafty.viewport.width) {
-                if (Crafty.viewport.x < (-bound.max.x + Crafty.viewport.width) / this._scale) {
-                    Crafty.viewport.x = (-bound.max.x + Crafty.viewport.width) / this._scale;
-                } else if (Crafty.viewport.x > -bound.min.x) {
-                    Crafty.viewport.x = -bound.min.x;
-                }
-            } else {
-                Crafty.viewport.x = -1 * (bound.min.x + (bound.max.x - bound.min.x) / 2 - Crafty.viewport.width / 2);
-            }
-            if (bound.max.y - bound.min.y > Crafty.viewport.height) {
-                if (Crafty.viewport.y < (-bound.max.y + Crafty.viewport.height) / this._scale) {
-                    Crafty.viewport.y = (-bound.max.y + Crafty.viewport.height) / this._scale;
-                } else if (Crafty.viewport.y > -bound.min.y) {
-                    Crafty.viewport.y = -bound.min.y;
-                }
-            } else {
-                Crafty.viewport.y = -1 * (bound.min.y + (bound.max.y - bound.min.y) / 2 - Crafty.viewport.height / 2);
-            }
-        },
 
-        /**@
+            lastMouse.x = arg.clientX;
+            lastMouse.y = arg.clientY;
+
+            Crafty.viewport.x += diff.x / this._scale;
+            Crafty.viewport.y += diff.y / this._scale;
+            Crafty.viewport._clamp();
+            break;
+          case "start":
+            Crafty.trigger("StopCamera");
+            lastMouse.x = arg.clientX;
+            lastMouse.y = arg.clientY;
+            dragging = true;
+            break;
+          case "stop":
+            dragging = false;
+            break;
+        }
+      };
+    })(),
+    _clamp: function() {
+      // clamps the viewport to the viewable area
+      // under no circumstances should the viewport see something outside the boundary of the 'world'
+      if (!this.clampToEntities) return;
+      var bound =
+        Crafty.clone(this.bounds) || Crafty.clone(Crafty.map.boundaries());
+      bound.max.x *= this._scale;
+      bound.min.x *= this._scale;
+      bound.max.y *= this._scale;
+      bound.min.y *= this._scale;
+      if (bound.max.x - bound.min.x > Crafty.viewport.width) {
+        if (
+          Crafty.viewport.x <
+          (-bound.max.x + Crafty.viewport.width) / this._scale
+        ) {
+          Crafty.viewport.x =
+            (-bound.max.x + Crafty.viewport.width) / this._scale;
+        } else if (Crafty.viewport.x > -bound.min.x) {
+          Crafty.viewport.x = -bound.min.x;
+        }
+      } else {
+        Crafty.viewport.x =
+          -1 *
+          (bound.min.x +
+            (bound.max.x - bound.min.x) / 2 -
+            Crafty.viewport.width / 2);
+      }
+      if (bound.max.y - bound.min.y > Crafty.viewport.height) {
+        if (
+          Crafty.viewport.y <
+          (-bound.max.y + Crafty.viewport.height) / this._scale
+        ) {
+          Crafty.viewport.y =
+            (-bound.max.y + Crafty.viewport.height) / this._scale;
+        } else if (Crafty.viewport.y > -bound.min.y) {
+          Crafty.viewport.y = -bound.min.y;
+        }
+      } else {
+        Crafty.viewport.y =
+          -1 *
+          (bound.min.y +
+            (bound.max.y - bound.min.y) / 2 -
+            Crafty.viewport.height / 2);
+      }
+    },
+
+    /**@
          * #Crafty.viewport.init
          * @comp Crafty.stage
          * @kind Method
@@ -571,38 +594,40 @@ Crafty.extend({
          *
          * @see Crafty.device, Crafty.domHelper, Crafty.stage, Crafty.viewport.reload
          */
-        init: function (w, h, stage_elem) {
-            // Define default graphics layers with default z-layers
-            Crafty.createLayer("DefaultCanvasLayer", "Canvas", {z: 20});
-            Crafty.createLayer("DefaultDOMLayer", "DOM", {z: 30});
-            Crafty.createLayer("DefaultWebGLLayer", "WebGL", {z: 10});
-            
-            // setters+getters for the viewport
-            this._defineViewportProperties();
+    init: function(w, h, stage_elem) {
+      // Define default graphics layers with default z-layers
+      Crafty.createLayer("DefaultCanvasLayer", "Canvas", { z: 20 });
+      Crafty.createLayer("DefaultDOMLayer", "DOM", { z: 30 });
+      Crafty.createLayer("DefaultWebGLLayer", "WebGL", { z: 10 });
 
-            // Set initial values -- necessary on restart
-            this._x = 0;
-            this._y = 0;
-            this._scale = 1;
-            this.bounds = null;
+      // setters+getters for the viewport
+      this._defineViewportProperties();
 
-            // If no width or height is defined, the width and height is set to fullscreen
-            this._width = w || window.innerWidth;
-            this._height = h || window.innerHeight;
+      // Set initial values -- necessary on restart
+      this._x = 0;
+      this._y = 0;
+      this._scale = 1;
+      this.bounds = null;
 
-            //check if stage exists
-            if (typeof stage_elem === 'undefined')
-                stage_elem = "cr-stage";
+      // If no width or height is defined, the width and height is set to fullscreen
+      this._width = w || window.innerWidth;
+      this._height = h || window.innerHeight;
 
-            var crstage;
-            if (typeof stage_elem === 'string')
-                crstage = document.getElementById(stage_elem);
-            else if (typeof HTMLElement !== "undefined" ? stage_elem instanceof HTMLElement : stage_elem instanceof Element)
-                crstage = stage_elem;
-            else
-                throw new TypeError("stage_elem must be a string or an HTMLElement");
+      //check if stage exists
+      if (typeof stage_elem === "undefined") stage_elem = "cr-stage";
 
-            /**@
+      var crstage;
+      if (typeof stage_elem === "string")
+        crstage = document.getElementById(stage_elem);
+      else if (
+        typeof HTMLElement !== "undefined"
+          ? stage_elem instanceof HTMLElement
+          : stage_elem instanceof Element
+      )
+        crstage = stage_elem;
+      else throw new TypeError("stage_elem must be a string or an HTMLElement");
+
+      /**@
              * #Crafty.stage
              * @category Core
              * @kind CoreObject
@@ -610,7 +635,7 @@ Crafty.extend({
              * The stage where all the DOM entities will be placed.
              */
 
-            /**@
+      /**@
              * #Crafty.stage.elem
              * @comp Crafty.stage
              * @kind Property
@@ -618,154 +643,155 @@ Crafty.extend({
              * The `#cr-stage` div element.
              */
 
-            //create stage div to contain everything
-            Crafty.stage = {
-                x: 0,
-                y: 0,
-                fullscreen: false,
-                elem: (crstage ? crstage : document.createElement("div")),
+      //create stage div to contain everything
+      Crafty.stage = {
+        x: 0,
+        y: 0,
+        fullscreen: false,
+        elem: crstage ? crstage : document.createElement("div")
+      };
+
+      //fullscreen, stop scrollbars
+      if (!w && !h) {
+        document.body.style.overflow = "hidden";
+        Crafty.stage.fullscreen = true;
+      }
+
+      Crafty.addEvent(this, window, "resize", Crafty.viewport.reload);
+
+      Crafty.addEvent(this, window, "blur", function() {
+        if (Crafty.settings.get("autoPause")) {
+          if (!Crafty._paused) Crafty.pause();
+        }
+      });
+      Crafty.addEvent(this, window, "focus", function() {
+        if (Crafty._paused && Crafty.settings.get("autoPause")) {
+          Crafty.pause();
+        }
+      });
+
+      //make the stage unselectable
+      Crafty.settings.register("stageSelectable", function(v) {
+        Crafty.stage.elem.onselectstart = v
+          ? function() {
+              return true;
+            }
+          : function() {
+              return false;
             };
+      });
+      Crafty.settings.modify("stageSelectable", false);
 
-            //fullscreen, stop scrollbars
-            if (!w && !h) {
-                document.body.style.overflow = "hidden";
-                Crafty.stage.fullscreen = true;
+      //make the stage have no context menu
+      Crafty.settings.register("stageContextMenu", function(v) {
+        Crafty.stage.elem.oncontextmenu = v
+          ? function() {
+              return true;
             }
+          : function() {
+              return false;
+            };
+      });
+      Crafty.settings.modify("stageContextMenu", false);
 
-            Crafty.addEvent(this, window, "resize", Crafty.viewport.reload);
+      Crafty.settings.register("autoPause", function() {});
+      Crafty.settings.modify("autoPause", false);
 
-            Crafty.addEvent(this, window, "blur", function () {
-                if (Crafty.settings.get("autoPause")) {
-                    if (!Crafty._paused) Crafty.pause();
-                }
-            });
-            Crafty.addEvent(this, window, "focus", function () {
-                if (Crafty._paused && Crafty.settings.get("autoPause")) {
-                    Crafty.pause();
-                }
-            });
+      //add to the body and give it an ID if not exists
+      if (!crstage) {
+        document.body.appendChild(Crafty.stage.elem);
+        Crafty.stage.elem.id = stage_elem;
+      }
 
-            //make the stage unselectable
-            Crafty.settings.register("stageSelectable", function (v) {
-                Crafty.stage.elem.onselectstart = v ? function () {
-                    return true;
-                } : function () {
-                    return false;
-                };
-            });
-            Crafty.settings.modify("stageSelectable", false);
+      var elem = Crafty.stage.elem.style, offset;
 
-            //make the stage have no context menu
-            Crafty.settings.register("stageContextMenu", function (v) {
-                Crafty.stage.elem.oncontextmenu = v ? function () {
-                    return true;
-                } : function () {
-                    return false;
-                };
-            });
-            Crafty.settings.modify("stageContextMenu", false);
+      //css style
+      elem.width = this.width + "px";
+      elem.height = this.height + "px";
+      elem.overflow = "hidden";
 
-            Crafty.settings.register("autoPause", function () {});
-            Crafty.settings.modify("autoPause", false);
+      // resize events
+      Crafty.bind("ViewportResize", function() {
+        Crafty.trigger("InvalidateViewport");
+      });
 
-            //add to the body and give it an ID if not exists
-            if (!crstage) {
-                document.body.appendChild(Crafty.stage.elem);
-                Crafty.stage.elem.id = stage_elem;
-            }
+      if (Crafty.mobile) {
+        // remove default gray highlighting after touch
+        if (typeof elem.webkitTapHighlightColor !== undefined) {
+          elem.webkitTapHighlightColor = "rgba(0,0,0,0)";
+        }
 
-            var elem = Crafty.stage.elem.style,
-                offset;
+        var meta = document.createElement("meta"),
+          head = document.getElementsByTagName("head")[0];
 
-            //css style
-            elem.width = this.width + "px";
-            elem.height = this.height + "px";
-            elem.overflow = "hidden";
+        //hide the address bar
+        meta = document.createElement("meta");
+        meta.setAttribute("name", "apple-mobile-web-app-capable");
+        meta.setAttribute("content", "yes");
+        head.appendChild(meta);
 
+        Crafty.addEvent(this, Crafty.stage.elem, "touchmove", function(e) {
+          e.preventDefault();
+        });
+      }
 
-            // resize events
-            Crafty.bind("ViewportResize", function(){Crafty.trigger("InvalidateViewport");});
+      elem.position = "relative";
+      //find out the offset position of the stage
+      offset = Crafty.domHelper.innerPosition(Crafty.stage.elem);
+      Crafty.stage.x = offset.x;
+      Crafty.stage.y = offset.y;
 
-            if (Crafty.mobile) {
+      Crafty.uniqueBind("ViewportResize", this._resize);
+    },
 
-                // remove default gray highlighting after touch
-                if (typeof elem.webkitTapHighlightColor !== undefined) {
-                    elem.webkitTapHighlightColor = "rgba(0,0,0,0)";
-                }
+    _resize: function() {
+      Crafty.stage.elem.style.width = Crafty.viewport.width + "px";
+      Crafty.stage.elem.style.height = Crafty.viewport.height + "px";
+    },
 
-                var meta = document.createElement("meta"),
-                    head = document.getElementsByTagName("head")[0];
-
-                //hide the address bar
-                meta = document.createElement("meta");
-                meta.setAttribute("name", "apple-mobile-web-app-capable");
-                meta.setAttribute("content", "yes");
-                head.appendChild(meta);
-
-                Crafty.addEvent(this, Crafty.stage.elem, "touchmove", function (e) {
-                    e.preventDefault();
-                });
-
-
-            }
-            
-            elem.position = "relative";
-            //find out the offset position of the stage
-            offset = Crafty.domHelper.innerPosition(Crafty.stage.elem);
-            Crafty.stage.x = offset.x;
-            Crafty.stage.y = offset.y;
-
-            Crafty.uniqueBind("ViewportResize", this._resize);
+    // Create setters/getters for x, y, width, height
+    _defineViewportProperties: function() {
+      Object.defineProperty(this, "x", {
+        set: function(v) {
+          this.scroll("_x", v);
         },
-
-        _resize: function(){
-            Crafty.stage.elem.style.width = Crafty.viewport.width + "px";
-            Crafty.stage.elem.style.height = Crafty.viewport.height + "px";
+        get: function() {
+          return this._x;
         },
-
-        // Create setters/getters for x, y, width, height
-        _defineViewportProperties: function(){
-            Object.defineProperty(this, 'x', {
-                set: function (v) {
-                    this.scroll('_x', v);
-                },
-                get: function () {
-                    return this._x;
-                },
-                configurable : true
-            });
-            Object.defineProperty(this, 'y', {
-                set: function (v) {
-                    this.scroll('_y', v);
-                },
-                get: function () {
-                    return this._y;
-                },
-                configurable : true
-            });
-            Object.defineProperty(this, 'width', {
-                set: function (v) {
-                    this._width = v;
-                    Crafty.trigger("ViewportResize");
-                },
-                get: function () {
-                    return this._width;
-                },
-                configurable : true
-            });
-            Object.defineProperty(this, 'height', {
-                set: function (v) {
-                    this._height = v;
-                    Crafty.trigger("ViewportResize");
-                },
-                get: function () {
-                    return this._height;
-                },
-                configurable : true
-            });
+        configurable: true
+      });
+      Object.defineProperty(this, "y", {
+        set: function(v) {
+          this.scroll("_y", v);
         },
+        get: function() {
+          return this._y;
+        },
+        configurable: true
+      });
+      Object.defineProperty(this, "width", {
+        set: function(v) {
+          this._width = v;
+          Crafty.trigger("ViewportResize");
+        },
+        get: function() {
+          return this._width;
+        },
+        configurable: true
+      });
+      Object.defineProperty(this, "height", {
+        set: function(v) {
+          this._height = v;
+          Crafty.trigger("ViewportResize");
+        },
+        get: function() {
+          return this._height;
+        },
+        configurable: true
+      });
+    },
 
-        /**@
+    /**@
          * #Crafty.viewport.reload
          * @comp Crafty.stage
          * @kind Method
@@ -777,24 +803,21 @@ Crafty.extend({
          * You should also call this method if you insert custom DOM elements that affect Crafty's stage offset.
          *
          */
-        reload: function () {
-            var w = window.innerWidth,
-                h= window.innerHeight,
-                offset;
+    reload: function() {
+      var w = window.innerWidth, h = window.innerHeight, offset;
 
+      if (Crafty.stage.fullscreen) {
+        this._width = w;
+        this._height = h;
+        Crafty.trigger("ViewportResize");
+      }
 
-            if (Crafty.stage.fullscreen) {
-                this._width = w;
-                this._height = h;
-                Crafty.trigger("ViewportResize");
-            }
+      offset = Crafty.domHelper.innerPosition(Crafty.stage.elem);
+      Crafty.stage.x = offset.x;
+      Crafty.stage.y = offset.y;
+    },
 
-            offset = Crafty.domHelper.innerPosition(Crafty.stage.elem);
-            Crafty.stage.x = offset.x;
-            Crafty.stage.y = offset.y;
-        },
-
-        /**@
+    /**@
          * #Crafty.viewport.reset
          * @comp Crafty.stage
          * @kind Method
@@ -806,16 +829,16 @@ Crafty.extend({
          * Resets the viewport to starting values, and cancels any existing camera animations.
          * Called when scene() is run.
          */
-        reset: function () {
-            Crafty.viewport.mouselook("stop");
-            Crafty.trigger("StopCamera");
-            // Reset viewport position and scale
-            Crafty.viewport.scroll("_x", 0);
-            Crafty.viewport.scroll("_y", 0);
-            Crafty.viewport.scale(1);
-        },
+    reset: function() {
+      Crafty.viewport.mouselook("stop");
+      Crafty.trigger("StopCamera");
+      // Reset viewport position and scale
+      Crafty.viewport.scroll("_x", 0);
+      Crafty.viewport.scroll("_y", 0);
+      Crafty.viewport.scale(1);
+    },
 
-        /**@
+    /**@
          * #Crafty.viewport.onScreen
          * @comp Crafty.viewport
          * @kind Method
@@ -825,9 +848,13 @@ Crafty.extend({
          *
          * Test if a rectangle is completely in viewport
          */
-        onScreen: function (rect) {
-            return Crafty.viewport._x + rect._x + rect._w > 0 && Crafty.viewport._y + rect._y + rect._h > 0 &&
-                Crafty.viewport._x + rect._x < Crafty.viewport.width && Crafty.viewport._y + rect._y < Crafty.viewport.height;
-        }
+    onScreen: function(rect) {
+      return (
+        Crafty.viewport._x + rect._x + rect._w > 0 &&
+        Crafty.viewport._y + rect._y + rect._h > 0 &&
+        Crafty.viewport._x + rect._x < Crafty.viewport.width &&
+        Crafty.viewport._y + rect._y < Crafty.viewport.height
+      );
     }
+  }
 });

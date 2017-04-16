@@ -1,4 +1,4 @@
-var Crafty = require('../core/core.js');
+var Crafty = require("../core/core.js");
 
 /**@
  * #Draggable
@@ -9,24 +9,22 @@ var Crafty = require('../core/core.js');
  * @see MouseDrag
  */
 Crafty.c("Draggable", {
-    _origX: null,
-    _origY: null,
-    _oldX: null,
-    _oldY: null,
-    _dir: null,
+  _origX: null,
+  _origY: null,
+  _oldX: null,
+  _oldY: null,
+  _dir: null,
 
-    init: function () {
-        this.requires("MouseDrag");
-        this.bind("StartDrag", this._startDrag)
-            .bind("Dragging", this._drag);
-    },
+  init: function() {
+    this.requires("MouseDrag");
+    this.bind("StartDrag", this._startDrag).bind("Dragging", this._drag);
+  },
 
-    remove: function() {
-        this.unbind("StartDrag", this._startDrag)
-            .unbind("Dragging", this._drag);
-    },
+  remove: function() {
+    this.unbind("StartDrag", this._startDrag).unbind("Dragging", this._drag);
+  },
 
-    /**@
+  /**@
      * #.enableDrag
      * @comp Draggable 
      * @kind Method
@@ -37,12 +35,12 @@ Crafty.c("Draggable", {
      *
      * @see .disableDrag
      */
-    enableDrag: function () {
-        this.uniqueBind("Dragging", this._drag);
-        return this;
-    },
+  enableDrag: function() {
+    this.uniqueBind("Dragging", this._drag);
+    return this;
+  },
 
-    /**@
+  /**@
      * #.disableDrag
      * @comp Draggable
      * @kind Method
@@ -53,12 +51,12 @@ Crafty.c("Draggable", {
      *
      * @see .enableDrag
      */
-    disableDrag: function () {
-        this.unbind("Dragging", this._drag);
-        return this;
-    },
+  disableDrag: function() {
+    this.unbind("Dragging", this._drag);
+    return this;
+  },
 
-    /**@
+  /**@
      * #.dragDirection
      * @comp Draggable
      * @kind Method
@@ -89,50 +87,52 @@ Crafty.c("Draggable", {
      * this.dragDirection(60) //60 degree.
      * ~~~
      */
-    dragDirection: function (dir) {
-        if (typeof dir === 'undefined') {
-            this._dir = null;
-        } else if (+dir === dir) { //dir is a number
-            this._dir = {
-                x: Math.cos(dir / 180 * Math.PI),
-                y: Math.sin(dir / 180 * Math.PI)
-            };
-        } else {
-            if (dir.x === 0 && dir.y === 0) {
-                this._dir = { x: 0, y: 0 };
-            } else {
-                var r = Math.sqrt(dir.x * dir.x + dir.y * dir.y);
-                this._dir = {
-                    x: dir.x / r,
-                    y: dir.y / r
-                };
-            }
-        }
-        return this;
-    },
-
-    _startDrag: function (e) {
-        this._origX = e.realX;
-        this._origY = e.realY;
-        this._oldX = this._x;
-        this._oldY = this._y;
-    },
-
-    //Note: the code is not tested with zoom, etc., that may distort the direction between the viewport and the coordinate on the canvas.
-    _drag: function(e) {
-        if (this._dir) {
-            if (this._dir.x !== 0 || this._dir.y !== 0) {
-                var len = (e.realX - this._origX) * this._dir.x + (e.realY - this._origY) * this._dir.y;
-                this.x = this._oldX + len * this._dir.x;
-                this.y = this._oldY + len * this._dir.y;
-            }
-        } else {
-            this.x = this._oldX + (e.realX - this._origX);
-            this.y = this._oldY + (e.realY - this._origY);
-        }
+  dragDirection: function(dir) {
+    if (typeof dir === "undefined") {
+      this._dir = null;
+    } else if (+dir === dir) {
+      //dir is a number
+      this._dir = {
+        x: Math.cos(dir / 180 * Math.PI),
+        y: Math.sin(dir / 180 * Math.PI)
+      };
+    } else {
+      if (dir.x === 0 && dir.y === 0) {
+        this._dir = { x: 0, y: 0 };
+      } else {
+        var r = Math.sqrt(dir.x * dir.x + dir.y * dir.y);
+        this._dir = {
+          x: dir.x / r,
+          y: dir.y / r
+        };
+      }
     }
-});
+    return this;
+  },
 
+  _startDrag: function(e) {
+    this._origX = e.realX;
+    this._origY = e.realY;
+    this._oldX = this._x;
+    this._oldY = this._y;
+  },
+
+  //Note: the code is not tested with zoom, etc., that may distort the direction between the viewport and the coordinate on the canvas.
+  _drag: function(e) {
+    if (this._dir) {
+      if (this._dir.x !== 0 || this._dir.y !== 0) {
+        var len =
+          (e.realX - this._origX) * this._dir.x +
+          (e.realY - this._origY) * this._dir.y;
+        this.x = this._oldX + len * this._dir.x;
+        this.y = this._oldY + len * this._dir.y;
+      }
+    } else {
+      this.x = this._oldX + (e.realX - this._origX);
+      this.y = this._oldY + (e.realY - this._origY);
+    }
+  }
+});
 
 /**@
  * #Controllable
@@ -145,38 +145,38 @@ Crafty.c("Draggable", {
  *
  */
 Crafty.c("Controllable", {
-    init: function () {
-        this._inputBindings = {
-            "DirectionalInput": {},
-            "TriggerInputDown": {},
-            "TriggerInputUp": {}
-        };
-    },
-    
-    events: {
-        // We don't want to use dot notation here for the property names
-        /* jshint -W069 */
-        "DirectionalInput": function (e) {
-            if (this._inputBindings["DirectionalInput"][e.name]) {
-                this._inputBindings["DirectionalInput"][e.name].call(this, e);
-            }
-        },
+  init: function() {
+    this._inputBindings = {
+      DirectionalInput: {},
+      TriggerInputDown: {},
+      TriggerInputUp: {}
+    };
+  },
 
-        "TriggerInputDown": function (e) {
-            if (this._inputBindings["TriggerInputDown"][e.name]) {
-                this._inputBindings["TriggerInputDown"][e.name].call(this, e);
-            }
-        },
-
-         "TriggerInputUp": function (e) {
-            if (this._inputBindings["TriggerInputUp"][e.name]) {
-                this._inputBindings["TriggerInputUp"][e.name].call(this, e);
-            }
-        }
-        /* jshint +W069 */
+  events: {
+    // We don't want to use dot notation here for the property names
+    /* jshint -W069 */
+    DirectionalInput: function(e) {
+      if (this._inputBindings["DirectionalInput"][e.name]) {
+        this._inputBindings["DirectionalInput"][e.name].call(this, e);
+      }
     },
 
-    /**@
+    TriggerInputDown: function(e) {
+      if (this._inputBindings["TriggerInputDown"][e.name]) {
+        this._inputBindings["TriggerInputDown"][e.name].call(this, e);
+      }
+    },
+
+    TriggerInputUp: function(e) {
+      if (this._inputBindings["TriggerInputUp"][e.name]) {
+        this._inputBindings["TriggerInputUp"][e.name].call(this, e);
+      }
+    }
+    /* jshint +W069 */
+  },
+
+  /**@
      * #.linkInput
      * @comp Controllable
      * @kind Method
@@ -205,11 +205,11 @@ Crafty.c("Controllable", {
      * 
      * @see .unlinkInput  
      */
-    linkInput: function(event, name, fn) {
-        this._inputBindings[event][name] = fn;
-    },
+  linkInput: function(event, name, fn) {
+    this._inputBindings[event][name] = fn;
+  },
 
-    /**@
+  /**@
      * #.unlinkInput
      * @comp Controllable
      * @kind Method
@@ -222,14 +222,13 @@ Crafty.c("Controllable", {
      * 
      * @see .linkInput
      */
-    unlinkInput: function(event, name) {
-        delete this._inputBindings[event][name];
-    },
+  unlinkInput: function(event, name) {
+    delete this._inputBindings[event][name];
+  },
 
+  disableControls: false,
 
-    disableControls: false,
-
-    /**@
+  /**@
      * #.enableControl
      * @comp Controllable
      * @kind Method
@@ -243,12 +242,12 @@ Crafty.c("Controllable", {
      * this.enableControl();
      * ~~~
      */
-    enableControl: function () {
-        this.disableControls = false;
-        return this;
-    },
+  enableControl: function() {
+    this.disableControls = false;
+    return this;
+  },
 
-    /**@
+  /**@
      * #.disableControl
      * @comp Controllable
      * @kind Method
@@ -262,12 +261,11 @@ Crafty.c("Controllable", {
      * this.disableControl();
      * ~~~
      */
-    disableControl: function () {
-        this.disableControls = true;
-        return this;
-    }
+  disableControl: function() {
+    this.disableControls = true;
+    return this;
+  }
 });
-
 
 /**@
  * #Multiway
@@ -289,40 +287,40 @@ Crafty.c("Controllable", {
  * @see Motion
  */
 Crafty.c("Multiway", {
-    _speed: null,
-    
-    init: function () {
-        this.requires("Motion, Controllable");
-        this._dpadName = "MultiwayDpad" + this[0];
-        this._speed = { x: 150, y: 150 };
-        this._direction = {x:0, y:0};
-    },
+  _speed: null,
 
-    remove: function() {
-        if (!this.disableControls) this.vx = this.vy = 0;
-    },
+  init: function() {
+    this.requires("Motion, Controllable");
+    this._dpadName = "MultiwayDpad" + this[0];
+    this._speed = { x: 150, y: 150 };
+    this._direction = { x: 0, y: 0 };
+  },
 
-    events: {
-        "EnterFrame": function() {
-            if (!this.disableControls) {
-                if (typeof this._speed.x !== 'undefined' && this._speed.x !== null){
-                    this.vx = this._speed.x * this._direction.x;
-                }
-                if (typeof this._speed.y !== 'undefined' && this._speed.y !== null) {
-                    this.vy = this._speed.y * this._direction.y;
-                }
-            }
+  remove: function() {
+    if (!this.disableControls) this.vx = this.vy = 0;
+  },
+
+  events: {
+    EnterFrame: function() {
+      if (!this.disableControls) {
+        if (typeof this._speed.x !== "undefined" && this._speed.x !== null) {
+          this.vx = this._speed.x * this._direction.x;
         }
-    },
-   
-   // Rather than update the velocity directly in response to changing input, track the input direction separately
-   // That makes it easier to enable/disable control
-    _updateDirection: function(e) {
-        this._direction.x = e.x;
-        this._direction.y = e.y;
-    },
+        if (typeof this._speed.y !== "undefined" && this._speed.y !== null) {
+          this.vy = this._speed.y * this._direction.y;
+        }
+      }
+    }
+  },
 
-    /**@
+  // Rather than update the velocity directly in response to changing input, track the input direction separately
+  // That makes it easier to enable/disable control
+  _updateDirection: function(e) {
+    this._direction.x = e.x;
+    this._direction.y = e.y;
+  },
+
+  /**@
      * #.multiway
      * @comp Multiway
      * @kind Method
@@ -350,22 +348,23 @@ Crafty.c("Multiway", {
      * ~~~
      *
      * @see Crafty.keys
-     */         
-    multiway: function (speed, keys, options) {
-        var inputSystem = Crafty.s("Controls");
+     */
 
-        if (keys) {
-            this.speed(speed);
-        } else {
-            keys = speed;
-        }
-        inputSystem.defineDpad(this._dpadName, keys, options);
-        this.linkInput("DirectionalInput", this._dpadName, this._updateDirection);
+  multiway: function(speed, keys, options) {
+    var inputSystem = Crafty.s("Controls");
 
-        return this;
-    },
+    if (keys) {
+      this.speed(speed);
+    } else {
+      keys = speed;
+    }
+    inputSystem.defineDpad(this._dpadName, keys, options);
+    this.linkInput("DirectionalInput", this._dpadName, this._updateDirection);
 
-    /**@
+    return this;
+  },
+
+  /**@
      * #.speed
      * @comp Multiway
      * @kind Method
@@ -383,20 +382,17 @@ Crafty.c("Multiway", {
      * this.speed({ x: 150, y: 50 });
      * ~~~
      */
-    speed: function (speed) {
-        if (typeof speed === 'object') {
-            this._speed.x = speed.x;
-            this._speed.y = speed.y;
-        } else {
-            this._speed.x = speed;
-            this._speed.y = speed;
-        }
-        return this;
-    },
-
-    
+  speed: function(speed) {
+    if (typeof speed === "object") {
+      this._speed.x = speed.x;
+      this._speed.y = speed.y;
+    } else {
+      this._speed.x = speed;
+      this._speed.y = speed;
+    }
+    return this;
+  }
 });
-
 
 /**@
  * #Jumper
@@ -412,9 +408,9 @@ Crafty.c("Multiway", {
  * @see Supportable, Motion, Keyboard, Gravity
  */
 Crafty.c("Jumper", {
-    _jumpSpeed: 300,
+  _jumpSpeed: 300,
 
-    /**@
+  /**@
      * #.canJump
      * @comp Jumper
      * @kind Method
@@ -438,24 +434,22 @@ Crafty.c("Jumper", {
      * });
      * ~~~
      */
-    canJump: true,
+  canJump: true,
 
-    init: function () {
-        this.requires("Supportable, Motion, Controllable");
-    },
+  init: function() {
+    this.requires("Supportable, Motion, Controllable");
+  },
 
-    
+  remove: function() {
+    this.unlinkInput("TriggerInputDown", this._jumpTriggerName);
+  },
 
-    remove: function() {
-        this.unlinkInput("TriggerInputDown", this._jumpTriggerName);
-    },
+  _keydown_jumper: function(e) {
+    if (this.disableControls) return;
+    this.jump();
+  },
 
-    _keydown_jumper: function (e) {
-        if (this.disableControls) return;
-        this.jump();        
-    },
-
-    /**@
+  /**@
      * #.jump
      * @comp Jumper
      * @kind Method
@@ -465,17 +459,17 @@ Crafty.c("Jumper", {
      * Directly trigger the entity to jump.
      *
      */
-    jump: function() {
-        var ground = this.ground;
-        this.canJump = !!ground;
-        this.trigger("CheckJumping", ground);
-        if (this.canJump) {
-            this.vy = -this._jumpSpeed;
-        }
-        return this;
-    },
+  jump: function() {
+    var ground = this.ground;
+    this.canJump = !!ground;
+    this.trigger("CheckJumping", ground);
+    if (this.canJump) {
+      this.vy = -this._jumpSpeed;
+    }
+    return this;
+  },
 
-    /**@
+  /**@
      * #.jumper
      * @comp Jumper
      * @kind Method
@@ -501,33 +495,37 @@ Crafty.c("Jumper", {
      *
      * @see Crafty.keys
      */
-    jumper: function (jumpSpeed, jumpKeys) {
-        if (jumpKeys) {
-            this._jumpSpeed = jumpSpeed;
-        } else {
-            jumpKeys = jumpSpeed;
-        }
-        this._jumpTriggerName = "JumpTrigger" + this[0];
-        if (Array.isArray(jumpKeys)) {
-            var keys = [];
-            for (var i = 0; i < jumpKeys.length; ++i) {
-                var key = jumpKeys[i];
-                var keyCode = Crafty.keys[key] || key;
-                keys.push(keyCode);
-            }
-            Crafty.s("Controls")
-                .defineTriggerGroup(this._jumpTriggerName, {keys:keys});
-        } else {
-            Crafty.s("Controls")
-                .defineTriggerGroup(this._jumpTriggerName, jumpKeys);
-        }
-        
-        this.linkInput("TriggerInputDown", this._jumpTriggerName, this._keydown_jumper);
+  jumper: function(jumpSpeed, jumpKeys) {
+    if (jumpKeys) {
+      this._jumpSpeed = jumpSpeed;
+    } else {
+      jumpKeys = jumpSpeed;
+    }
+    this._jumpTriggerName = "JumpTrigger" + this[0];
+    if (Array.isArray(jumpKeys)) {
+      var keys = [];
+      for (var i = 0; i < jumpKeys.length; ++i) {
+        var key = jumpKeys[i];
+        var keyCode = Crafty.keys[key] || key;
+        keys.push(keyCode);
+      }
+      Crafty.s("Controls").defineTriggerGroup(this._jumpTriggerName, {
+        keys: keys
+      });
+    } else {
+      Crafty.s("Controls").defineTriggerGroup(this._jumpTriggerName, jumpKeys);
+    }
 
-        return this;
-    },
+    this.linkInput(
+      "TriggerInputDown",
+      this._jumpTriggerName,
+      this._keydown_jumper
+    );
 
-    /**@
+    return this;
+  },
+
+  /**@
      * #.jumpSpeed
      * @comp Jumper
      * @kind Method
@@ -542,10 +540,10 @@ Crafty.c("Jumper", {
      * this.jumpSpeed(300);
      * ~~~
      */
-    jumpSpeed: function (jumpSpeed) {
-        this._jumpSpeed = jumpSpeed;
-        return this;
-    }
+  jumpSpeed: function(jumpSpeed) {
+    this._jumpSpeed = jumpSpeed;
+    return this;
+  }
 });
 
 /**@
@@ -563,12 +561,11 @@ Crafty.c("Jumper", {
  * @see Motion
  */
 Crafty.c("Fourway", {
+  init: function() {
+    this.requires("Multiway");
+  },
 
-    init: function () {
-        this.requires("Multiway");
-    },
-
-    /**@
+  /**@
      * #.fourway
      * @comp Fourway
      * @kind Method
@@ -590,22 +587,26 @@ Crafty.c("Fourway", {
      * 
      * The speed is in units of pixels per second.
      */
-    fourway: function (speed, options) {
-        this.multiway(speed || this._speed, {
-            UP_ARROW: -90,
-            DOWN_ARROW: 90,
-            RIGHT_ARROW: 0,
-            LEFT_ARROW: 180,
-            W: -90,
-            S: 90,
-            D: 0,
-            A: 180,
-            Z: -90,
-            Q: 180
-        }, options);
+  fourway: function(speed, options) {
+    this.multiway(
+      speed || this._speed,
+      {
+        UP_ARROW: -90,
+        DOWN_ARROW: 90,
+        RIGHT_ARROW: 0,
+        LEFT_ARROW: 180,
+        W: -90,
+        S: 90,
+        D: 0,
+        A: 180,
+        Z: -90,
+        Q: 180
+      },
+      options
+    );
 
-        return this;
-    }
+    return this;
+  }
 });
 
 /**@
@@ -623,12 +624,11 @@ Crafty.c("Fourway", {
  * @see Multiway, Jumper
  */
 Crafty.c("Twoway", {
+  init: function() {
+    this.requires("Multiway, Jumper");
+  },
 
-    init: function () {
-        this.requires("Multiway, Jumper");
-    },
-
-    /**@
+  /**@
      * #.twoway
      * @comp Twoway
      * @kind Method
@@ -642,23 +642,26 @@ Crafty.c("Twoway", {
      * in the respective direction by the speed passed in the argument.
      * Pressing the jump key will cause the entity to jump with the supplied power.
      */
-    twoway: function (speed, jumpSpeed) {
-        // Set multiway with horizontal speed only
-        var hSpeed = speed || this._speed;
-        this.multiway({x: hSpeed}, {
-            RIGHT_ARROW: 0,
-            LEFT_ARROW: 180,
-            D: 0,
-            A: 180,
-            Q: 180
-        });
+  twoway: function(speed, jumpSpeed) {
+    // Set multiway with horizontal speed only
+    var hSpeed = speed || this._speed;
+    this.multiway(
+      { x: hSpeed },
+      {
+        RIGHT_ARROW: 0,
+        LEFT_ARROW: 180,
+        D: 0,
+        A: 180,
+        Q: 180
+      }
+    );
 
-        this.jumper(jumpSpeed || speed * 2 || this._jumpSpeed, [
-            Crafty.keys.UP_ARROW,
-            Crafty.keys.W,
-            Crafty.keys.Z
-        ]);
+    this.jumper(jumpSpeed || speed * 2 || this._jumpSpeed, [
+      Crafty.keys.UP_ARROW,
+      Crafty.keys.W,
+      Crafty.keys.Z
+    ]);
 
-        return this;
-    }
+    return this;
+  }
 });

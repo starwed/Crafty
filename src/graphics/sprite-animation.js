@@ -1,5 +1,4 @@
-var Crafty = require('../core/core.js');
-
+var Crafty = require("../core/core.js");
 
 /**@
  * #SpriteAnimation
@@ -28,45 +27,44 @@ var Crafty = require('../core/core.js');
  * @see Crafty.sprite
  */
 Crafty.c("SpriteAnimation", {
-    /*
+  /*
      * A map in which the keys are the names assigned to animations defined using
      * the component (also known as reelIDs), and the values are objects describing
      * the animation and its state.
      */
-    _reels: null,
+  _reels: null,
 
-    /*
+  /*
      * The reelID of the currently active reel (which is one of the elements in `this._reels`).
      * This value is `null` if no reel is active. Some of the component's actions can be invoked
      * without specifying a reel, in which case they will work on the active reel.
      */
-    _currentReelId: null,
+  _currentReelId: null,
 
-    /*
+  /*
      * The currently active reel.
      * This value is `null` if no reel is active.
      */
-    _currentReel: null,
+  _currentReel: null,
 
-    /*
+  /*
      * Whether or not an animation is currently playing.
      */
-    _isPlaying: false,
+  _isPlaying: false,
 
-    /**@
+  /**@
      * #.animationSpeed
      * @comp SpriteAnimation
      *
      * The playback rate of the animation.  This property defaults to 1.
      */
-    animationSpeed: 1,
+  animationSpeed: 1,
 
+  init: function() {
+    this._reels = {};
+  },
 
-    init: function () {
-        this._reels = {};
-    },
-
-    /**@
+  /**@
      * #.reel
      * @comp SpriteAnimation
      * @kind Method
@@ -135,80 +133,79 @@ Crafty.c("SpriteAnimation", {
      *       .reel('PlayerRunning', 1000, ['PlayerIdle1', 'PlayerLeftFootForward', 'PlayerIdle2', 'PlayerRightFootForward']);
      * ~~~
      */
-    reel: function (reelId, duration, fromX, fromY, frameCount, rowLength) {
-        // @sign public this .reel()
-        if (arguments.length === 0) {
-            return this._currentReelId;
+  reel: function(reelId, duration, fromX, fromY, frameCount, rowLength) {
+    // @sign public this .reel()
+    if (arguments.length === 0) {
+      return this._currentReelId;
+    }
+
+    // @sign public this .reel(String reelID)
+    if (arguments.length === 1 && typeof reelId === "string") {
+      if (typeof this._reels[reelId] === "undefined") {
+        throw "The specified reel " + reelId + " is undefined.";
+      }
+      this.pauseAnimation();
+      if (this._currentReelId !== reelId) {
+        this._currentReelId = reelId;
+        this._currentReel = this._reels[reelId];
+        // Change the visible sprite
+        this._updateSprite();
+        // Trigger event
+        this.trigger("ReelChange", this._currentReel);
+      }
+      return this;
+    }
+
+    var reel, i;
+
+    reel = {
+      id: reelId,
+      frames: [],
+      currentFrame: 0,
+      easing: new Crafty.easing(duration),
+      defaultLoops: 1
+    };
+
+    reel.duration = reel.easing.duration;
+
+    // @sign public this .reel(String reelId, Number duration, Number fromX, Number fromY, Number frameDuration)
+    if (typeof fromX === "number") {
+      rowLength = rowLength || Infinity;
+
+      if (frameCount >= 0) {
+        // forward animation
+        for (i = 0; i < frameCount; ++i) {
+          reel.frames.push([fromX, fromY]);
+
+          if (++fromX >= rowLength) {
+            fromX = 0;
+            fromY++;
+          }
         }
+      } else {
+        // backward animation
+        for (i = 0; i > frameCount; --i) {
+          reel.frames.push([fromX, fromY]);
 
-        // @sign public this .reel(String reelID)
-        if (arguments.length === 1 && typeof reelId === "string") {
-            if (typeof this._reels[reelId] === "undefined") {
-                throw("The specified reel " + reelId + " is undefined.");
-            }
-            this.pauseAnimation();
-            if (this._currentReelId !== reelId) {
-                this._currentReelId = reelId;
-                this._currentReel = this._reels[reelId];
-                // Change the visible sprite
-                this._updateSprite();
-                // Trigger event
-                this.trigger("ReelChange", this._currentReel);
-            }
-            return this;
+          if (--fromX < 0) {
+            fromX = rowLength - 1;
+            fromY--;
+          }
         }
+      }
+    } else if (arguments.length === 3 && typeof fromX === "object") {
+      // @sign public this .reel(String reelId, Number duration, Array frames)
+      reel.frames = fromX;
+    } else {
+      throw "Unrecognized arguments. Please see the documentation for 'reel(...)'.";
+    }
 
+    this._reels[reelId] = reel;
 
-        var reel, i;
+    return this;
+  },
 
-        reel = {
-            id: reelId,
-            frames: [],
-            currentFrame: 0,
-            easing: new Crafty.easing(duration),
-            defaultLoops: 1
-        };
-
-        reel.duration = reel.easing.duration;
-
-        // @sign public this .reel(String reelId, Number duration, Number fromX, Number fromY, Number frameDuration)
-        if (typeof fromX === "number") {
-            rowLength = rowLength || Infinity;
-
-            if (frameCount >= 0) { // forward animation
-                for (i = 0; i < frameCount; ++i) {
-                    reel.frames.push([fromX, fromY]);
-
-                    if (++fromX >= rowLength) {
-                        fromX = 0;
-                        fromY++;
-                    }
-                }
-            } else { // backward animation
-                for (i = 0; i > frameCount; --i) {
-                    reel.frames.push([fromX, fromY]);
-
-                    if (--fromX < 0) {
-                        fromX = rowLength - 1;
-                        fromY--;
-                    }
-                }
-            }
-        }
-        // @sign public this .reel(String reelId, Number duration, Array frames)
-        else if (arguments.length === 3 && typeof fromX === "object") {
-            reel.frames = fromX;
-        }
-        else {
-            throw "Unrecognized arguments. Please see the documentation for 'reel(...)'.";
-        }
-
-        this._reels[reelId] = reel;
-
-        return this;
-    },
-
-    /**@
+  /**@
      * #.animate
      * @comp SpriteAnimation
      * @kind Method
@@ -241,42 +238,42 @@ Crafty.c("SpriteAnimation", {
      *     .animate('PlayerRunning', -1); // start animation
      * ~~~
      */
-    animate: function(reelId, loopCount) {
-        // switch to the specified reel if necessary
-        if (typeof reelId === "string") this.reel(reelId);
+  animate: function(reelId, loopCount) {
+    // switch to the specified reel if necessary
+    if (typeof reelId === "string") this.reel(reelId);
 
-        var currentReel = this._currentReel;
+    var currentReel = this._currentReel;
 
-        if (typeof currentReel === "undefined" || currentReel === null) {
-            throw("No reel is specified, and there is no currently active reel.");
-        }
+    if (typeof currentReel === "undefined" || currentReel === null) {
+      throw "No reel is specified, and there is no currently active reel.";
+    }
 
-        this.pauseAnimation(); // This will pause the current animation, if one is playing
+    this.pauseAnimation(); // This will pause the current animation, if one is playing
 
-        // Handle repeats; if loopCount is undefined and reelID is a number, calling with that signature
-        if (typeof loopCount === "undefined") {
-            if (typeof reelId === "number") loopCount = reelId;
-            else loopCount = 1;
-        }
+    // Handle repeats; if loopCount is undefined and reelID is a number, calling with that signature
+    if (typeof loopCount === "undefined") {
+      if (typeof reelId === "number") loopCount = reelId;
+      else loopCount = 1;
+    }
 
-        // set the animation to the beginning
-        currentReel.easing.reset();
+    // set the animation to the beginning
+    currentReel.easing.reset();
 
-        // user provided loop count.
-        this.loops(loopCount);
+    // user provided loop count.
+    this.loops(loopCount);
 
-        // trigger the necessary events and switch to the first frame
-        this._setFrame(0);
+    // trigger the necessary events and switch to the first frame
+    this._setFrame(0);
 
-        // Start the anim
-        this.bind("EnterFrame", this._animationTick);
-        this._isPlaying = true;
-        this.trigger("StartAnimation", currentReel);
+    // Start the anim
+    this.bind("EnterFrame", this._animationTick);
+    this._isPlaying = true;
+    this.trigger("StartAnimation", currentReel);
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.resumeAnimation
      * @comp SpriteAnimation
      * @kind Method
@@ -286,18 +283,18 @@ Crafty.c("SpriteAnimation", {
      * This will resume animation of the current reel from its current state.
      * If a reel is already playing, or there is no current reel, there will be no effect.
      */
-    resumeAnimation: function() {
-        if (this._isPlaying === false &&  this._currentReel !== null) {
-            this.bind("EnterFrame", this._animationTick);
-            this._isPlaying = true;
-            this._currentReel.easing.resume();
-            this.trigger("StartAnimation", this._currentReel);
-        }
+  resumeAnimation: function() {
+    if (this._isPlaying === false && this._currentReel !== null) {
+      this.bind("EnterFrame", this._animationTick);
+      this._isPlaying = true;
+      this._currentReel.easing.resume();
+      this.trigger("StartAnimation", this._currentReel);
+    }
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.pauseAnimation
      * @comp SpriteAnimation
      * @kind Method
@@ -306,17 +303,17 @@ Crafty.c("SpriteAnimation", {
      *
      * Pauses the currently playing animation, or does nothing if no animation is playing.
      */
-    pauseAnimation: function () {
-        if (this._isPlaying === true) {
-            this.unbind("EnterFrame", this._animationTick);
-            this._isPlaying = false;
-            this._reels[this._currentReelId].easing.pause();
-        }
+  pauseAnimation: function() {
+    if (this._isPlaying === true) {
+      this.unbind("EnterFrame", this._animationTick);
+      this._isPlaying = false;
+      this._reels[this._currentReelId].easing.pause();
+    }
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.resetAnimation
      * @comp SpriteAnimation
      * @kind Method
@@ -327,18 +324,17 @@ Crafty.c("SpriteAnimation", {
      *
      * Neither pauses nor resumes the current animation.
      */
-    resetAnimation: function() {
-        var currentReel = this._currentReel;
-        if (currentReel === null) throw("No active reel to reset.");
+  resetAnimation: function() {
+    var currentReel = this._currentReel;
+    if (currentReel === null) throw "No active reel to reset.";
 
-        this.reelPosition(0);
-        currentReel.easing.repeat(currentReel.defaultLoops);
+    this.reelPosition(0);
+    currentReel.easing.repeat(currentReel.defaultLoops);
 
-        return this;
-   },
+    return this;
+  },
 
-
-    /**@
+  /**@
      * #.loops
      * @comp SpriteAnimation
      * @kind Method
@@ -352,25 +348,23 @@ Crafty.c("SpriteAnimation", {
      * @sign public Number .loops()
      * @returns The number of loops left.  Returns 0 if no reel is active.
      */
-    loops: function(loopCount) {
-        if (arguments.length === 0) {
-            if (this._currentReel !== null)
-                return this._currentReel.easing.loops;
-            else
-                return 0;
-        }
+  loops: function(loopCount) {
+    if (arguments.length === 0) {
+      if (this._currentReel !== null) return this._currentReel.easing.loops;
+      else return 0;
+    }
 
-        if (this._currentReel !== null) {
-            if (loopCount < 0) loopCount = Infinity;
+    if (this._currentReel !== null) {
+      if (loopCount < 0) loopCount = Infinity;
 
-            this._currentReel.easing.repeat(loopCount);
-            this._currentReel.defaultLoops = loopCount;
-        }
+      this._currentReel.easing.repeat(loopCount);
+      this._currentReel.defaultLoops = loopCount;
+    }
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.reelPosition
      * @kind Method
      *
@@ -391,40 +385,38 @@ Crafty.c("SpriteAnimation", {
      * @returns The current frame number
      *
      */
-    reelPosition: function(position) {
-        if (this._currentReel === null) throw("No active reel.");
+  reelPosition: function(position) {
+    if (this._currentReel === null) throw "No active reel.";
 
-        if (arguments.length === 0) {
-            return this._currentReel.currentFrame;
-        }
+    if (arguments.length === 0) {
+      return this._currentReel.currentFrame;
+    }
 
-        var progress,
-            l = this._currentReel.frames.length;
+    var progress, l = this._currentReel.frames.length;
 
-        if (position === "end") {
-            position = l - 1;
-        }
+    if (position === "end") {
+      position = l - 1;
+    }
 
-        if (position < 1 && position > 0) {
-            progress = position;
-            position = Math.floor(l * progress);
-        } else {
-            if (position !== Math.floor(position))
-                throw("Position " + position + " is invalid.");
-            if (position < 0)
-                position = l - 1 + position;
-            progress = position / l;
-        }
-        // cap to last frame
-        position = Math.min(position, l-1);
-        position = Math.max(position, 0);
-        this._setProgress(progress);
-        this._setFrame(position);
+    if (position < 1 && position > 0) {
+      progress = position;
+      position = Math.floor(l * progress);
+    } else {
+      if (position !== Math.floor(position))
+        throw "Position " + position + " is invalid.";
+      if (position < 0) position = l - 1 + position;
+      progress = position / l;
+    }
+    // cap to last frame
+    position = Math.min(position, l - 1);
+    position = Math.max(position, 0);
+    this._setProgress(progress);
+    this._setFrame(position);
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.reelFrame
      * @kind Method
      *
@@ -437,65 +429,65 @@ Crafty.c("SpriteAnimation", {
      * Jumps to specifed frame if the reel was created with sprite names.
      *
      */
-    reelFrame: function (frameName) {
-        if (this._currentReel === null) throw("No active reel.");
+  reelFrame: function(frameName) {
+    if (this._currentReel === null) throw "No active reel.";
 
-        var index = this._currentReel.frames.indexOf(frameName);
+    var index = this._currentReel.frames.indexOf(frameName);
 
-        if (index === -1) {
-            throw("Frame name " + frameName + " is invalid.");
-        }
+    if (index === -1) {
+      throw "Frame name " + frameName + " is invalid.";
+    }
 
-        this.reelPosition(index);
+    this.reelPosition(index);
 
-        return this;
-    },
+    return this;
+  },
 
-    // Bound to "EnterFrame".  Progresses the animation by dt, changing the frame if necessary.
-    // dt is multiplied by the animationSpeed property
-    _animationTick: function(frameData) {
-        var currentReel = this._reels[this._currentReelId];
-        currentReel.easing.tick(frameData.dt * this.animationSpeed);
-        var progress = currentReel.easing.value();
-        var frameNumber = Math.min( Math.floor(currentReel.frames.length * progress), currentReel.frames.length - 1);
+  // Bound to "EnterFrame".  Progresses the animation by dt, changing the frame if necessary.
+  // dt is multiplied by the animationSpeed property
+  _animationTick: function(frameData) {
+    var currentReel = this._reels[this._currentReelId];
+    currentReel.easing.tick(frameData.dt * this.animationSpeed);
+    var progress = currentReel.easing.value();
+    var frameNumber = Math.min(
+      Math.floor(currentReel.frames.length * progress),
+      currentReel.frames.length - 1
+    );
 
-        this._setFrame(frameNumber);
+    this._setFrame(frameNumber);
 
-        if(currentReel.easing.complete === true){
-            this.pauseAnimation();
-            this.trigger("AnimationEnd", this._currentReel);
-        }
-    },
+    if (currentReel.easing.complete === true) {
+      this.pauseAnimation();
+      this.trigger("AnimationEnd", this._currentReel);
+    }
+  },
 
-    // Set the current frame and update the displayed sprite
-    // The actual progress for the animation must be set seperately.
-    _setFrame: function(frameNumber) {
-        var currentReel = this._currentReel;
-        if (frameNumber === currentReel.currentFrame)
-            return;
-        currentReel.currentFrame = frameNumber;
-        this._updateSprite();
-        this.trigger("FrameChange", currentReel);
-    },
+  // Set the current frame and update the displayed sprite
+  // The actual progress for the animation must be set seperately.
+  _setFrame: function(frameNumber) {
+    var currentReel = this._currentReel;
+    if (frameNumber === currentReel.currentFrame) return;
+    currentReel.currentFrame = frameNumber;
+    this._updateSprite();
+    this.trigger("FrameChange", currentReel);
+  },
 
-    // Update the displayed sprite.
-    _updateSprite: function() {
-        var currentReel = this._currentReel;
-        var frame = currentReel.frames[currentReel.currentFrame];
+  // Update the displayed sprite.
+  _updateSprite: function() {
+    var currentReel = this._currentReel;
+    var frame = currentReel.frames[currentReel.currentFrame];
 
-        // .sprite will trigger redraw
-        if(typeof frame === "string") this.sprite(frame);
-        else this.sprite(frame[0], frame[1]);
-    },
+    // .sprite will trigger redraw
+    if (typeof frame === "string") this.sprite(frame);
+    else this.sprite(frame[0], frame[1]);
+  },
 
+  // Sets the internal state of the current reel's easing object
+  _setProgress: function(progress, repeats) {
+    this._currentReel.easing.setProgress(progress, repeats);
+  },
 
-    // Sets the internal state of the current reel's easing object
-    _setProgress: function(progress, repeats) {
-        this._currentReel.easing.setProgress(progress, repeats);
-    },
-
-
-    /**@
+  /**@
      * #.isPlaying
      * @comp SpriteAnimation
      * @kind Method
@@ -513,13 +505,13 @@ Crafty.c("SpriteAnimation", {
      * myEntity.isPlaying('PlayerRunning') // is the PlayerRunning animation playing
      * ~~~
      */
-    isPlaying: function (reelId) {
-        if (!this._isPlaying) return false;
-        if (!reelId) return !!this._currentReelId;
-        return this._currentReelId === reelId;
-    },
+  isPlaying: function(reelId) {
+    if (!this._isPlaying) return false;
+    if (!reelId) return !!this._currentReelId;
+    return this._currentReelId === reelId;
+  },
 
-    /**@
+  /**@
      * #.getReel
      * @comp SpriteAnimation
      * @kind Method
@@ -532,12 +524,12 @@ Crafty.c("SpriteAnimation", {
      * @returns The specified reel, or `undefined` if no such reel exists.
      *
      */
-    getReel: function (reelId) {
-        if (arguments.length === 0) {
-            if (!this._currentReelId) return null;
-            reelId = this._currentReelId;
-        }
-
-        return this._reels[reelId];
+  getReel: function(reelId) {
+    if (arguments.length === 0) {
+      if (!this._currentReelId) return null;
+      reelId = this._currentReelId;
     }
+
+    return this._reels[reelId];
+  }
 });

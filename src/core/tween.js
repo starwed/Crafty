@@ -1,5 +1,4 @@
-var Crafty = require('../core/core.js');
-
+var Crafty = require("../core/core.js");
 
 /**@
  * #Tween
@@ -11,21 +10,19 @@ var Crafty = require('../core/core.js');
  * Component to animate the change in 2D properties over time.
  */
 module.exports = {
-
-  init: function(){
+  init: function() {
     this.tweenGroup = {};
     this.tweenStart = {};
     this.tweens = [];
     this.uniqueBind("EnterFrame", this._tweenTick);
-
   },
 
-  _tweenTick: function(frameData){
+  _tweenTick: function(frameData) {
     var tween, v, i;
-    for ( i = this.tweens.length-1; i>=0; i--){
+    for (i = this.tweens.length - 1; i >= 0; i--) {
       tween = this.tweens[i];
       tween.easing.tick(frameData.dt);
-      v  = tween.easing.value();
+      v = tween.easing.value();
       this._doTween(tween.props, v);
       if (tween.easing.complete) {
         this.tweens.splice(i, 1);
@@ -34,13 +31,10 @@ module.exports = {
     }
   },
 
-  _doTween: function(props, v){
+  _doTween: function(props, v) {
     for (var name in props)
-      this[name] = (1-v) * this.tweenStart[name] + v * props[name];
-
+      this[name] = (1 - v) * this.tweenStart[name] + v * props[name];
   },
-
-
 
   /**@
   * #.tween
@@ -76,8 +70,7 @@ module.exports = {
   * @see Crafty.easing
   *
   */
-  tween: function (props, duration, easingFn) {
-
+  tween: function(props, duration, easingFn) {
     var tween = {
       props: props,
       easing: new Crafty.easing(duration, easingFn)
@@ -87,7 +80,7 @@ module.exports = {
     // Individual properties must belong to only a single group
     // When a new tween starts, if it already belongs to a group, move it to the new one
     // Record the group it currently belongs to, as well as its starting coordinate.
-    for (var propname in props){
+    for (var propname in props) {
       if (typeof this.tweenGroup[propname] !== "undefined")
         this.cancelTween(propname);
       this.tweenStart[propname] = this[propname];
@@ -96,7 +89,6 @@ module.exports = {
     this.tweens.push(tween);
 
     return this;
-
   },
 
   /**@
@@ -113,9 +105,9 @@ module.exports = {
   * Stops tweening the specified property or properties.
   * Passing the object used to start the tween might be a typical use of the second signature.
   */
-  cancelTween: function(target){
-    if (typeof target === "string"){
-      if (typeof this.tweenGroup[target] === "object" )
+  cancelTween: function(target) {
+    if (typeof target === "string") {
+      if (typeof this.tweenGroup[target] === "object")
         delete this.tweenGroup[target][target];
     } else if (typeof target === "object") {
       for (var propname in target)
@@ -123,7 +115,6 @@ module.exports = {
     }
 
     return this;
-
   },
 
   /**@
@@ -135,8 +126,10 @@ module.exports = {
   *
   * Pauses all tweens associated with the entity
   */
-  pauseTweens: function(){
-      this.tweens.map(function(e){e.easing.pause();});
+  pauseTweens: function() {
+    this.tweens.map(function(e) {
+      e.easing.pause();
+    });
   },
 
   /**@
@@ -148,16 +141,18 @@ module.exports = {
   *
   * Resumes all paused tweens associated with the entity
   */
-  resumeTweens: function(){
-      this.tweens.map(function(e){e.easing.resume();});
+  resumeTweens: function() {
+    this.tweens.map(function(e) {
+      e.easing.resume();
+    });
   },
 
   /*
   * Stops tweening the specified group of properties, and fires the "TweenEnd" event.
   */
-  _endTween: function(properties){
+  _endTween: function(properties) {
     var notEmpty = false;
-    for (var propname in properties){
+    for (var propname in properties) {
       notEmpty = true;
       delete this.tweenGroup[propname];
     }

@@ -6,10 +6,9 @@
 
   test("Collision constructors", function(_) {
     var newHitboxEvents = 0;
-    var e = Crafty.e("2D, Collision")
-              .bind("NewHitbox", function(newHitbox) {
-                newHitboxEvents++;
-              });
+    var e = Crafty.e("2D, Collision").bind("NewHitbox", function(newHitbox) {
+      newHitboxEvents++;
+    });
 
     var poly = new Crafty.polygon([50, 0, 100, 100, 0, 100]);
     e.collision(poly);
@@ -19,7 +18,10 @@
     var arr = [50, 0, 100, 100, 0, 100];
     e.collision(arr);
     _.ok(e.map instanceof Crafty.polygon, "Hitbox is a polygon");
-    _.ok(e.map.points && e.map.points !== arr, "Array used in hitbox is a clone of passed array");
+    _.ok(
+      e.map.points && e.map.points !== arr,
+      "Array used in hitbox is a clone of passed array"
+    );
 
     e.collision(50, 0, 100, 100, 0, 100);
     _.ok(e.map instanceof Crafty.polygon, "Hitbox is a polygon");
@@ -28,44 +30,55 @@
   });
 
   test("hit", function(_) {
-    var e = Crafty.e("2D, Collision, solid")
-                  .attr({x: 0, y: 0, w: 25, h: 25});
-    var f = Crafty.e("2D, Collision, solid")
-                  .attr({x: 255, y: 255, w: 25, h: 25});
-    var g = Crafty.e("2D, Collision, solid")
-                  .attr({x: 255, y: 255, w: 25, h: 25});
-    var h = Crafty.e("2D, Collision, plasma")
-                  .attr({x: 255, y: 255, w: 25, h: 25});
+    var e = Crafty.e("2D, Collision, solid").attr({ x: 0, y: 0, w: 25, h: 25 });
+    var f = Crafty.e("2D, Collision, solid").attr({
+      x: 255,
+      y: 255,
+      w: 25,
+      h: 25
+    });
+    var g = Crafty.e("2D, Collision, solid").attr({
+      x: 255,
+      y: 255,
+      w: 25,
+      h: 25
+    });
+    var h = Crafty.e("2D, Collision, plasma").attr({
+      x: 255,
+      y: 255,
+      w: 25,
+      h: 25
+    });
 
     var results;
 
     // check entity itself is not reported
-    results = e.hit('solid');
+    results = e.hit("solid");
     _.strictEqual(results, null, "empty collision results");
 
     // check no reported hits given no intersections
-    results = e.hit('obj');
+    results = e.hit("obj");
     _.strictEqual(results, null, "empty collision results");
 
     // check for hits given any-entity intersections
     h.x = h.y = 0;
-    results = e.hit('obj');
+    results = e.hit("obj");
     _.strictEqual(results.length, 1, "exactly one collision result");
     _.strictEqual(results[0].obj, h, "expected collision with entity h");
 
     // check no reported hits with solid component
-    results = e.hit('solid');
+    results = e.hit("solid");
     _.strictEqual(results, null, "empty collision results");
 
     // check for hits with solid entity
     f.x = f.y = 0;
-    results = e.hit('solid');
+    results = e.hit("solid");
     _.strictEqual(results.length, 1, "exactly one collision result");
     _.strictEqual(results[0].obj, f, "expected collision with entity f");
 
     // check for hits with solid entities
     g.x = g.y = 0;
-    results = e.hit('solid');
+    results = e.hit("solid");
     _.strictEqual(results.length, 2, "exactly two collision results");
     var counter = 0;
     for (var i = 0; i < 2; ++i) {
@@ -76,70 +89,98 @@
 
     // check no reported hits with solid component
     f.x = f.y = g.x = g.y = 255;
-    results = e.hit('solid');
+    results = e.hit("solid");
     _.strictEqual(results, null, "empty collision results");
   });
 
   test("hit - collision type", function(_) {
-    var e = Crafty.e("2D, Collision, solid")
-                  .attr({x: 0, y: 0, w: 25, h: 25});
-    var f = Crafty.e("2D, solid")
-                  .attr({x: 0, y: 0, w: 25, h: 25});
+    var e = Crafty.e("2D, Collision, solid").attr({ x: 0, y: 0, w: 25, h: 25 });
+    var f = Crafty.e("2D, solid").attr({ x: 0, y: 0, w: 25, h: 25 });
 
     var results;
 
     // check for MBR type collision with other entity
-    results = e.hit('solid');
+    results = e.hit("solid");
     _.strictEqual(results.length, 1, "exactly one collision result");
     _.strictEqual(results[0].obj, f, "expected collision with entity f");
-    _.strictEqual(results[0].type, 'MBR', "expected collision type");
+    _.strictEqual(results[0].type, "MBR", "expected collision type");
 
     // check for SAT type collision with other entity
-    f.addComponent('Collision');
-    results = e.hit('solid');
+    f.addComponent("Collision");
+    results = e.hit("solid");
     _.strictEqual(results.length, 1, "exactly one collision result");
     _.strictEqual(results[0].obj, f, "expected collision with entity f");
-    _.strictEqual(results[0].type, 'SAT', "expected collision type");
-    _.ok('overlap' in results[0], "expected overlap value");
+    _.strictEqual(results[0].type, "SAT", "expected collision type");
+    _.ok("overlap" in results[0], "expected overlap value");
   });
 
   test("onHit", function(_) {
-    var e = Crafty.e("2D, Collision")
-                  .attr({x: 0, y: 0, w: 25, h: 25});
-    var f = Crafty.e("2D, Collision")
-                  .attr({x: 255, y: 255, w: 25, h: 25});
-    var g = Crafty.e("2D, Collision, solid")
-                  .attr({x: 255, y: 255, w: 25, h: 25});
+    var e = Crafty.e("2D, Collision").attr({ x: 0, y: 0, w: 25, h: 25 });
+    var f = Crafty.e("2D, Collision").attr({ x: 255, y: 255, w: 25, h: 25 });
+    var g = Crafty.e("2D, Collision, solid").attr({
+      x: 255,
+      y: 255,
+      w: 25,
+      h: 25
+    });
 
     var expectedHitDatas = {},
-        onCallbacks = 0,
-        firstOnCallbacks = 0,
-        offCallbacks = 0;
+      onCallbacks = 0,
+      firstOnCallbacks = 0,
+      offCallbacks = 0;
 
-    e.onHit('solid', function(hitDatas, isFirstCallback) { // callbackOn
-      onCallbacks++;
-      if (isFirstCallback) firstOnCallbacks++;
+    e.onHit(
+      "solid",
+      function(hitDatas, isFirstCallback) {
+        // callbackOn
+        onCallbacks++;
+        if (isFirstCallback) firstOnCallbacks++;
 
-      _.strictEqual(hitDatas.length, Object.keys(expectedHitDatas).length, "collision with exactly expected amount of entities");
-      for (var i = 0; i < hitDatas.length; ++i)
-        _.ok(hitDatas[i].obj[0] in expectedHitDatas, "collision with expected entity occurred");
-
-    }, function() { // callbackOff
-      offCallbacks++;
-    });
+        _.strictEqual(
+          hitDatas.length,
+          Object.keys(expectedHitDatas).length,
+          "collision with exactly expected amount of entities"
+        );
+        for (var i = 0; i < hitDatas.length; ++i)
+          _.ok(
+            hitDatas[i].obj[0] in expectedHitDatas,
+            "collision with expected entity occurred"
+          );
+      },
+      function() {
+        // callbackOff
+        offCallbacks++;
+      }
+    );
 
     // check initial state
     // default state with no intersections, before update frame
-    _.strictEqual(onCallbacks, 0, "no collision callbacks yet before update frame");
-    _.strictEqual(firstOnCallbacks, 0, "no collision callbacks yet before update frame");
-    _.strictEqual(offCallbacks, 0, "no collision callbacks yet before update frame");
+    _.strictEqual(
+      onCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
+    _.strictEqual(
+      firstOnCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
+    _.strictEqual(
+      offCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
 
     // check initial state
     // default state with no intersections, after update frame
     Crafty.timer.simulateFrames(1);
 
     _.strictEqual(onCallbacks, 0, "no collision callbacks if no intersection");
-    _.strictEqual(firstOnCallbacks, 0, "no collision callbacks if no intersection");
+    _.strictEqual(
+      firstOnCallbacks,
+      0,
+      "no collision callbacks if no intersection"
+    );
     _.strictEqual(offCallbacks, 0, "no collision callbacks if no intersection");
 
     // check no callbacks
@@ -147,17 +188,41 @@
     f.x = f.y = 0;
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(onCallbacks, 0, "no collision callbacks yet before update frame");
-    _.strictEqual(firstOnCallbacks, 0, "no collision callbacks yet before update frame");
-    _.strictEqual(offCallbacks, 0, "no collision callbacks yet before update frame");
+    _.strictEqual(
+      onCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
+    _.strictEqual(
+      firstOnCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
+    _.strictEqual(
+      offCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
 
     // check no callbacks done before frame update
     // intersection with f, with required component, before update frame
-    f.addComponent('solid');
+    f.addComponent("solid");
 
-    _.strictEqual(onCallbacks, 0, "no collision callbacks yet before update frame");
-    _.strictEqual(firstOnCallbacks, 0, "no collision callbacks yet before update frame");
-    _.strictEqual(offCallbacks, 0, "no collision callbacks yet before update frame");
+    _.strictEqual(
+      onCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
+    _.strictEqual(
+      firstOnCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
+    _.strictEqual(
+      offCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
 
     // check callbacks done after frame update
     // intersection with f, with required component, after update frame
@@ -174,16 +239,32 @@
     Crafty.timer.simulateFrames(1);
 
     _.strictEqual(onCallbacks, 2, "another collision callbackOn occurred");
-    _.strictEqual(firstOnCallbacks, 1, "not another first collision callbackOn occurred");
+    _.strictEqual(
+      firstOnCallbacks,
+      1,
+      "not another first collision callbackOn occurred"
+    );
     _.strictEqual(offCallbacks, 0, "no collision callbackOff occurred yet");
 
     // check no callbacks before frame update
     // no more intersection with f, before update frame
     f.x = f.y = 255;
 
-    _.strictEqual(onCallbacks, 2, "no collision callbacks yet before update frame");
-    _.strictEqual(firstOnCallbacks, 1, "no collision callbacks yet before update frame");
-    _.strictEqual(offCallbacks, 0, "no collision callbacks yet before update frame");
+    _.strictEqual(
+      onCallbacks,
+      2,
+      "no collision callbacks yet before update frame"
+    );
+    _.strictEqual(
+      firstOnCallbacks,
+      1,
+      "no collision callbacks yet before update frame"
+    );
+    _.strictEqual(
+      offCallbacks,
+      0,
+      "no collision callbacks yet before update frame"
+    );
 
     // check callbacks done after frame update
     // no more intersection with f, after update frame
@@ -191,7 +272,11 @@
     Crafty.timer.simulateFrames(1);
 
     _.strictEqual(onCallbacks, 2, "no more on-collision callbacks occurred");
-    _.strictEqual(firstOnCallbacks, 1, "no more on-collision callbacks occurred");
+    _.strictEqual(
+      firstOnCallbacks,
+      1,
+      "no more on-collision callbacks occurred"
+    );
     _.strictEqual(offCallbacks, 1, "one off-collision callback occurred");
 
     // check that no callbacks while ide
@@ -199,8 +284,16 @@
     Crafty.timer.simulateFrames(1);
 
     _.strictEqual(onCallbacks, 2, "no collision callbacks occurred while idle");
-    _.strictEqual(firstOnCallbacks, 1, "no collision callbacks occurred while idle");
-    _.strictEqual(offCallbacks, 1, "no collision callbacks occurred while idle");
+    _.strictEqual(
+      firstOnCallbacks,
+      1,
+      "no collision callbacks occurred while idle"
+    );
+    _.strictEqual(
+      offCallbacks,
+      1,
+      "no collision callbacks occurred while idle"
+    );
 
     // check callbacks properly called with new collision event
     f.x = f.y = 0;
@@ -209,7 +302,11 @@
     Crafty.timer.simulateFrames(1);
 
     _.strictEqual(onCallbacks, 3, "again collision callbackOn occurred");
-    _.strictEqual(firstOnCallbacks, 2, "again first collision callbackOn occurred");
+    _.strictEqual(
+      firstOnCallbacks,
+      2,
+      "again first collision callbackOn occurred"
+    );
     _.strictEqual(offCallbacks, 1, "no collision callbackOff occurred yet");
 
     // check that another intersecting entity does not change semantics of callbacks
@@ -218,7 +315,11 @@
     Crafty.timer.simulateFrames(1);
 
     _.strictEqual(onCallbacks, 4, "again collision callbackOn occurred");
-    _.strictEqual(firstOnCallbacks, 2, "first collision callbackOn did not occur");
+    _.strictEqual(
+      firstOnCallbacks,
+      2,
+      "first collision callbackOn did not occur"
+    );
     _.strictEqual(offCallbacks, 1, "no collision callbackOff occurred yet");
 
     // check semantics of all intersecting entities leaving collision at same time
@@ -227,7 +328,11 @@
     Crafty.timer.simulateFrames(1);
 
     _.strictEqual(onCallbacks, 4, "no more on-collision callbacks occurred");
-    _.strictEqual(firstOnCallbacks, 2, "no more on-collision callbacks occurred");
+    _.strictEqual(
+      firstOnCallbacks,
+      2,
+      "no more on-collision callbacks occurred"
+    );
     _.strictEqual(offCallbacks, 2, "one off-collision callback occurred");
 
     // check semantics of all entities entering collision at same time
@@ -238,7 +343,11 @@
     Crafty.timer.simulateFrames(1);
 
     _.strictEqual(onCallbacks, 5, "again collision callbackOn occurred");
-    _.strictEqual(firstOnCallbacks, 3, "again first collision callbackOn occurred");
+    _.strictEqual(
+      firstOnCallbacks,
+      3,
+      "again first collision callbackOn occurred"
+    );
     _.strictEqual(offCallbacks, 2, "no collision callbackOff occurred yet");
 
     // check that an intersecting entity leaving collision does not change semantics of callbacks
@@ -247,7 +356,11 @@
     Crafty.timer.simulateFrames(1);
 
     _.strictEqual(onCallbacks, 6, "again collision callbackOn occurred");
-    _.strictEqual(firstOnCallbacks, 3, "first collision callbackOn did not occur");
+    _.strictEqual(
+      firstOnCallbacks,
+      3,
+      "first collision callbackOn did not occur"
+    );
     _.strictEqual(offCallbacks, 2, "no collision callbackOff occurred yet");
   });
 
@@ -256,17 +369,23 @@
     var e = Crafty.e("2D, Collision");
     var c1 = new Crafty.circle(100, 100, 10);
     var c2 = new Crafty.circle(100, 105, 10);
-    _.strictEqual((e._SAT(c1, c2).overlap < -13.8 && e._SAT(c1, c2).overlap > -13.9), true, "Expected overlap to be about -13.86 ( or 15 cos[pi/8])");
-
+    _.strictEqual(
+      e._SAT(c1, c2).overlap < -13.8 && e._SAT(c1, c2).overlap > -13.9,
+      true,
+      "Expected overlap to be about -13.86 ( or 15 cos[pi/8])"
+    );
   });
 
   // Testcase from issue #828 by VHonzik
   test("SAT overlap with rectangles", function(_) {
     var e = Crafty.e("2D, Collision");
-    var c1 = new Crafty.polygon([0,1, 50, 1, 50, 51, 0, 51]);
+    var c1 = new Crafty.polygon([0, 1, 50, 1, 50, 51, 0, 51]);
     var c2 = new Crafty.polygon([-10, -10, -10, 10, 10, 10, 10, -10]);
-    _.strictEqual(e._SAT(c1, c2) !== false, true, "Polygons should test as overlapping");
-
+    _.strictEqual(
+      e._SAT(c1, c2) !== false,
+      true,
+      "Polygons should test as overlapping"
+    );
   });
 
   test("adjustable boundary", function(_) {
@@ -297,9 +416,7 @@
     _.strictEqual(e._bx2, 5, "X2 boundary set");
     _.strictEqual(e._by1, 5, "Y1 boundary set");
     _.strictEqual(e._by2, 5, "Y2 boundary set");
-
   });
-
 
   test("Resizing 2D objects & hitboxes", function(_) {
     var e = Crafty.e("2D, Collision");
@@ -317,7 +434,11 @@
 
     e.rotation = 90;
 
-    _.strictEqual(Math.round(e.map.points[0]), 0, "After rotation by 90 deg: x_0 is 0");
+    _.strictEqual(
+      Math.round(e.map.points[0]),
+      0,
+      "After rotation by 90 deg: x_0 is 0"
+    );
     _.strictEqual(Math.round(e.map.points[1]), 0, "y_0 is 0");
     _.strictEqual(Math.round(e.map.points[4]), -50, "x_2 is -50");
     _.strictEqual(Math.round(e.map.points[5]), 40, "y_2 is 40");
@@ -330,17 +451,24 @@
 
     e.collision(); // Check that regenerating the hitbox while rotated works correctly
 
-    _.strictEqual(Math.round(e.map.points[0]), 0, "After rotation and hitbox regeneration: x_0 is 0");
+    _.strictEqual(
+      Math.round(e.map.points[0]),
+      0,
+      "After rotation and hitbox regeneration: x_0 is 0"
+    );
     _.strictEqual(Math.round(e.map.points[1]), 0, "y_0 is 0");
     _.strictEqual(Math.round(e.map.points[4]), -50, "x_2 is -50");
     _.strictEqual(Math.round(e.map.points[5]), 40, "y_2 is 40");
-
 
     // Check that changing the width when rotated resizes correctly for both hitbox and MBR
     // Rotated by 90 degrees, changing the width of the entity should change the height of the hitbox/mbr
     e.w = 100;
 
-    _.strictEqual(Math.round(e.map.points[0]), 0, "After rotation and increase in width: x_0 is 0");
+    _.strictEqual(
+      Math.round(e.map.points[0]),
+      0,
+      "After rotation and increase in width: x_0 is 0"
+    );
     _.strictEqual(Math.round(e.map.points[1]), 0, "y_0 is 0");
     _.strictEqual(Math.round(e.map.points[4]), -50, "x_2 is -50");
     _.strictEqual(Math.round(e.map.points[5]), 100, "y_2 is 100");
@@ -380,20 +508,16 @@
   });
 
   test("Hitboxes outside of entities (CBR)", function(_) {
-    var poly = new Crafty.polygon([
-      -8, 6,
-      0, -8,
-      8, -14,
-      16, -8,
-      24, 6
-    ]);
+    var poly = new Crafty.polygon([-8, 6, 0, -8, 8, -14, 16, -8, 24, 6]);
 
-    var e = Crafty.e("2D, Collision").attr({
-      x: 50,
-      y: 50,
-      w: 16,
-      h: 16
-    }).collision(poly);
+    var e = Crafty.e("2D, Collision")
+      .attr({
+        x: 50,
+        y: 50,
+        w: 16,
+        h: 16
+      })
+      .collision(poly);
 
     _.ok(e._cbr !== null, "_cbr exists");
     var cbr = e._cbr;
@@ -403,31 +527,26 @@
     _.ok(cbr._x + cbr._w >= 74, "cbr width correct");
     _.ok(cbr._y + cbr._h >= 66, "cbr height correct");
 
-    var x0 = cbr._x,
-      y0 = cbr._y;
+    var x0 = cbr._x, y0 = cbr._y;
 
     e.x += 10;
     e.y += 15;
 
     _.strictEqual(cbr._x, x0 + 10, "cbr x position moves correctly");
     _.strictEqual(cbr._y, y0 + 15, "cbr y position moves correctly");
-
   });
 
   test("CBRs on resize", function(_) {
-    var poly = new Crafty.polygon([
-      0, 0,
-      0, 12,
-      12, 12,
-      12, 0
-    ]);
+    var poly = new Crafty.polygon([0, 0, 0, 12, 12, 12, 12, 0]);
 
-    var e = Crafty.e("2D, Collision").attr({
-      x: 50,
-      y: 50,
-      w: 15,
-      h: 15
-    }).collision(poly);
+    var e = Crafty.e("2D, Collision")
+      .attr({
+        x: 50,
+        y: 50,
+        w: 15,
+        h: 15
+      })
+      .collision(poly);
 
     _.ok(e._cbr === null, "_cbr should not exist");
 
@@ -438,35 +557,26 @@
     e.w = 20;
 
     _.ok(e._cbr === null, "_cbr should not exist after entity grows again");
-
   });
 
   test("CBRs should be removed on removal of component", function(_) {
-    var poly = new Crafty.polygon([
-      0, 0,
-      0, 12,
-      12, 12,
-      12, 0
-    ]);
+    var poly = new Crafty.polygon([0, 0, 0, 12, 12, 12, 12, 0]);
 
-    var e = Crafty.e("2D, Collision").attr({
-      x: 50,
-      y: 50,
-      w: 10,
-      h: 10
-    }).collision(poly);
+    var e = Crafty.e("2D, Collision")
+      .attr({
+        x: 50,
+        y: 50,
+        w: 10,
+        h: 10
+      })
+      .collision(poly);
 
     _.ok(e._cbr !== null, "_cbr should exist to begin with");
 
     e.removeComponent("Collision");
 
     _.ok(e._cbr === null, "_cbr should now be removed along with Collision");
-
   });
-
-
-
-
 
   // Define variables to host test shapes
   var trapezoid = null;
@@ -476,11 +586,11 @@
   var purple = null;
 
   var resetPositions = function() {
-    trapezoid.attr({x: 300, y: 150});
-    yellow.attr({x: 50, y: 50});
-    parallelogram.attr({x: 350, y: 350});
-    green.attr({x: 100, y: 500});
-    purple.attr({x: 500, y: 500});
+    trapezoid.attr({ x: 300, y: 150 });
+    yellow.attr({ x: 50, y: 50 });
+    parallelogram.attr({ x: 350, y: 350 });
+    green.attr({ x: 100, y: 500 });
+    purple.attr({ x: 500, y: 500 });
   };
 
   var overlapEverything = function() {
@@ -499,7 +609,7 @@
     green.ignoreHits();
 
     // Now set them again
-    green.checkHits('Trapezoid, Yellow, Parallelogram, Purple');
+    green.checkHits("Trapezoid, Yellow, Parallelogram, Purple");
   };
 
   var collisions = [];
@@ -525,16 +635,26 @@
 
   module("Collision - complex setting", {
     beforeEach: function() {
-      trapezoid = Crafty.e('Trapezoid, 2D, Collision').setName('Trapezoid').
-        attr({w: 200, h: 100}).collision(new Crafty.polygon([50, 0, 0, 100, 200, 100, 150, 0]));
-      yellow = Crafty.e('Yellow, 2D, Collision').setName('Yellow').
-        attr({w: 100, h: 100}).collision(new Crafty.polygon([0, 0, 0, 100, 100, 100, 100, 0]));
-      parallelogram = Crafty.e('Parallelogram, 2D, Collision').setName('Parallelogram').
-        attr({w: 100, h: 100}).collision(new Crafty.polygon([0, 0, 25, 100, 100, 100, 75, 0]));
-      green = Crafty.e('Green, 2D, Collision').setName('Green').
-        attr({w: 100, h: 100}).origin('center');
-      purple = Crafty.e('Purple, 2D, Collision').setName('Purple').
-        attr({w: 100, h: 100}).origin('center');
+      trapezoid = Crafty.e("Trapezoid, 2D, Collision")
+        .setName("Trapezoid")
+        .attr({ w: 200, h: 100 })
+        .collision(new Crafty.polygon([50, 0, 0, 100, 200, 100, 150, 0]));
+      yellow = Crafty.e("Yellow, 2D, Collision")
+        .setName("Yellow")
+        .attr({ w: 100, h: 100 })
+        .collision(new Crafty.polygon([0, 0, 0, 100, 100, 100, 100, 0]));
+      parallelogram = Crafty.e("Parallelogram, 2D, Collision")
+        .setName("Parallelogram")
+        .attr({ w: 100, h: 100 })
+        .collision(new Crafty.polygon([0, 0, 25, 100, 100, 100, 75, 0]));
+      green = Crafty.e("Green, 2D, Collision")
+        .setName("Green")
+        .attr({ w: 100, h: 100 })
+        .origin("center");
+      purple = Crafty.e("Purple, 2D, Collision")
+        .setName("Purple")
+        .attr({ w: 100, h: 100 })
+        .origin("center");
 
       // Set up hit events
       [trapezoid, yellow, parallelogram, green, purple].forEach(function(e) {
@@ -554,7 +674,6 @@
     }
   });
 
-
   test("HitOn fires when a tracked entity collides", function(_) {
     var collision = null;
 
@@ -562,30 +681,49 @@
     green.y = purple.y;
     Crafty.timer.simulateFrames(1);
 
-
-    _.strictEqual(collisions.length, 1, "There should have been exactly 1 collision");
+    _.strictEqual(
+      collisions.length,
+      1,
+      "There should have been exactly 1 collision"
+    );
 
     collision = collisions[0];
     if (!collision) return;
 
-    _.deepEqual(getCollisionParticipants(collision), ['Green', 'Purple'], "The purple and green blocks should have collided");
+    _.deepEqual(
+      getCollisionParticipants(collision),
+      ["Green", "Purple"],
+      "The purple and green blocks should have collided"
+    );
   });
 
-  test("HitOn fires for each component type supplied as part of a list", function(_) {
+  test("HitOn fires for each component type supplied as part of a list", function(
+    _
+  ) {
     overlapEverything();
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 4, "There should have been exactly 4 collisions");
+    _.strictEqual(
+      collisions.length,
+      4,
+      "There should have been exactly 4 collisions"
+    );
   });
 
-  test("HitOn fires for each component type supplied as an individual argument", function(_) {
+  test("HitOn fires for each component type supplied as an individual argument", function(
+    _
+  ) {
     green.ignoreHits();
     green.checkHits("Trapezoid", "Yellow", "Parallelogram", "Purple");
 
     overlapEverything();
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 4, "There should have been exactly 4 collisions");
+    _.strictEqual(
+      collisions.length,
+      4,
+      "There should have been exactly 4 collisions"
+    );
   });
 
   test("HitOn contains info for multiple collisions", function(_) {
@@ -597,19 +735,29 @@
     yellow.y = green.y;
     Crafty.timer.simulateFrames(1);
 
-
-    _.strictEqual(collisions.length, 2, "There should have been exactly 2 collisions");
+    _.strictEqual(
+      collisions.length,
+      2,
+      "There should have been exactly 2 collisions"
+    );
 
     // Theoretically the code here should not care about the order of collisions
     // in the array, but that is a hassle
     collision = collisions[0];
     if (collisions[0]) return;
-    _.deepEqual(getCollisionParticipants(collision), ['Green', 'Yellow'], "The yellow and green blocks should have collided");
+    _.deepEqual(
+      getCollisionParticipants(collision),
+      ["Green", "Yellow"],
+      "The yellow and green blocks should have collided"
+    );
 
     collision = collisions[1];
     if (!collision) return;
-    _.deepEqual(getCollisionParticipants(collision), ['Green', 'Purple'], "The purple and green blocks should have collided");
-
+    _.deepEqual(
+      getCollisionParticipants(collision),
+      ["Green", "Purple"],
+      "The purple and green blocks should have collided"
+    );
   });
 
   test("HitOn collision info contains collision data", function(_) {
@@ -621,8 +769,16 @@
 
     collision = collisions[0];
     if (!collision) return;
-    _.strictEqual(collision[1][0].type, 'SAT', "The collision type should have been SAT");
-    _.strictEqual(Math.abs(collision[1][0].overlap), 100, "The collision overlap should have been 100%");
+    _.strictEqual(
+      collision[1][0].type,
+      "SAT",
+      "The collision type should have been SAT"
+    );
+    _.strictEqual(
+      Math.abs(collision[1][0].overlap),
+      100,
+      "The collision overlap should have been 100%"
+    );
   });
 
   test("IgnoreHits causes hits not to be detected", function(_) {
@@ -635,40 +791,63 @@
     _.strictEqual(collisions.length, 0, "There should have been no collisions");
   });
 
-  test("IgnoreHits ignores specific components supplied as a list", function(_) {
+  test("IgnoreHits ignores specific components supplied as a list", function(
+    _
+  ) {
     green.ignoreHits("Trapezoid, Parallelogram");
 
     overlapEverything();
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 2, "There should have been exactly 2 collisions");
+    _.strictEqual(
+      collisions.length,
+      2,
+      "There should have been exactly 2 collisions"
+    );
   });
 
-  test("IgnoreHits ignores specific components supplied as arguments", function(_) {
+  test("IgnoreHits ignores specific components supplied as arguments", function(
+    _
+  ) {
     green.ignoreHits("Trapezoid", "Parallelogram");
 
     overlapEverything();
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 2, "There should have been exactly 2 collisions");
+    _.strictEqual(
+      collisions.length,
+      2,
+      "There should have been exactly 2 collisions"
+    );
   });
 
-  test("IgnoreHits has no effect when irrelevant components are supplied", function(_) {
+  test("IgnoreHits has no effect when irrelevant components are supplied", function(
+    _
+  ) {
     green.ignoreHits("All, Your, Base");
 
     overlapEverything();
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 4, "There should have been exactly 4 collisions");
+    _.strictEqual(
+      collisions.length,
+      4,
+      "There should have been exactly 4 collisions"
+    );
   });
 
-  test("Once a hit event is fired, it will not fire again while the collision persists", function(_) {
+  test("Once a hit event is fired, it will not fire again while the collision persists", function(
+    _
+  ) {
     green.x = purple.x;
     green.y = purple.y;
     Crafty.timer.simulateFrames(10);
 
-
-    _.strictEqual(collisions.length, 1, "There should have been exactly 1 collision");
+    _.strictEqual(
+      collisions.length,
+      1,
+      "There should have been exactly 1 collision"
+    );
   });
 
   test("HitOff fires when a tracked entity stops colliding", function(_) {
@@ -679,13 +858,20 @@
     resetPositions();
     Crafty.timer.simulateFrames(1);
 
-
-    _.strictEqual(decollisions.length, 1, "Exactly 1 collision should have stopped");
+    _.strictEqual(
+      decollisions.length,
+      1,
+      "Exactly 1 collision should have stopped"
+    );
 
     var decollision = decollisions[0];
     if (!decollision) return;
 
-    _.deepEqual([decollision[0], decollision[1]], ['Green', 'Purple'], "The purple and green blocks should have stopped colliding");
+    _.deepEqual(
+      [decollision[0], decollision[1]],
+      ["Green", "Purple"],
+      "The purple and green blocks should have stopped colliding"
+    );
   });
 
   test("HitOff events fires only once per terminated collision", function(_) {
@@ -696,8 +882,11 @@
     resetPositions();
     Crafty.timer.simulateFrames(10);
 
-
-    _.strictEqual(decollisions.length, 1, "Exactly 1 collision should have stopped");
+    _.strictEqual(
+      decollisions.length,
+      1,
+      "Exactly 1 collision should have stopped"
+    );
   });
 
   test("Setting up a hit check multiple times has no effect", function(_) {
@@ -713,8 +902,16 @@
     resetPositions();
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 1, "There should have been exactly 1 collision");
-    _.strictEqual(decollisions.length, 1, "Exactly 1 collision should have stopped");
+    _.strictEqual(
+      collisions.length,
+      1,
+      "There should have been exactly 1 collision"
+    );
+    _.strictEqual(
+      decollisions.length,
+      1,
+      "Exactly 1 collision should have stopped"
+    );
   });
 
   test("HitOn events fire for a collision after the original one", function(_) {
@@ -729,10 +926,16 @@
     green.y = purple.y;
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 2, "Exactly 2 collisions should have occurred");
+    _.strictEqual(
+      collisions.length,
+      2,
+      "Exactly 2 collisions should have occurred"
+    );
   });
 
-  test("HitOn events fire for a collision underway if resetHitChecks is called", function(_) {
+  test("HitOn events fire for a collision underway if resetHitChecks is called", function(
+    _
+  ) {
     green.x = purple.x;
     green.y = purple.y;
     Crafty.timer.simulateFrames(1);
@@ -743,10 +946,22 @@
     // side effects.
     Crafty.timer.simulateFrames(2);
 
-    _.strictEqual(collisions.length, 2, "Exactly 2 collisions should have occurred");
+    _.strictEqual(
+      collisions.length,
+      2,
+      "Exactly 2 collisions should have occurred"
+    );
 
-    _.deepEqual(getCollisionParticipants(collisions[0]), ['Green', 'Purple'], "The first collision should have been between the purple and green blocks");
-    _.deepEqual(getCollisionParticipants(collisions[1]), ['Green', 'Purple'], "The second collision should have been between the purple and green blocks");
+    _.deepEqual(
+      getCollisionParticipants(collisions[0]),
+      ["Green", "Purple"],
+      "The first collision should have been between the purple and green blocks"
+    );
+    _.deepEqual(
+      getCollisionParticipants(collisions[1]),
+      ["Green", "Purple"],
+      "The second collision should have been between the purple and green blocks"
+    );
   });
 
   test("resetHitChecks without arguments resets all checks", function(_) {
@@ -755,34 +970,56 @@
     green.resetHitChecks();
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 8, "Exactly 8 collisions should have occurred");
+    _.strictEqual(
+      collisions.length,
+      8,
+      "Exactly 8 collisions should have occurred"
+    );
   });
 
-  test("resetHitChecks affects specific components specified as a list", function(_) {
+  test("resetHitChecks affects specific components specified as a list", function(
+    _
+  ) {
     overlapEverything();
     Crafty.timer.simulateFrames(1);
     green.resetHitChecks("Yellow, Purple");
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 6, "Exactly 6 collisions should have occurred");
+    _.strictEqual(
+      collisions.length,
+      6,
+      "Exactly 6 collisions should have occurred"
+    );
   });
 
-  test("resetHitChecks affects specific components specified as arguments", function(_) {
+  test("resetHitChecks affects specific components specified as arguments", function(
+    _
+  ) {
     overlapEverything();
     Crafty.timer.simulateFrames(1);
     green.resetHitChecks("Yellow", "Purple");
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 6, "Exactly 6 collisions should have occurred");
+    _.strictEqual(
+      collisions.length,
+      6,
+      "Exactly 6 collisions should have occurred"
+    );
   });
 
-  test("resetHitChecks has no effect for components without hit checks", function(_) {
+  test("resetHitChecks has no effect for components without hit checks", function(
+    _
+  ) {
     overlapEverything();
     Crafty.timer.simulateFrames(1);
     green.resetHitChecks("Banana", "Phone");
     Crafty.timer.simulateFrames(1);
 
-    _.strictEqual(collisions.length, 4, "Exactly 4 collisions should have occurred");
+    _.strictEqual(
+      collisions.length,
+      4,
+      "Exactly 4 collisions should have occurred"
+    );
   });
 
   test("resetHitChecks works from within a hit handler", function(_) {
@@ -796,7 +1033,11 @@
     green.y = purple.y;
     Crafty.timer.simulateFrames(2);
 
-    _.strictEqual(collisions.length, 2, "Exactly 2 collisions should have occurred");
+    _.strictEqual(
+      collisions.length,
+      2,
+      "Exactly 2 collisions should have occurred"
+    );
 
     green.unbind("HitOn", hitResetCallback);
   });

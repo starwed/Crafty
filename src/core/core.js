@@ -1,5 +1,4 @@
-var version = require('./version');
-
+var version = require("./version");
 
 /**@
  * #Crafty
@@ -52,26 +51,24 @@ var version = require('./version');
  * @see Crafty Core#.each
  */
 
-var Crafty = function (selector) {
-    return new Crafty.fn.init(selector);
+var Crafty = function(selector) {
+  return new Crafty.fn.init(selector);
 };
-    // Internal variables
-var GUID, frame, components, entities, handlers, onloads,
-slice, rlist, rspace;
+// Internal variables
+var GUID, frame, components, entities, handlers, onloads, slice, rlist, rspace;
 
+components = {}; // Map of components and their functions
+slice = Array.prototype.slice;
+rlist = /\s*,\s*/;
+rspace = /\s+/;
 
-components  = {}; // Map of components and their functions
-slice       = Array.prototype.slice;
-rlist       = /\s*,\s*/;
-rspace      = /\s+/;
+var initState = function() {
+  GUID = 1; // GUID for entity IDs
+  frame = 0;
 
-var initState = function () {
-    GUID        = 1; // GUID for entity IDs
-    frame       = 0;
-
-    entities    = {}; // Map of entities and their data
-    handlers    = {}; // Global event handlers
-    onloads     = []; // Temporary storage of onload handlers
+  entities = {}; // Map of entities and their data
+  handlers = {}; // Global event handlers
+  onloads = []; // Temporary storage of onload handlers
 };
 
 initState();
@@ -89,109 +86,115 @@ initState();
  * A set of methods added to every single entity.
  */
 Crafty.fn = Crafty.prototype = {
+  init: function(selector) {
+    //select entities by component
+    if (typeof selector === "string") {
+      var elem = 0, //index elements
+        e, //entity forEach
+        current,
+        and = false, //flags for multiple
+        or = false,
+        del,
+        comps,
+        score,
+        i,
+        l;
 
-    init: function (selector) {
-        //select entities by component
-        if (typeof selector === "string") {
-            var elem = 0, //index elements
-                e, //entity forEach
-                current,
-                and = false, //flags for multiple
-                or = false,
-                del,
-                comps,
-                score,
-                i, l;
-
-            if (selector === '*') {
-                i = 0;
-                for (e in entities) {
-                    // entities is something like {2:entity2, 3:entity3, 11:entity11, ...}
-                    // The for...in loop sets e to "2", "3", "11", ... i.e. all
-                    // the entity ID numbers. e is a string, so +e converts to number type.
-                    this[i] = +e;
-                    i++;
-                }
-                this.length = i;
-                // if there's only one entity, return the actual entity
-                if (i === 1) {
-                    return entities[this[0]];
-                }
-                return this;
-            }
-
-            //multiple components OR
-            if (selector.indexOf(',') !== -1) {
-                or = true;
-                del = rlist;
-                //deal with multiple components AND
-            } else if (selector.indexOf(' ') !== -1) {
-                and = true;
-                del = rspace;
-            }
-
-            //loop over entities
-            for (e in entities) {
-                if (!entities.hasOwnProperty(e)) continue; //skip
-                current = entities[e];
-
-                if (and || or) { //multiple components
-                    comps = selector.split(del);
-                    i = 0;
-                    l = comps.length;
-                    score = 0;
-
-                    for (; i < l; i++) //loop over components
-                        if (current.__c[comps[i]]) score++; //if component exists add to score
-
-                        //if anded comps and has all OR ored comps and at least 1
-                    if (and && score === l || or && score > 0) this[elem++] = +e;
-
-                } else if (current.__c[selector]) this[elem++] = +e; //convert to int
-            }
-
-            //extend all common components
-            if (elem > 0 && !and && !or) this.extend(components[selector]);
-            if (comps && and)
-                for (i = 0; i < l; i++) this.extend(components[comps[i]]);
-
-            this.length = elem; //length is the last index (already incremented)
-
-            // if there's only one entity, return the actual entity
-            if (elem === 1) {
-                return entities[this[elem - 1]];
-            }
-
-        } else { //Select a specific entity
-
-            if (!selector) { //nothin passed creates God entity
-                selector = 0;
-                if (!(selector in entities)) entities[selector] = this;
-            }
-
-            //if not exists, return undefined
-            if (!(selector in entities)) {
-                this.length = 0;
-                return this;
-            }
-
-            this[0] = selector;
-            this.length = 1;
-
-            //update from the cache
-            if (!this.__c) this.__c = {};
-            if (!this._callbacks) Crafty._addCallbackMethods(this);
-
-            //update to the cache if NULL
-            if (!entities[selector]) entities[selector] = this;
-            return entities[selector]; //return the cached selector
+      if (selector === "*") {
+        i = 0;
+        for (e in entities) {
+          // entities is something like {2:entity2, 3:entity3, 11:entity11, ...}
+          // The for...in loop sets e to "2", "3", "11", ... i.e. all
+          // the entity ID numbers. e is a string, so +e converts to number type.
+          this[i] = +e;
+          i++;
         }
-
-        Crafty._addCallbackMethods(this);
+        this.length = i;
+        // if there's only one entity, return the actual entity
+        if (i === 1) {
+          return entities[this[0]];
+        }
         return this;
-    },
+      }
 
-    /**@
+      //multiple components OR
+      if (selector.indexOf(",") !== -1) {
+        or = true;
+        del = rlist;
+        //deal with multiple components AND
+      } else if (selector.indexOf(" ") !== -1) {
+        and = true;
+        del = rspace;
+      }
+
+      //loop over entities
+      for (e in entities) {
+        if (!entities.hasOwnProperty(e)) continue; //skip
+        current = entities[e];
+
+        if (and || or) {
+          //multiple components
+          comps = selector.split(del);
+          i = 0;
+          l = comps.length;
+          score = 0;
+
+          for (
+            ;
+            i < l;
+            i++ //loop over components
+          )
+            if (current.__c[comps[i]]) score++; //if component exists add to score
+
+          //if anded comps and has all OR ored comps and at least 1
+          if ((and && score === l) || (or && score > 0)) this[elem++] = +e;
+        } else if (current.__c[selector]) this[elem++] = +e; //convert to int
+      }
+
+      //extend all common components
+      if (elem > 0 && !and && !or) this.extend(components[selector]);
+      if (comps && and)
+        for (i = 0; i < l; i++)
+          this.extend(components[comps[i]]);
+
+      this.length = elem; //length is the last index (already incremented)
+
+      // if there's only one entity, return the actual entity
+      if (elem === 1) {
+        return entities[this[elem - 1]];
+      }
+    } else {
+      //Select a specific entity
+
+      if (!selector) {
+        //nothin passed creates God entity
+        selector = 0;
+        if (!(selector in entities)) entities[selector] = this;
+      }
+
+      //if not exists, return undefined
+      if (!(selector in entities)) {
+        this.length = 0;
+        return this;
+      }
+
+      this[0] = selector;
+      this.length = 1;
+
+      //update from the cache
+      if (!this.__c) this.__c = {};
+      if (!this._callbacks) Crafty._addCallbackMethods(this);
+
+      //update to the cache if NULL
+      if (!entities[selector]) entities[selector] = this;
+      return entities[selector]; //return the cached selector
+    }
+
+    Crafty._addCallbackMethods(this);
+    return this;
+  },
+
+  /**@
      * #.setName
      * @comp Crafty Core
      * @kind Method
@@ -208,14 +211,14 @@ Crafty.fn = Crafty.prototype = {
      *
      * @see Crafty Core#.getName
      */
-    setName: function (name) {
-        var entityName = String(name);
-        this._entityName = entityName;
-        this.trigger("NewEntityName", entityName);
-        return this;
-    },
+  setName: function(name) {
+    var entityName = String(name);
+    this._entityName = entityName;
+    this.trigger("NewEntityName", entityName);
+    return this;
+  },
 
-    /**@
+  /**@
      * #.getName
      * @comp Crafty Core
      * @kind Method
@@ -233,11 +236,11 @@ Crafty.fn = Crafty.prototype = {
      *
      * @see Crafty Core#.setName
      */
-    getName: function (name) {
-        return this._entityName;
-    },
+  getName: function(name) {
+    return this._entityName;
+  },
 
-    /**@
+  /**@
      * #.addComponent
      * @comp Crafty Core
      * @kind Method
@@ -267,57 +270,58 @@ Crafty.fn = Crafty.prototype = {
      * this.addComponent("2D", "Canvas");
      * ~~~
      */
-    addComponent: function (id) {
-        var comps,
-            comp, c = 0;
+  addComponent: function(id) {
+    var comps, comp, c = 0;
 
-        //add multiple arguments
-        if (arguments.length === 1 && id.indexOf(',') !== -1) {
-            comps = id.split(rlist);
-        } else {
-            comps = arguments;
+    //add multiple arguments
+    if (arguments.length === 1 && id.indexOf(",") !== -1) {
+      comps = id.split(rlist);
+    } else {
+      comps = arguments;
+    }
+
+    //extend the components
+    for (; c < comps.length; c++) {
+      // If component already exists, continue
+      if (this.__c[comps[c]] === true) {
+        continue;
+      }
+      this.__c[comps[c]] = true;
+      comp = components[comps[c]];
+      // Copy all methods of the component
+      this.extend(comp);
+      // Add any required components
+      if (comp && "required" in comp) {
+        this.requires(comp.required);
+      }
+      // Define properties
+      if (comp && "properties" in comp) {
+        var props = comp.properties;
+        for (var propertyName in props) {
+          Object.defineProperty(this, propertyName, props[propertyName]);
         }
-
-        //extend the components
-        for (; c < comps.length; c++) {
-            // If component already exists, continue
-            if (this.__c[comps[c]] === true) {
-                continue;
-            }
-            this.__c[comps[c]] = true;
-            comp = components[comps[c]];
-            // Copy all methods of the component
-            this.extend(comp);
-            // Add any required components
-            if (comp && "required" in comp) {
-                this.requires( comp.required );
-            }
-            // Define properties
-            if (comp && "properties" in comp) {
-                var props = comp.properties;
-                for (var propertyName in props) {
-                    Object.defineProperty(this, propertyName, props[propertyName]);
-                }
-            }
-            // Call constructor function
-            if (comp && "init" in comp) {
-                comp.init.call(this);
-            }
-            // Bind events
-            if (comp && "events" in comp){
-                var auto = comp.events;
-                for (var eventName in auto){
-                    var fn = typeof auto[eventName] === "function" ? auto[eventName] : comp[auto[eventName]];
-                    this.bind(eventName, fn);
-                }
-            }
+      }
+      // Call constructor function
+      if (comp && "init" in comp) {
+        comp.init.call(this);
+      }
+      // Bind events
+      if (comp && "events" in comp) {
+        var auto = comp.events;
+        for (var eventName in auto) {
+          var fn = typeof auto[eventName] === "function"
+            ? auto[eventName]
+            : comp[auto[eventName]];
+          this.bind(eventName, fn);
         }
+      }
+    }
 
-        this.trigger("NewComponent", comps);
-        return this;
-    },
+    this.trigger("NewComponent", comps);
+    return this;
+  },
 
-    /**@
+  /**@
      * #.toggleComponent
      * @comp Crafty Core
      * @kind Method
@@ -343,44 +347,43 @@ Crafty.fn = Crafty.prototype = {
      * e.toggleComponent("Test");         //Remove Test
      * ~~~
      */
-    toggleComponent: function (toggle) {
-        var i = 0,
-            l, comps;
-        if (arguments.length > 1) {
-            l = arguments.length;
+  toggleComponent: function(toggle) {
+    var i = 0, l, comps;
+    if (arguments.length > 1) {
+      l = arguments.length;
 
-            for (; i < l; i++) {
-                if (this.has(arguments[i])) {
-                    this.removeComponent(arguments[i]);
-                } else {
-                    this.addComponent(arguments[i]);
-                }
-            }
-            //split components if contains comma
-        } else if (toggle.indexOf(',') !== -1) {
-            comps = toggle.split(rlist);
-            l = comps.length;
-            for (; i < l; i++) {
-                if (this.has(comps[i])) {
-                    this.removeComponent(comps[i]);
-                } else {
-                    this.addComponent(comps[i]);
-                }
-            }
-
-            //single component passed
+      for (; i < l; i++) {
+        if (this.has(arguments[i])) {
+          this.removeComponent(arguments[i]);
         } else {
-            if (this.has(toggle)) {
-                this.removeComponent(toggle);
-            } else {
-                this.addComponent(toggle);
-            }
+          this.addComponent(arguments[i]);
         }
+      }
+      //split components if contains comma
+    } else if (toggle.indexOf(",") !== -1) {
+      comps = toggle.split(rlist);
+      l = comps.length;
+      for (; i < l; i++) {
+        if (this.has(comps[i])) {
+          this.removeComponent(comps[i]);
+        } else {
+          this.addComponent(comps[i]);
+        }
+      }
 
-        return this;
-    },
+      //single component passed
+    } else {
+      if (this.has(toggle)) {
+        this.removeComponent(toggle);
+      } else {
+        this.addComponent(toggle);
+      }
+    }
 
-    /**@
+    return this;
+  },
+
+  /**@
      * #.requires
      * @comp Crafty Core
      * @kind Method
@@ -399,11 +402,11 @@ Crafty.fn = Crafty.prototype = {
      *
      * @see .addComponent
      */
-    requires: function (list) {
-        return this.addComponent(list);
-    },
+  requires: function(list) {
+    return this.addComponent(list);
+  },
 
-    /**@
+  /**@
      * #.removeComponent
      * @comp Crafty Core
      * @kind Method
@@ -423,31 +426,32 @@ Crafty.fn = Crafty.prototype = {
      * e.removeComponent("Test", false); //Hard remove Test component
      * ~~~
      */
-    removeComponent: function (id, soft) {
-        var comp = components[id];
-        this.trigger("RemoveComponent", id);
-        if (comp && "events" in comp){
-            var auto = comp.events;
-            for (var eventName in auto){
-                var fn = typeof auto[eventName] === "function" ? auto[eventName] : comp[auto[eventName]];
-                this.unbind(eventName, fn);
-            }
-        }
-        if (comp && "remove" in comp) {
-            comp.remove.call(this, false);
-        }
-        if (soft === false && comp) {
-            for (var prop in comp) {
-                delete this[prop];
-            }
-        }
-        delete this.__c[id];
+  removeComponent: function(id, soft) {
+    var comp = components[id];
+    this.trigger("RemoveComponent", id);
+    if (comp && "events" in comp) {
+      var auto = comp.events;
+      for (var eventName in auto) {
+        var fn = typeof auto[eventName] === "function"
+          ? auto[eventName]
+          : comp[auto[eventName]];
+        this.unbind(eventName, fn);
+      }
+    }
+    if (comp && "remove" in comp) {
+      comp.remove.call(this, false);
+    }
+    if (soft === false && comp) {
+      for (var prop in comp) {
+        delete this[prop];
+      }
+    }
+    delete this.__c[id];
 
+    return this;
+  },
 
-        return this;
-    },
-
-    /**@
+  /**@
      * #.getId
      * @comp Crafty Core
      * @kind Method
@@ -465,11 +469,11 @@ Crafty.fn = Crafty.prototype = {
      *    ent.getId(); //also ID
      * ~~~
      */
-    getId: function () {
-        return this[0];
-    },
+  getId: function() {
+    return this[0];
+  },
 
-    /**@
+  /**@
      * #.has
      * @comp Crafty Core
      * @kind Method
@@ -483,11 +487,11 @@ Crafty.fn = Crafty.prototype = {
      * which will be `true` if the entity has the component or
      * will not exist (or be `false`).
      */
-    has: function (id) {
-        return !!this.__c[id];
-    },
+  has: function(id) {
+    return !!this.__c[id];
+  },
 
-    /**@
+  /**@
      * #.attr
      * @comp Crafty Core
      * @kind Method
@@ -537,15 +541,15 @@ Crafty.fn = Crafty.prototype = {
      * this.attr('parent.child'); // "newvalue"
      * ~~~
      */
-    attr: function (key, value, silent, recursive) {
-        if (arguments.length === 1 && typeof arguments[0] === 'string') {
-            return this._attr_get(key);
-        } else {
-            return this._attr_set(key, value, silent, recursive);
-        }
-    },
+  attr: function(key, value, silent, recursive) {
+    if (arguments.length === 1 && typeof arguments[0] === "string") {
+      return this._attr_get(key);
+    } else {
+      return this._attr_set(key, value, silent, recursive);
+    }
+  },
 
-    /**
+  /**
      * Internal getter method for data on the entity. Called by `.attr`.
      *
      * example
@@ -555,22 +559,22 @@ Crafty.fn = Crafty.prototype = {
      * person._attr_get('contact.email'); // fox_at_example.com
      * ~~~
      */
-    _attr_get: function(key, context) {
-        var first, keys, subkey;
-        if (typeof context === "undefined" || context === null) {
-            context = this;
-        }
-        if (key.indexOf('.') > -1) {
-            keys = key.split('.');
-            first = keys.shift();
-            subkey = keys.join('.');
-            return this._attr_get(keys.join('.'), context[first]);
-        } else {
-            return context[key];
-        }
-    },
+  _attr_get: function(key, context) {
+    var first, keys, subkey;
+    if (typeof context === "undefined" || context === null) {
+      context = this;
+    }
+    if (key.indexOf(".") > -1) {
+      keys = key.split(".");
+      first = keys.shift();
+      subkey = keys.join(".");
+      return this._attr_get(keys.join("."), context[first]);
+    } else {
+      return context[key];
+    }
+  },
 
-    /**
+  /**
      * Internal setter method for attributes on the component. Called by `.attr`.
      *
      * Options:
@@ -591,64 +595,67 @@ Crafty.fn = Crafty.prototype = {
      * person._attr_set('name.first', 'Foxxy');
      * ~~~
      */
-    _attr_set: function() {
-        var data, silent, recursive;
-        if (typeof arguments[0] === 'string') {
-            data = this._set_create_object(arguments[0], arguments[1]);
-            silent = !!arguments[2];
-            recursive = arguments[3] || arguments[0].indexOf('.') > -1;
-        } else {
-            data = arguments[0];
-            silent = !!arguments[1];
-            recursive = !!arguments[2];
-        }
+  _attr_set: function() {
+    var data, silent, recursive;
+    if (typeof arguments[0] === "string") {
+      data = this._set_create_object(arguments[0], arguments[1]);
+      silent = !!arguments[2];
+      recursive = arguments[3] || arguments[0].indexOf(".") > -1;
+    } else {
+      data = arguments[0];
+      silent = !!arguments[1];
+      recursive = !!arguments[2];
+    }
 
-        if (!silent) {
-            this.trigger('Change', data);
-        }
+    if (!silent) {
+      this.trigger("Change", data);
+    }
 
-        if (recursive) {
-            this._recursive_extend(data, this);
-        } else {
-            this.extend.call(this, data);
-        }
-        return this;
-    },
+    if (recursive) {
+      this._recursive_extend(data, this);
+    } else {
+      this.extend.call(this, data);
+    }
+    return this;
+  },
 
-    /**
+  /**
      * If you are setting a key of 'foo.bar' or 'bar', this creates
      * the appropriate object for you to recursively merge with the
      * current attributes.
      */
-    _set_create_object: function(key, value) {
-        var data = {}, keys, first, subkey;
-        if (key.indexOf('.') > -1) {
-            keys = key.split('.');
-            first = keys.shift();
-            subkey = keys.join('.');
-            data[first] = this._set_create_object(subkey, value);
-        } else {
-            data[key] = value;
-        }
-        return data;
-    },
+  _set_create_object: function(key, value) {
+    var data = {}, keys, first, subkey;
+    if (key.indexOf(".") > -1) {
+      keys = key.split(".");
+      first = keys.shift();
+      subkey = keys.join(".");
+      data[first] = this._set_create_object(subkey, value);
+    } else {
+      data[key] = value;
+    }
+    return data;
+  },
 
-    /**
+  /**
      * Recursively puts `new_data` into `original_data`.
      */
-    _recursive_extend: function(new_data, original_data) {
-        var key;
-        for (key in new_data) {
-            if (new_data[key].constructor === Object) {
-                original_data[key] = this._recursive_extend(new_data[key], original_data[key]);
-            } else {
-                original_data[key] = new_data[key];
-            }
-        }
-        return original_data;
-    },
+  _recursive_extend: function(new_data, original_data) {
+    var key;
+    for (key in new_data) {
+      if (new_data[key].constructor === Object) {
+        original_data[key] = this._recursive_extend(
+          new_data[key],
+          original_data[key]
+        );
+      } else {
+        original_data[key] = new_data[key];
+      }
+    }
+    return original_data;
+  },
 
-    /**@
+  /**@
      * #.toArray
      * @comp Crafty Core
      * @kind Method
@@ -658,11 +665,11 @@ Crafty.fn = Crafty.prototype = {
      * This method will simply return the found entities as an array of ids.  To get an array of the actual entities, use `get()`.
      * @see .get
      */
-    toArray: function () {
-        return slice.call(this, 0);
-    },
+  toArray: function() {
+    return slice.call(this, 0);
+  },
 
-    /**@
+  /**@
     * #.timeout
     * @comp Crafty Core
     * @kind Method
@@ -683,17 +690,17 @@ Crafty.fn = Crafty.prototype = {
     * }, 100);
     * ~~~
     */
-    timeout: function (callback, duration) {
-        this.each(function () {
-            var self = this;
-            setTimeout(function () {
-                callback.call(self);
-            }, duration);
-        });
-        return this;
-    },
+  timeout: function(callback, duration) {
+    this.each(function() {
+      var self = this;
+      setTimeout(function() {
+        callback.call(self);
+      }, duration);
+    });
+    return this;
+  },
 
-    /**@
+  /**@
      * #.bind
      * @comp Crafty Core
      * @kind Method
@@ -730,23 +737,23 @@ Crafty.fn = Crafty.prototype = {
      *
      * @see .trigger, .unbind
      */
-    bind: function (event, callback) {
-        //  To learn how the event system functions, see the comments for Crafty._callbackMethods
-        //optimization for 1 entity
-        if (this.length === 1) {
-            this._bindCallback(event, callback);
-        } else {
-            for (var i = 0; i < this.length; i++) {
-                var e = entities[this[i]];
-                if (e) {
-                    e._bindCallback(event, callback);
-                }
-            }
+  bind: function(event, callback) {
+    //  To learn how the event system functions, see the comments for Crafty._callbackMethods
+    //optimization for 1 entity
+    if (this.length === 1) {
+      this._bindCallback(event, callback);
+    } else {
+      for (var i = 0; i < this.length; i++) {
+        var e = entities[this[i]];
+        if (e) {
+          e._bindCallback(event, callback);
         }
-        return this;
-    },
+      }
+    }
+    return this;
+  },
 
-    /**@
+  /**@
      * #.uniqueBind
      * @comp Crafty Core
      * @kind Method
@@ -760,13 +767,12 @@ Crafty.fn = Crafty.prototype = {
      *
      * @see .bind
      */
-    uniqueBind: function (event, callback) {
-        this.unbind(event, callback);
-        this.bind(event, callback);
+  uniqueBind: function(event, callback) {
+    this.unbind(event, callback);
+    this.bind(event, callback);
+  },
 
-    },
-
-    /**@
+  /**@
      * #.one
      * @comp Crafty Core
      * @kind Method
@@ -780,17 +786,16 @@ Crafty.fn = Crafty.prototype = {
      *
      * @see .bind
      */
-    one: function (event, callback) {
-        var self = this;
-        var oneHandler = function (data) {
-            callback.call(self, data);
-            self.unbind(event, oneHandler);
-        };
-        return self.bind(event, oneHandler);
+  one: function(event, callback) {
+    var self = this;
+    var oneHandler = function(data) {
+      callback.call(self, data);
+      self.unbind(event, oneHandler);
+    };
+    return self.bind(event, oneHandler);
+  },
 
-    },
-
-    /**@
+  /**@
      * #.unbind
      * @comp Crafty Core
      * @kind Method
@@ -806,19 +811,19 @@ Crafty.fn = Crafty.prototype = {
      * unbind only that callback.
      * @see .bind, .trigger
      */
-    unbind: function (event, callback) {
-        //  To learn how the event system functions, see the comments for Crafty._callbackMethods
-        var i, e;
-        for (i = 0; i < this.length; i++) {
-            e = entities[this[i]];
-            if (e) {
-                e._unbindCallbacks(event, callback);
-            }
-        }
-        return this;
-    },
+  unbind: function(event, callback) {
+    //  To learn how the event system functions, see the comments for Crafty._callbackMethods
+    var i, e;
+    for (i = 0; i < this.length; i++) {
+      e = entities[this[i]];
+      if (e) {
+        e._unbindCallbacks(event, callback);
+      }
+    }
+    return this;
+  },
 
-    /**@
+  /**@
      * #.trigger
      * @comp Crafty Core
      * @kind Method
@@ -837,23 +842,23 @@ Crafty.fn = Crafty.prototype = {
      *
      * Unlike DOM events, Crafty events are executed synchronously.
      */
-    trigger: function (event, data) {
-        //  To learn how the event system functions, see the comments for Crafty._callbackMethods
-        if (this.length === 1) {
-            //find the handlers assigned to the entity
-            this._runCallbacks(event, data);
-         } else {
-            for (var i = 0; i < this.length; i++) {
-                var e = entities[this[i]];
-                if (e) {
-                    e._runCallbacks(event, data);
-                }
-            }
+  trigger: function(event, data) {
+    //  To learn how the event system functions, see the comments for Crafty._callbackMethods
+    if (this.length === 1) {
+      //find the handlers assigned to the entity
+      this._runCallbacks(event, data);
+    } else {
+      for (var i = 0; i < this.length; i++) {
+        var e = entities[this[i]];
+        if (e) {
+          e._runCallbacks(event, data);
         }
-        return this;
-    },
+      }
+    }
+    return this;
+  },
 
-    /**@
+  /**@
      * #.each
      * @comp Crafty Core
      * @kind Method
@@ -877,18 +882,17 @@ Crafty.fn = Crafty.prototype = {
      * });
      * ~~~
      */
-    each: function (func) {
-        var i = 0,
-            l = this.length;
-        for (; i < l; i++) {
-            //skip if not exists
-            if (!entities[this[i]]) continue;
-            func.call(entities[this[i]], i);
-        }
-        return this;
-    },
+  each: function(func) {
+    var i = 0, l = this.length;
+    for (; i < l; i++) {
+      //skip if not exists
+      if (!entities[this[i]]) continue;
+      func.call(entities[this[i]], i);
+    }
+    return this;
+  },
 
-    /**@
+  /**@
      * #.get
      * @comp Crafty Core
      * @kind Method
@@ -917,27 +921,24 @@ Crafty.fn = Crafty.prototype = {
      * ~~~
      *
      */
-    get: function(index) {
-        var l = this.length;
-        if (typeof index !== "undefined") {
-            if (index >= l || index+l < 0)
-                return undefined;
-            if (index>=0)
-                return entities[this[index]];
-            else
-                return entities[this[index+l]];
-        } else {
-            var i=0, result = [];
-            for (; i < l; i++) {
-                //skip if not exists
-                if (!entities[this[i]]) continue;
-                result.push( entities[this[i]] );
-            }
-            return result;
-        }
-    },
+  get: function(index) {
+    var l = this.length;
+    if (typeof index !== "undefined") {
+      if (index >= l || index + l < 0) return undefined;
+      if (index >= 0) return entities[this[index]];
+      else return entities[this[index + l]];
+    } else {
+      var i = 0, result = [];
+      for (; i < l; i++) {
+        //skip if not exists
+        if (!entities[this[i]]) continue;
+        result.push(entities[this[i]]);
+      }
+      return result;
+    }
+  },
 
-    /**@
+  /**@
      * #.clone
      * @comp Crafty Core
      * @kind Method
@@ -948,26 +949,28 @@ Crafty.fn = Crafty.prototype = {
      * Method will create another entity with the exact same
      * properties, components and methods as the current entity.
      */
-    clone: function () {
-        var comps = this.__c,
-            comp,
-            prop,
-            clone = Crafty.e();
+  clone: function() {
+    var comps = this.__c, comp, prop, clone = Crafty.e();
 
-        for (comp in comps) {
-            clone.addComponent(comp);
-        }
-        for (prop in this) {
-            if (prop !== "0" && prop !== "_global" && prop !== "_changed" && typeof this[prop] !== "function" && typeof this[prop] !== "object") {
-                clone[prop] = this[prop];
-            }
-        }
+    for (comp in comps) {
+      clone.addComponent(comp);
+    }
+    for (prop in this) {
+      if (
+        prop !== "0" &&
+        prop !== "_global" &&
+        prop !== "_changed" &&
+        typeof this[prop] !== "function" &&
+        typeof this[prop] !== "object"
+      ) {
+        clone[prop] = this[prop];
+      }
+    }
 
-        return clone;
-    },
+    return clone;
+  },
 
-
-    /**@
+  /**@
      * #.setter
      * @comp Crafty Core
      * @kind Method
@@ -982,11 +985,11 @@ Crafty.fn = Crafty.prototype = {
      * This feature is deprecated; use .defineField() instead.
      * @see .defineField
      */
-    setter: function (prop, callback) {
-        return this.defineField(prop, function(){}, callback);
-    },
+  setter: function(prop, callback) {
+    return this.defineField(prop, function() {}, callback);
+  },
 
-    /**@
+  /**@
      * #.defineField
      * @comp Crafty Core
      * @kind Method
@@ -1015,12 +1018,12 @@ Crafty.fn = Crafty.prototype = {
      * Crafty.log(ent.customData) // prints 2
      * ~~~
      */
-    defineField: function (prop, getCallback, setCallback) {
-        Crafty.defineField(this, prop, getCallback, setCallback);
-        return this;
-    },
+  defineField: function(prop, getCallback, setCallback) {
+    Crafty.defineField(this, prop, getCallback, setCallback);
+    return this;
+  },
 
-    /**@
+  /**@
      * #.destroy
      * @comp Crafty Core
      * @kind Method
@@ -1028,25 +1031,23 @@ Crafty.fn = Crafty.prototype = {
      * @sign public this .destroy(void)
      * Will remove all event listeners and delete all properties as well as removing from the stage
      */
-    destroy: function () {
-        //remove all event handlers, delete from entities
-        this.each(function () {
-            var comp;
-            this.trigger("Remove");
-            for (var compName in this.__c) {
-                comp = components[compName];
-                if (comp && "remove" in comp)
-                    comp.remove.call(this, true);
-            }
-            this._unbindAll();
-            delete entities[this[0]];
-        });
-    }
+  destroy: function() {
+    //remove all event handlers, delete from entities
+    this.each(function() {
+      var comp;
+      this.trigger("Remove");
+      for (var compName in this.__c) {
+        comp = components[compName];
+        if (comp && "remove" in comp) comp.remove.call(this, true);
+      }
+      this._unbindAll();
+      delete entities[this[0]];
+    });
+  }
 };
 
 //give the init instances the Crafty prototype
 Crafty.fn.init.prototype = Crafty.fn;
-
 
 /**@
  * #Crafty.extend
@@ -1070,30 +1071,26 @@ Crafty.fn.init.prototype = Crafty.fn;
  * Crafty.isArray('hi');       // returns false
  * ~~~
  */
-Crafty.extend = Crafty.fn.extend = function (obj) {
-    var target = this,
-        key;
+Crafty.extend = Crafty.fn.extend = function(obj) {
+  var target = this, key;
 
-    //don't bother with nulls
-    if (!obj) return target;
+  //don't bother with nulls
+  if (!obj) return target;
 
-    for (key in obj) {
-        if (target === obj[key]) continue; //handle circular reference
-        target[key] = obj[key];
-    }
+  for (key in obj) {
+    if (target === obj[key]) continue; //handle circular reference
+    target[key] = obj[key];
+  }
 
-    return target;
+  return target;
 };
-
-
-
 
 // How Crafty handles events and callbacks
 // -----------------------------------------
-// Callbacks are stored in the global object `handlers`, which has properties for each event.  
+// Callbacks are stored in the global object `handlers`, which has properties for each event.
 // These properties point to an object which has a property for each entity listening to the event.
 // These in turn are arrays containing the callbacks to be triggered.
-// 
+//
 // Here is an example of what "handlers" can look like:
 //     handlers ===
 //         { Move:  {5:[fnA], 6:[fnB, fnC], global:[fnD]},
@@ -1111,105 +1108,104 @@ Crafty.extend = Crafty.fn.extend = function (obj) {
 //
 //     handlers[event][objID] === (Array of callback functions)
 //
-// In addition to the global object, each object participating in the event system has a `_callbacks` property 
+// In addition to the global object, each object participating in the event system has a `_callbacks` property
 // which lists the events that object is listening to.  It allows access to the object's callbacks like this:
 //     obj._callbacks[event] === (Array of callback functions)
 //
-// Objects, which can listen to events (or collections of such objects) have varying logic 
+// Objects, which can listen to events (or collections of such objects) have varying logic
 // on how the events are bound/triggered/unbound.  Since the underlying operations on the callback array are the same,
-// the single-object operations are implemented in the following object.  
+// the single-object operations are implemented in the following object.
 // Calling `Crafty._addCallbackMethods(obj)` on an object will extend that object with these methods.
 
-
- 
 Crafty._callbackMethods = {
-    // Add a function to the list of callbacks for an event
-    _bindCallback: function(event, fn) {
-        // Get handle to event, creating it if necessary
-        var callbacks = this._callbacks[event];
-        if (!callbacks) {
-            callbacks = this._callbacks[event] = ( handlers[event] || ( handlers[event] = {} ) )[this[0]] = [];
-            callbacks.context = this;
-            callbacks.depth = 0;
-        }
-        // Push to callback array
-        callbacks.push(fn);
-    },
-
-    // Process for running all callbacks for the given event
-    _runCallbacks: function(event, data) {
-        if (!this._callbacks[event]) {
-            return;
-        }
-        var callbacks = this._callbacks[event];
-
-        // Callback loop; deletes dead callbacks, but only when it is safe to do so
-        var i, l = callbacks.length;
-        // callbacks.depth tracks whether this function was invoked in the middle of a previous iteration through the same callback array
-        callbacks.depth++;
-        for (i = 0; i < l; i++) {
-            if (typeof callbacks[i] === "undefined") {
-                if (callbacks.depth <= 1) {
-                    callbacks.splice(i, 1);
-                    i--;
-                    l--;
-                    // Delete callbacks object if there are no remaining bound events
-                    if (callbacks.length === 0) {
-                        delete this._callbacks[event];
-                        delete handlers[event][this[0]];
-                    }
-                }
-            } else {
-                callbacks[i].call(this, data);
-            }
-        }
-        callbacks.depth--;
-    },
-
-    // Unbind callbacks for the given event
-    // If fn is specified, only it will be removed; otherwise all callbacks will be
-    _unbindCallbacks: function(event, fn) {
-        if (!this._callbacks[event]) {
-            return;
-        }
-        var callbacks = this._callbacks[event];
-        // Iterate through and delete the callback functions that match
-        // They are spliced out when _runCallbacks is invoked, not here
-        // (This function might be called in the middle of a callback, which complicates the logic)
-        for (var i = 0; i < callbacks.length; i++) {
-            if (!fn || callbacks[i] === fn) {
-                delete callbacks[i];
-            }
-        }
-    },
-
-    // Completely all callbacks for every event, such as on object destruction
-    _unbindAll: function() {
-        if (!this._callbacks) return;
-        for (var event in this._callbacks) {
-            if (this._callbacks[event]) {
-                // Remove the normal way, in case we've got a nested loop
-                this._unbindCallbacks(event);
-                // Also completely delete the registered callback from handlers
-                delete handlers[event][this[0]];
-            }
-        }
+  // Add a function to the list of callbacks for an event
+  _bindCallback: function(event, fn) {
+    // Get handle to event, creating it if necessary
+    var callbacks = this._callbacks[event];
+    if (!callbacks) {
+      callbacks = this._callbacks[event] = (handlers[event] ||
+        (handlers[event] = {}))[this[0]] = [];
+      callbacks.context = this;
+      callbacks.depth = 0;
     }
+    // Push to callback array
+    callbacks.push(fn);
+  },
+
+  // Process for running all callbacks for the given event
+  _runCallbacks: function(event, data) {
+    if (!this._callbacks[event]) {
+      return;
+    }
+    var callbacks = this._callbacks[event];
+
+    // Callback loop; deletes dead callbacks, but only when it is safe to do so
+    var i, l = callbacks.length;
+    // callbacks.depth tracks whether this function was invoked in the middle of a previous iteration through the same callback array
+    callbacks.depth++;
+    for (i = 0; i < l; i++) {
+      if (typeof callbacks[i] === "undefined") {
+        if (callbacks.depth <= 1) {
+          callbacks.splice(i, 1);
+          i--;
+          l--;
+          // Delete callbacks object if there are no remaining bound events
+          if (callbacks.length === 0) {
+            delete this._callbacks[event];
+            delete handlers[event][this[0]];
+          }
+        }
+      } else {
+        callbacks[i].call(this, data);
+      }
+    }
+    callbacks.depth--;
+  },
+
+  // Unbind callbacks for the given event
+  // If fn is specified, only it will be removed; otherwise all callbacks will be
+  _unbindCallbacks: function(event, fn) {
+    if (!this._callbacks[event]) {
+      return;
+    }
+    var callbacks = this._callbacks[event];
+    // Iterate through and delete the callback functions that match
+    // They are spliced out when _runCallbacks is invoked, not here
+    // (This function might be called in the middle of a callback, which complicates the logic)
+    for (var i = 0; i < callbacks.length; i++) {
+      if (!fn || callbacks[i] === fn) {
+        delete callbacks[i];
+      }
+    }
+  },
+
+  // Completely all callbacks for every event, such as on object destruction
+  _unbindAll: function() {
+    if (!this._callbacks) return;
+    for (var event in this._callbacks) {
+      if (this._callbacks[event]) {
+        // Remove the normal way, in case we've got a nested loop
+        this._unbindCallbacks(event);
+        // Also completely delete the registered callback from handlers
+        delete handlers[event][this[0]];
+      }
+    }
+  }
 };
 
 // Helper function to add the callback methods above to an object, as well as initializing the callbacks object
 // it provies the "low level" operations; bind, unbind, and trigger will still need to be implemented for that object
 Crafty._addCallbackMethods = function(context) {
-    context.extend(Crafty._callbackMethods);
-    context._callbacks = {};
+  context.extend(Crafty._callbackMethods);
+  context._callbacks = {};
 };
 
 Crafty._addCallbackMethods(Crafty);
 
 Crafty.extend({
-    // Define Crafty's id
-    0: "global",
-    /**@
+  // Define Crafty's id
+  0: "global",
+  /**@
      * #Crafty.init
      * @category Core
      * @kind Method
@@ -1232,39 +1228,37 @@ Crafty.extend({
      * Uses `requestAnimationFrame` to sync the drawing with the browser but will default to `setInterval` if the browser does not support it.
      * @see Crafty.stop,  Crafty.viewport
      */
-    init: function (w, h, stage_elem) {
-        
-        // If necessary, attach any event handlers registered before Crafty started
-        if (!this._preBindDone) {
-            for(var i = 0; i < this._bindOnInit.length; i++) {
+  init: function(w, h, stage_elem) {
+    // If necessary, attach any event handlers registered before Crafty started
+    if (!this._preBindDone) {
+      for (var i = 0; i < this._bindOnInit.length; i++) {
+        var preBind = this._bindOnInit[i];
+        Crafty.bind(preBind.event, preBind.handler);
+      }
+    }
 
-                var preBind = this._bindOnInit[i];
-                Crafty.bind(preBind.event, preBind.handler);
-            }
-        }
+    // The viewport will init things like the default graphics layers as well
+    Crafty.viewport.init(w, h, stage_elem);
 
-        // The viewport will init things like the default graphics layers as well
-        Crafty.viewport.init(w, h, stage_elem);
+    //call all arbitrary functions attached to onload
+    this.trigger("Load");
+    this.timer.init();
 
-        //call all arbitrary functions attached to onload
-        this.trigger("Load");
-        this.timer.init();
+    return this;
+  },
 
-        return this;
-    },
+  // There are some events that need to be bound to Crafty when it's started/restarted, so store them here
+  // Switching Crafty's internals to use the new system idiom should allow removing this hack
+  _bindOnInit: [],
+  _preBindDone: false,
+  _preBind: function(event, handler) {
+    this._bindOnInit.push({
+      event: event,
+      handler: handler
+    });
+  },
 
-    // There are some events that need to be bound to Crafty when it's started/restarted, so store them here
-    // Switching Crafty's internals to use the new system idiom should allow removing this hack
-    _bindOnInit: [],
-    _preBindDone: false,
-    _preBind: function(event, handler) {
-        this._bindOnInit.push({
-            event: event,
-            handler: handler
-        });
-    },
-
-    /**@
+  /**@
      * #Crafty.getVersion
      * @category Core
      * @kind Method
@@ -1279,11 +1273,11 @@ Crafty.extend({
      * Crafty.getVersion(); //'0.5.2'
      * ~~~
      */
-    getVersion: function () {
-        return version;
-    },
+  getVersion: function() {
+    return version;
+  },
 
-    /**@
+  /**@
      * #Crafty.stop
      * @category Core
      * @kind Method
@@ -1296,38 +1290,42 @@ Crafty.extend({
      *
      * To restart, use `Crafty.init()`.
      * @see Crafty.init
-     */ 
-    stop: function (clearState) {
-        Crafty.trigger("CraftyStop", clearState);
+     */
 
-        this.timer.stop();
-        if (clearState) {
-            // Remove audio
-            Crafty.audio.remove();
+  stop: function(clearState) {
+    Crafty.trigger("CraftyStop", clearState);
 
-            //Destroy all systems
-            for (var s in Crafty._systems) {
-                Crafty._systems[s].destroy();
-            }
+    this.timer.stop();
+    if (clearState) {
+      // Remove audio
+      Crafty.audio.remove();
 
-            // Remove the stage element, and re-add a div with the same id
-            if (Crafty.stage && Crafty.stage.elem.parentNode) {
-                var newCrStage = document.createElement('div');
-                newCrStage.id = Crafty.stage.elem.id;
-                Crafty.stage.elem.parentNode.replaceChild(newCrStage, Crafty.stage.elem);
-            }
+      //Destroy all systems
+      for (var s in Crafty._systems) {
+        Crafty._systems[s].destroy();
+      }
 
-            // reset callbacks, and indicate that prebound functions need to be bound on init again
-            Crafty._unbindAll();
-            Crafty._addCallbackMethods(Crafty);
-            this._preBindDone = false;
+      // Remove the stage element, and re-add a div with the same id
+      if (Crafty.stage && Crafty.stage.elem.parentNode) {
+        var newCrStage = document.createElement("div");
+        newCrStage.id = Crafty.stage.elem.id;
+        Crafty.stage.elem.parentNode.replaceChild(
+          newCrStage,
+          Crafty.stage.elem
+        );
+      }
 
-            initState();
-        }
-        return this;
-    },
+      // reset callbacks, and indicate that prebound functions need to be bound on init again
+      Crafty._unbindAll();
+      Crafty._addCallbackMethods(Crafty);
+      this._preBindDone = false;
 
-    /**@
+      initState();
+    }
+    return this;
+  },
+
+  /**@
      * #Crafty.pause
      * @category Core
      * @kind Method
@@ -1349,25 +1347,25 @@ Crafty.extend({
      * });
      * ~~~
      */
-    pause: function (toggle) {
-        if (arguments.length === 1 ? toggle : !this._paused) {
-            this.trigger('Pause');
-            this._paused = true;
-            setTimeout(function () {
-                Crafty.timer.stop();
-            }, 0);
-            Crafty.keydown = {};
-        } else {
-            this.trigger('Unpause');
-            this._paused = false;
-            setTimeout(function () {
-                Crafty.timer.init();
-            }, 0);
-        }
-        return this;
-    },
+  pause: function(toggle) {
+    if (arguments.length === 1 ? toggle : !this._paused) {
+      this.trigger("Pause");
+      this._paused = true;
+      setTimeout(function() {
+        Crafty.timer.stop();
+      }, 0);
+      Crafty.keydown = {};
+    } else {
+      this.trigger("Unpause");
+      this._paused = false;
+      setTimeout(function() {
+        Crafty.timer.init();
+      }, 0);
+    }
+    return this;
+  },
 
-    /**@
+  /**@
      * #Crafty.isPaused
      * @category Core
      * @kind Method
@@ -1380,95 +1378,86 @@ Crafty.extend({
      * Crafty.isPaused();
      * ~~~
      */
-    isPaused: function () {
-        return this._paused;
-    },
+  isPaused: function() {
+    return this._paused;
+  },
 
-    /**@
+  /**@
      * #Crafty.timer
      * @category Game Loop
      * @kind CoreObject
      * 
      * Handles game ticks
      */
-    timer: (function () {
-        /*
+  timer: (function() {
+    /*
          * `window.requestAnimationFrame` or its variants is called for animation.
          * `.requestID` keeps a record of the return value previous `window.requestAnimationFrame` call.
          * This is an internal variable. Used to stop frame.
          */
-        var tick, requestID;
+    var tick, requestID;
 
-        // Internal variables used to control the game loop.  Use Crafty.timer.steptype() to set these.
-        var mode = "fixed",
-            maxFramesPerStep = 5,
-            maxTimestep = 40;
+    // Internal variables used to control the game loop.  Use Crafty.timer.steptype() to set these.
+    var mode = "fixed", maxFramesPerStep = 5, maxTimestep = 40;
 
-        // variables used by the game loop to track state
-        var endTime = 0,
-            timeSlip = 0,
-            gameTime;
+    // variables used by the game loop to track state
+    var endTime = 0, timeSlip = 0, gameTime;
 
-        // Controls the target rate of fixed mode loop.  Set these with the Crafty.timer.FPS function
-        var FPS = 50,
-            milliSecPerFrame = 1000 / FPS;
+    // Controls the target rate of fixed mode loop.  Set these with the Crafty.timer.FPS function
+    var FPS = 50, milliSecPerFrame = 1000 / FPS;
 
+    return {
+      init: function() {
+        // When first called, set the  gametime one frame before now!
+        if (typeof gameTime === "undefined")
+          gameTime = new Date().getTime() - milliSecPerFrame;
 
+        var onFrame =
+          typeof window !== "undefined" &&
+          (window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            null);
 
+        if (onFrame) {
+          tick = function() {
+            Crafty.timer.step();
+            if (tick !== null) {
+              requestID = onFrame(tick);
+            }
+            //Crafty.log(requestID + ', ' + frame)
+          };
 
-        return {
-            init: function () {
-                // When first called, set the  gametime one frame before now!
-                if (typeof gameTime === "undefined")
-                    gameTime = (new Date().getTime()) - milliSecPerFrame;
+          tick();
+        } else {
+          tick = setInterval(function() {
+            Crafty.timer.step();
+          }, 1000 / FPS);
+        }
+      },
 
-                var onFrame = (typeof window !== "undefined") && (
-                    window.requestAnimationFrame ||
-                    window.webkitRequestAnimationFrame ||
-                    window.mozRequestAnimationFrame ||
-                    window.oRequestAnimationFrame ||
-                    window.msRequestAnimationFrame ||
-                    null
-                );
+      stop: function() {
+        Crafty.trigger("CraftyStopTimer");
 
-                if (onFrame) {
-                    tick = function () {
-                        Crafty.timer.step();
-                        if (tick !== null) {
-                            requestID = onFrame(tick);
-                        }
-                        //Crafty.log(requestID + ', ' + frame)
-                    };
+        if (typeof tick !== "function") clearInterval(tick);
 
-                    tick();
-                } else {
-                    tick = setInterval(function () {
-                        Crafty.timer.step();
-                    }, 1000 / FPS);
-                }
-            },
+        var onFrame =
+          typeof window !== "undefined" &&
+          (window.cancelAnimationFrame ||
+            window.cancelRequestAnimationFrame ||
+            window.webkitCancelRequestAnimationFrame ||
+            window.mozCancelRequestAnimationFrame ||
+            window.oCancelRequestAnimationFrame ||
+            window.msCancelRequestAnimationFrame ||
+            null);
 
-            stop: function () {
-                Crafty.trigger("CraftyStopTimer");
+        if (onFrame) onFrame(requestID);
+        tick = null;
+      },
 
-                if (typeof tick !== "function") clearInterval(tick);
-
-                var onFrame = (typeof window !== "undefined") && (
-                    window.cancelAnimationFrame ||
-                    window.cancelRequestAnimationFrame ||
-                    window.webkitCancelRequestAnimationFrame ||
-                    window.mozCancelRequestAnimationFrame ||
-                    window.oCancelRequestAnimationFrame ||
-                    window.msCancelRequestAnimationFrame ||
-                    null
-                );
-
-                if (onFrame) onFrame(requestID);
-                tick = null;
-            },
-
-
-            /**@
+      /**@
              * #Crafty.timer.steptype
              * @comp Crafty.timer
              * @kind Method
@@ -1490,30 +1479,36 @@ Crafty.extend({
              *
              * @see Crafty.timer.FPS
              */
-            steptype: function (newmode, option) {
-                // setters
-                if (newmode === "variable" || newmode === "semifixed") {
-                    mode = newmode;
-                    if (option)
-                        maxTimestep = option;
-                    Crafty.trigger("NewSteptype", {mode: mode, maxTimeStep: maxTimestep});
-                } else if (newmode === "fixed") {
-                    mode = "fixed";
-                    if (option)
-                        maxFramesPerStep = option;
-                    Crafty.trigger("NewSteptype", {mode: mode, maxTimeStep: maxFramesPerStep});
-                } else if (newmode !== undefined) {
-                    throw "Invalid step type specified";
-                // getter
-                } else {
-                    return {
-                        mode: mode,
-                        maxTimeStep: (mode === "variable" || mode === "semifixed") ? maxTimestep : maxFramesPerStep
-                    };
-                }
-            },
+      steptype: function(newmode, option) {
+        // setters
+        if (newmode === "variable" || newmode === "semifixed") {
+          mode = newmode;
+          if (option) maxTimestep = option;
+          Crafty.trigger("NewSteptype", {
+            mode: mode,
+            maxTimeStep: maxTimestep
+          });
+        } else if (newmode === "fixed") {
+          mode = "fixed";
+          if (option) maxFramesPerStep = option;
+          Crafty.trigger("NewSteptype", {
+            mode: mode,
+            maxTimeStep: maxFramesPerStep
+          });
+        } else if (newmode !== undefined) {
+          throw "Invalid step type specified";
+          // getter
+        } else {
+          return {
+            mode: mode,
+            maxTimeStep: mode === "variable" || mode === "semifixed"
+              ? maxTimestep
+              : maxFramesPerStep
+          };
+        }
+      },
 
-            /**@
+      /**@
              * #Crafty.timer.step
              * @comp Crafty.timer
              * @kind Method
@@ -1534,79 +1529,79 @@ Crafty.extend({
              * @see Crafty.timer.steptype
              * @see Crafty.timer.FPS
              */
-            step: function () {
-                var drawTimeStart, dt, lastFrameTime, loops = 0;
+      step: function() {
+        var drawTimeStart, dt, lastFrameTime, loops = 0;
 
-                var currentTime = new Date().getTime();
-                if (endTime > 0)
-                    Crafty.trigger("MeasureWaitTime", currentTime - endTime);
+        var currentTime = new Date().getTime();
+        if (endTime > 0)
+          Crafty.trigger("MeasureWaitTime", currentTime - endTime);
 
-                // If we're currently ahead of the current time, we need to wait until we're not!
-                if (gameTime + timeSlip >= currentTime) {
-                    endTime = currentTime;
-                    return;
-                }
+        // If we're currently ahead of the current time, we need to wait until we're not!
+        if (gameTime + timeSlip >= currentTime) {
+          endTime = currentTime;
+          return;
+        }
 
-                var netTimeStep = currentTime - (gameTime + timeSlip);
-                // We try to keep up with the target FPS by processing multiple frames per render
-                // If we're hopelessly behind, stop trying to catch up.
-                if (netTimeStep > milliSecPerFrame * 20) {
-                    //gameTime = currentTime - milliSecPerFrame;
-                    timeSlip += netTimeStep - milliSecPerFrame;
-                    netTimeStep = milliSecPerFrame;
-                }
+        var netTimeStep = currentTime - (gameTime + timeSlip);
+        // We try to keep up with the target FPS by processing multiple frames per render
+        // If we're hopelessly behind, stop trying to catch up.
+        if (netTimeStep > milliSecPerFrame * 20) {
+          //gameTime = currentTime - milliSecPerFrame;
+          timeSlip += netTimeStep - milliSecPerFrame;
+          netTimeStep = milliSecPerFrame;
+        }
 
-                // Set up how time is incremented
-                if (mode === "fixed") {
-                    loops = Math.ceil(netTimeStep / milliSecPerFrame);
-                    // maxFramesPerStep adjusts how willing we are to delay drawing in order to keep at the target FPS
-                    loops = Math.min(loops, maxFramesPerStep);
-                    dt = milliSecPerFrame;
-                } else if (mode === "variable") {
-                    loops = 1;
-                    dt = netTimeStep;
-                    // maxTimestep is the maximum time to be processed in a frame.  (Large dt => unstable physics)
-                    dt = Math.min(dt, maxTimestep);
-                } else if (mode === "semifixed") {
-                    loops = Math.ceil(netTimeStep / maxTimestep);
-                    dt = netTimeStep / loops;
-                }
+        // Set up how time is incremented
+        if (mode === "fixed") {
+          loops = Math.ceil(netTimeStep / milliSecPerFrame);
+          // maxFramesPerStep adjusts how willing we are to delay drawing in order to keep at the target FPS
+          loops = Math.min(loops, maxFramesPerStep);
+          dt = milliSecPerFrame;
+        } else if (mode === "variable") {
+          loops = 1;
+          dt = netTimeStep;
+          // maxTimestep is the maximum time to be processed in a frame.  (Large dt => unstable physics)
+          dt = Math.min(dt, maxTimestep);
+        } else if (mode === "semifixed") {
+          loops = Math.ceil(netTimeStep / maxTimestep);
+          dt = netTimeStep / loops;
+        }
 
-                // Process frames, incrementing the game clock with each frame.
-                // dt is determined by the mode
-                for (var i = 0; i < loops; i++) {
-                    lastFrameTime = currentTime;
-                    
-                    var frameData = {
-                        frame: frame++,
-                        dt: dt,
-                        gameTime: gameTime
-                    };
-                    // Handle any changes due to user input
-                    Crafty.trigger("EnterFrameInput", frameData);
-                    // Everything that changes over time hooks into this event
-                    Crafty.trigger("EnterFrame", frameData);
-                    // Event that happens after "EnterFrame", e.g. for resolivng collisions applied through movement during "EnterFrame" events
-                    Crafty.trigger("ExitFrame", frameData);
-                    gameTime += dt;
+        // Process frames, incrementing the game clock with each frame.
+        // dt is determined by the mode
+        for (var i = 0; i < loops; i++) {
+          lastFrameTime = currentTime;
 
-                    currentTime = new Date().getTime();
-                    Crafty.trigger("MeasureFrameTime", currentTime - lastFrameTime);
-                }
+          var frameData = {
+            frame: frame++,
+            dt: dt,
+            gameTime: gameTime
+          };
+          // Handle any changes due to user input
+          Crafty.trigger("EnterFrameInput", frameData);
+          // Everything that changes over time hooks into this event
+          Crafty.trigger("EnterFrame", frameData);
+          // Event that happens after "EnterFrame", e.g. for resolivng collisions applied through movement during "EnterFrame" events
+          Crafty.trigger("ExitFrame", frameData);
+          gameTime += dt;
 
-                //If any frames were processed, render the results
-                if (loops > 0) {
-                    drawTimeStart = currentTime;
-                    Crafty.trigger("PreRender"); // Pre-render setup opportunity
-                    Crafty.trigger("RenderScene");
-                    Crafty.trigger("PostRender"); // Post-render cleanup opportunity
-                    currentTime = new Date().getTime();
-                    Crafty.trigger("MeasureRenderTime", currentTime - drawTimeStart);
-                }
+          currentTime = new Date().getTime();
+          Crafty.trigger("MeasureFrameTime", currentTime - lastFrameTime);
+        }
 
-                endTime = currentTime;
-            },
-            /**@
+        //If any frames were processed, render the results
+        if (loops > 0) {
+          drawTimeStart = currentTime;
+          Crafty.trigger("PreRender"); // Pre-render setup opportunity
+          Crafty.trigger("RenderScene");
+          Crafty.trigger("PostRender"); // Post-render cleanup opportunity
+          currentTime = new Date().getTime();
+          Crafty.trigger("MeasureRenderTime", currentTime - drawTimeStart);
+        }
+
+        endTime = currentTime;
+      },
+      /**@
              * #Crafty.timer.FPS
              * @comp Crafty.timer
              * @kind Method
@@ -1622,17 +1617,16 @@ Crafty.extend({
              *
              * @see Crafty.timer.steptype
              */
-            FPS: function (value) {
-                if (typeof value === "undefined")
-                    return FPS;
-                else {
-                    FPS = value;
-                    milliSecPerFrame = 1000 / FPS;
-                    Crafty.trigger("FPSChange", value);
-                }
-            },
+      FPS: function(value) {
+        if (typeof value === "undefined") return FPS;
+        else {
+          FPS = value;
+          milliSecPerFrame = 1000 / FPS;
+          Crafty.trigger("FPSChange", value);
+        }
+      },
 
-            /**@
+      /**@
              * #Crafty.timer.simulateFrames
              * @comp Crafty.timer
              * @kind Method
@@ -1642,26 +1636,25 @@ Crafty.extend({
              * @param frames - number of frames to simulate
              * @param timestep - the duration to pass each frame.  Defaults to milliSecPerFrame (20 ms) if not specified.
              */
-            simulateFrames: function (frames, timestep) {
-                timestep = timestep || milliSecPerFrame;
-                while (frames-- > 0) {
-                    var frameData = {
-                        frame: frame++,
-                        dt: timestep
-                    };
-                    Crafty.trigger("EnterFrameInput", frameData);
-                    Crafty.trigger("EnterFrame", frameData);
-                    Crafty.trigger("ExitFrame", frameData);
-                }
-                Crafty.trigger("PreRender");
-                Crafty.trigger("RenderScene");
-                Crafty.trigger("PostRender");
-            }
-        };
-    })(),
+      simulateFrames: function(frames, timestep) {
+        timestep = timestep || milliSecPerFrame;
+        while (frames-- > 0) {
+          var frameData = {
+            frame: frame++,
+            dt: timestep
+          };
+          Crafty.trigger("EnterFrameInput", frameData);
+          Crafty.trigger("EnterFrame", frameData);
+          Crafty.trigger("ExitFrame", frameData);
+        }
+        Crafty.trigger("PreRender");
+        Crafty.trigger("RenderScene");
+        Crafty.trigger("PostRender");
+      }
+    };
+  })(),
 
-
-    /**@
+  /**@
      * #Crafty.e
      * @category Core
      * @kind Method
@@ -1685,25 +1678,25 @@ Crafty.extend({
      *
      * @see Crafty.c
      */
-    e: function () {
-        var id = UID();
-        entities[id] = null;
-        entities[id] = Crafty(id);
+  e: function() {
+    var id = UID();
+    entities[id] = null;
+    entities[id] = Crafty(id);
 
-        if (arguments.length > 0) {
-            entities[id].addComponent.apply(entities[id], arguments);
-        }
-        entities[id].setName('Entity #' + id); //set default entity human readable name
-        entities[id].addComponent("obj"); //every entity automatically assumes obj
+    if (arguments.length > 0) {
+      entities[id].addComponent.apply(entities[id], arguments);
+    }
+    entities[id].setName("Entity #" + id); //set default entity human readable name
+    entities[id].addComponent("obj"); //every entity automatically assumes obj
 
-        Crafty.trigger("NewEntity", {
-            id: id
-        });
+    Crafty.trigger("NewEntity", {
+      id: id
+    });
 
-        return entities[id];
-    },
+    return entities[id];
+  },
 
-    /**@
+  /**@
      * #Crafty.c
      * @category Core
      * @kind Method
@@ -1778,11 +1771,11 @@ Crafty.extend({
      *
      * @see Crafty.e
      */
-    c: function (compName, component) {
-        components[compName] = component;
-    },
+  c: function(compName, component) {
+    components[compName] = component;
+  },
 
-    /**@
+  /**@
      * #Crafty.trigger
      * @category Core, Events
      * @kind Method
@@ -1796,23 +1789,21 @@ Crafty.extend({
      *
      * @see Crafty.bind
      */
-    trigger: function (event, data) {
+  trigger: function(event, data) {
+    //  To learn how the event system functions, see the comments for Crafty._callbackMethods
+    var hdl = handlers[event] || (handlers[event] = {}), h, callbacks;
+    //loop over every object bound
+    for (h in hdl) {
+      // Check whether h needs to be processed
+      if (!hdl.hasOwnProperty(h)) continue;
+      callbacks = hdl[h];
+      if (!callbacks || callbacks.length === 0) continue;
 
-        //  To learn how the event system functions, see the comments for Crafty._callbackMethods
-        var hdl = handlers[event] || (handlers[event] = {}),
-            h, callbacks;
-        //loop over every object bound
-        for (h in hdl) {
-            // Check whether h needs to be processed
-            if (!hdl.hasOwnProperty(h)) continue;
-            callbacks = hdl[h];
-            if (!callbacks || callbacks.length === 0) continue;
+      callbacks.context._runCallbacks(event, data);
+    }
+  },
 
-            callbacks.context._runCallbacks(event, data);
-        }
-    },
-
-    /**@
+  /**@
      * #Crafty.bind
      * @category Core, Events
      * @kind Method
@@ -1827,15 +1818,13 @@ Crafty.extend({
      *
      * @see Crafty.trigger, Crafty.unbind
      */
-    bind: function (event, callback) {
+  bind: function(event, callback) {
+    // To learn how the event system functions, see the comments for Crafty._callbackMethods
+    this._bindCallback(event, callback);
+    return callback;
+  },
 
-        // To learn how the event system functions, see the comments for Crafty._callbackMethods
-        this._bindCallback(event, callback);
-        return callback;
-    },
-
-
-    /**@
+  /**@
      * #Crafty.uniqueBind
      * @category Core, Events
      * @kind Method
@@ -1849,12 +1838,12 @@ Crafty.extend({
      *
      * @see Crafty.bind
      */
-    uniqueBind: function (event, callback) {
-        this.unbind(event, callback);
-        return this.bind(event, callback);
-    },
+  uniqueBind: function(event, callback) {
+    this.unbind(event, callback);
+    return this.bind(event, callback);
+  },
 
-    /**@
+  /**@
      * #Crafty.one
      * @category Core, Events
      * @kind Method
@@ -1868,16 +1857,16 @@ Crafty.extend({
      *
      * @see Crafty.bind
      */
-    one: function (event, callback) {
-        var self = this;
-        var oneHandler = function (data) {
-            callback.call(self, data);
-            self.unbind(event, oneHandler);
-        };
-        return self.bind(event, oneHandler);
-    },
+  one: function(event, callback) {
+    var self = this;
+    var oneHandler = function(data) {
+      callback.call(self, data);
+      self.unbind(event, oneHandler);
+    };
+    return self.bind(event, oneHandler);
+  },
 
-    /**@
+  /**@
      * #Crafty.unbind
      * @category Core, Events
      * @kind Method
@@ -1905,12 +1894,12 @@ Crafty.extend({
      * includes all callbacks attached by `Crafty.bind('GameOver', ...)`, but
      * none of the callbacks attached by `some_entity.bind('GameOver', ...)`.
      */
-    unbind: function (event, callback) {
-        //  To learn how the event system functions, see the comments for Crafty._callbackMethods
-        this._unbindCallbacks(event, callback);
-    },
+  unbind: function(event, callback) {
+    //  To learn how the event system functions, see the comments for Crafty._callbackMethods
+    this._unbindCallbacks(event, callback);
+  },
 
-    /**@
+  /**@
      * #Crafty.frame
      * @category Core
      * @kind Method
@@ -1918,39 +1907,38 @@ Crafty.extend({
      * @sign public Number Crafty.frame(void)
      * @returns the current frame number
      */
-    frame: function () {
-        return frame;
-    },
+  frame: function() {
+    return frame;
+  },
 
-    components: function () {
-        return components;
-    },
+  components: function() {
+    return components;
+  },
 
-    isComp: function (comp) {
-        return comp in components;
-    },
+  isComp: function(comp) {
+    return comp in components;
+  },
 
-    debug: function (str) {
-        // access internal variables - handlers or entities
-        if (str === 'handlers') {
-            return handlers;
-        }
-        return entities;
-    },
+  debug: function(str) {
+    // access internal variables - handlers or entities
+    if (str === "handlers") {
+      return handlers;
+    }
+    return entities;
+  },
 
-    /**@
+  /**@
      * #Crafty.settings
      * @category Core
      * @kind CoreObject
      * 
      * Modify the inner workings of Crafty through the settings.
      */
-    settings: (function () {
-        var states = {},
-            callbacks = {};
+  settings: (function() {
+    var states = {}, callbacks = {};
 
-        return {
-            /**@
+    return {
+      /**@
              * #Crafty.settings.register
              * @comp Crafty.settings
              * @kind Method
@@ -1963,11 +1951,11 @@ Crafty.extend({
              *
              * @see Crafty.settings.modify
              */
-            register: function (setting, callback) {
-                callbacks[setting] = callback;
-            },
+      register: function(setting, callback) {
+        callbacks[setting] = callback;
+      },
 
-            /**@
+      /**@
              * #Crafty.settings.modify
              * @comp Crafty.settings
              * @kind Method
@@ -1980,13 +1968,13 @@ Crafty.extend({
              *
              * @see Crafty.settings.register, Crafty.settings.get
              */
-            modify: function (setting, value) {
-                if (!callbacks[setting]) return;
-                callbacks[setting].call(states[setting], value);
-                states[setting] = value;
-            },
+      modify: function(setting, value) {
+        if (!callbacks[setting]) return;
+        callbacks[setting].call(states[setting], value);
+        states[setting] = value;
+      },
 
-            /**@
+      /**@
              * #Crafty.settings.get
              * @comp Crafty.settings
              * @kind Method
@@ -1999,13 +1987,13 @@ Crafty.extend({
              *
              * @see Crafty.settings.register, Crafty.settings.get
              */
-            get: function (setting) {
-                return states[setting];
-            }
-        };
-    })(),
+      get: function(setting) {
+        return states[setting];
+      }
+    };
+  })(),
 
-    /**@
+  /**@
      * #Crafty.defineField
      * @category Core
      * @kind Method
@@ -2036,16 +2024,16 @@ Crafty.extend({
      * ~~~
      * @see Crafty Core#.defineField
      */
-    defineField: function(obj, prop, getCallback, setCallback) {
-        Object.defineProperty(obj, prop, {
-            get: getCallback,
-            set: setCallback,
-            configurable: false,
-            enumerable: true,
-        });
-    },
+  defineField: function(obj, prop, getCallback, setCallback) {
+    Object.defineProperty(obj, prop, {
+      get: getCallback,
+      set: setCallback,
+      configurable: false,
+      enumerable: true
+    });
+  },
 
-    clone: clone
+  clone: clone
 });
 
 /**
@@ -2053,12 +2041,12 @@ Crafty.extend({
  */
 
 function UID() {
-    var id = GUID++;
-    //if GUID is not unique
-    if (id in entities) {
-        return UID(); //recurse until it is unique
-    }
-    return id;
+  var id = GUID++;
+  //if GUID is not unique
+  if (id in entities) {
+    return UID(); //recurse until it is unique
+  }
+  return id;
 }
 
 /**@
@@ -2106,21 +2094,22 @@ function UID() {
  */
 
 function clone(obj) {
-    if (obj === null || typeof (obj) !== 'object')
-        return obj;
+  if (obj === null || typeof obj !== "object") return obj;
 
-    var temp = obj.constructor(); // changed
+  var temp = obj.constructor(); // changed
 
-    for (var key in obj)
-        temp[key] = clone(obj[key]);
-    return temp;
+  for (var key in obj)
+    temp[key] = clone(obj[key]);
+  return temp;
 }
 
 // export Crafty
-if (typeof define === 'function') { // AMD
-    define('crafty', [], function () { // jshint ignore:line
-        return Crafty;
-    });
+if (typeof define === "function") {
+  // AMD
+  define("crafty", [], function() {
+    // jshint ignore:line
+    return Crafty;
+  });
 }
 
 module.exports = Crafty;

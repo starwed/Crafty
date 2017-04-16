@@ -1,5 +1,4 @@
-var Crafty = require('../core/core.js'),
-    document = window.document;
+var Crafty = require("../core/core.js"), document = window.document;
 
 /**@
  * #DebugCanvas
@@ -17,32 +16,31 @@ var Crafty = require('../core/core.js'),
  * @see DebugPolygon,  DebugRectangle
  */
 Crafty.c("DebugCanvas", {
-    init: function () {
-        this.requires("2D");
-        if (!Crafty.DebugCanvas.context)
-            Crafty.DebugCanvas.init();
-        Crafty.DebugCanvas.add(this);
-        this._debug = {
-            alpha: 1.0,
-            lineWidth: 1
-        };
-        this.bind("RemoveComponent", this.onDebugRemove);
-        this.bind("Remove", this.onDebugDestroy);
-    },
+  init: function() {
+    this.requires("2D");
+    if (!Crafty.DebugCanvas.context) Crafty.DebugCanvas.init();
+    Crafty.DebugCanvas.add(this);
+    this._debug = {
+      alpha: 1.0,
+      lineWidth: 1
+    };
+    this.bind("RemoveComponent", this.onDebugRemove);
+    this.bind("Remove", this.onDebugDestroy);
+  },
 
-    // When component is removed
-    onDebugRemove: function (id) {
-        if (id === "DebugCanvas") {
-            Crafty.DebugCanvas.remove(this);
-        }
-    },
+  // When component is removed
+  onDebugRemove: function(id) {
+    if (id === "DebugCanvas") {
+      Crafty.DebugCanvas.remove(this);
+    }
+  },
 
-    //When entity is destroyed
-    onDebugDestroy: function (id) {
-        Crafty.DebugCanvas.remove(this);
-    },
+  //When entity is destroyed
+  onDebugDestroy: function(id) {
+    Crafty.DebugCanvas.remove(this);
+  },
 
-    /**@
+  /**@
      * #.debugAlpha
      * @comp DebugCanvas
      * @kind Method
@@ -50,12 +48,12 @@ Crafty.c("DebugCanvas", {
      * @sign public  .debugAlpha(Number alpha)
      * @param alpha - The alpha level the component will be drawn with
      */
-    debugAlpha: function (alpha) {
-        this._debug.alpha = alpha;
-        return this;
-    },
+  debugAlpha: function(alpha) {
+    this._debug.alpha = alpha;
+    return this;
+  },
 
-    /**@
+  /**@
      * #.debugFill
      * @comp DebugCanvas
      * @kind Method
@@ -67,14 +65,13 @@ Crafty.c("DebugCanvas", {
      * var myEntity = Crafty.e("2D, Collision, SolidHitBox ").debugFill("purple")
      * ~~~
      */
-    debugFill: function (fillStyle) {
-        if (typeof fillStyle === 'undefined')
-            fillStyle = "red";
-        this._debug.fillStyle = fillStyle;
-        return this;
-    },
+  debugFill: function(fillStyle) {
+    if (typeof fillStyle === "undefined") fillStyle = "red";
+    this._debug.fillStyle = fillStyle;
+    return this;
+  },
 
-    /**@
+  /**@
      * #.debugStroke
      * @comp DebugCanvas
      * @kind Method
@@ -86,39 +83,29 @@ Crafty.c("DebugCanvas", {
      * var myEntity = Crafty.e("2D, Collision, WiredHitBox ").debugStroke("white")
      * ~~~
      */
-    debugStroke: function (strokeStyle) {
-        if (typeof strokeStyle === 'undefined')
-            strokeStyle = "red";
-        this._debug.strokeStyle = strokeStyle;
-        return this;
-    },
+  debugStroke: function(strokeStyle) {
+    if (typeof strokeStyle === "undefined") strokeStyle = "red";
+    this._debug.strokeStyle = strokeStyle;
+    return this;
+  },
 
-    debugDraw: function (ctx) {
-        var ga = ctx.globalAlpha;
-        var props = this._debug;
+  debugDraw: function(ctx) {
+    var ga = ctx.globalAlpha;
+    var props = this._debug;
 
-        if (props.alpha)
-            ctx.globalAlpha = this._debug.alpha;
+    if (props.alpha) ctx.globalAlpha = this._debug.alpha;
 
-        if (props.strokeStyle)
-            ctx.strokeStyle = props.strokeStyle;
+    if (props.strokeStyle) ctx.strokeStyle = props.strokeStyle;
 
-        if (props.lineWidth)
-            ctx.lineWidth = props.lineWidth;
+    if (props.lineWidth) ctx.lineWidth = props.lineWidth;
 
-        if (props.fillStyle)
-            ctx.fillStyle = props.fillStyle;
+    if (props.fillStyle) ctx.fillStyle = props.fillStyle;
 
-        this.trigger("DebugDraw", ctx);
+    this.trigger("DebugDraw", ctx);
 
-        ctx.globalAlpha = ga;
-
-    }
-
-
+    ctx.globalAlpha = ga;
+  }
 });
-
-
 
 /**@
  * #DebugRectangle
@@ -137,11 +124,11 @@ Crafty.c("DebugCanvas", {
  * @see DebugCanvas
  */
 Crafty.c("DebugRectangle", {
-    init: function () {
-        this.requires("2D, DebugCanvas");
-    },
+  init: function() {
+    this.requires("2D, DebugCanvas");
+  },
 
-    /**@
+  /**@
      * #.debugRectangle
      * @comp DebugRectangle
      * @kind Method
@@ -152,33 +139,24 @@ Crafty.c("DebugRectangle", {
      * Sets the rectangle that this component draws to the debug canvas.
      *
      */
-    debugRectangle: function (rect) {
-        this.debugRect = rect;
-        this.unbind("DebugDraw", this.drawDebugRect);
-        this.bind("DebugDraw", this.drawDebugRect);
-        return this;
+  debugRectangle: function(rect) {
+    this.debugRect = rect;
+    this.unbind("DebugDraw", this.drawDebugRect);
+    this.bind("DebugDraw", this.drawDebugRect);
+    return this;
+  },
 
-    },
-
-    drawDebugRect: function (ctx) {
-
-        var rect = this.debugRect;
-        if (rect === null || rect === undefined)
-            return;
-        if (rect._h && rect._w) {
-            if (this._debug.fillStyle)
-                ctx.fillRect(rect._x, rect._y, rect._w, rect._h);
-            if (this._debug.strokeStyle)
-                ctx.strokeRect(rect._x, rect._y, rect._w, rect._h);
-        }
-
+  drawDebugRect: function(ctx) {
+    var rect = this.debugRect;
+    if (rect === null || rect === undefined) return;
+    if (rect._h && rect._w) {
+      if (this._debug.fillStyle)
+        ctx.fillRect(rect._x, rect._y, rect._w, rect._h);
+      if (this._debug.strokeStyle)
+        ctx.strokeRect(rect._x, rect._y, rect._w, rect._h);
     }
-
-
-
+  }
 });
-
-
 
 /**@
  * #VisibleMBR
@@ -191,24 +169,18 @@ Crafty.c("DebugRectangle", {
  * @see 2D, DebugRectangle, DebugCanvas
  */
 Crafty.c("VisibleMBR", {
-    init: function () {
-        this.requires("DebugRectangle")
-            .debugFill("purple")
-            .bind("EnterFrame", this._assignRect);
-    },
+  init: function() {
+    this.requires("DebugRectangle")
+      .debugFill("purple")
+      .bind("EnterFrame", this._assignRect);
+  },
 
-    // Internal method for updating the MBR drawn.
-    _assignRect: function () {
-        if (this._mbr)
-            this.debugRectangle(this._mbr);
-        else
-            this.debugRectangle(this);
-
-    }
-
-
+  // Internal method for updating the MBR drawn.
+  _assignRect: function() {
+    if (this._mbr) this.debugRectangle(this._mbr);
+    else this.debugRectangle(this);
+  }
 });
-
 
 /**@
  * #DebugPolygon
@@ -224,12 +196,11 @@ Crafty.c("VisibleMBR", {
  * @see DebugCanvas
  */
 Crafty.c("DebugPolygon", {
-    init: function () {
-        this.requires("2D, DebugCanvas");
-    },
+  init: function() {
+    this.requires("2D, DebugCanvas");
+  },
 
-
-    /**@
+  /**@
      * #.debugPolygon
      * @comp DebugPolygon
      * @kind Method
@@ -240,31 +211,27 @@ Crafty.c("DebugPolygon", {
      * Sets the polygon that this component renders to the debug canvas.
      *
      */
-    debugPolygon: function (poly) {
-        this.polygon = poly;
-        this.unbind("DebugDraw", this.drawDebugPolygon);
-        this.bind("DebugDraw", this.drawDebugPolygon);
-        return this;
-    },
+  debugPolygon: function(poly) {
+    this.polygon = poly;
+    this.unbind("DebugDraw", this.drawDebugPolygon);
+    this.bind("DebugDraw", this.drawDebugPolygon);
+    return this;
+  },
 
-    drawDebugPolygon: function (ctx) {
-        if (typeof this.polygon === "undefined")
-            return;
+  drawDebugPolygon: function(ctx) {
+    if (typeof this.polygon === "undefined") return;
 
-        ctx.beginPath();
-        var p = this.polygon.points, l = p.length;
-        for (var i=0; i<l; i+=2){
-            ctx.lineTo(p[i], p[i+1]);
-        }
-        ctx.closePath();
-
-        if (this._debug.fillStyle)
-            ctx.fill();
-        if (this._debug.strokeStyle)
-            ctx.stroke();
+    ctx.beginPath();
+    var p = this.polygon.points, l = p.length;
+    for (var i = 0; i < l; i += 2) {
+      ctx.lineTo(p[i], p[i + 1]);
     }
-});
+    ctx.closePath();
 
+    if (this._debug.fillStyle) ctx.fill();
+    if (this._debug.strokeStyle) ctx.stroke();
+  }
+});
 
 /**@
  * #WiredHitBox
@@ -277,15 +244,13 @@ Crafty.c("DebugPolygon", {
  * @see DebugPolygon, DebugCanvas
  */
 Crafty.c("WiredHitBox", {
-    init: function () {
-        this.requires("DebugPolygon")
-            .debugStroke("red")
-            .matchHitBox();
-        this.bind("NewHitbox", this.matchHitBox);
-    },
-    matchHitBox: function () {
-        this.debugPolygon(this.map);
-    }
+  init: function() {
+    this.requires("DebugPolygon").debugStroke("red").matchHitBox();
+    this.bind("NewHitbox", this.matchHitBox);
+  },
+  matchHitBox: function() {
+    this.debugPolygon(this.map);
+  }
 });
 
 /**@
@@ -299,15 +264,16 @@ Crafty.c("WiredHitBox", {
  * @see DebugPolygon, DebugCanvas
  */
 Crafty.c("SolidHitBox", {
-    init: function () {
-        this.requires("Collision, DebugPolygon")
-            .debugFill("orange").debugAlpha(0.7)
-            .matchHitBox();
-        this.bind("NewHitbox", this.matchHitBox);
-    },
-    matchHitBox: function () {
-        this.debugPolygon(this.map);
-    }
+  init: function() {
+    this.requires("Collision, DebugPolygon")
+      .debugFill("orange")
+      .debugAlpha(0.7)
+      .matchHitBox();
+    this.bind("NewHitbox", this.matchHitBox);
+  },
+  matchHitBox: function() {
+    this.debugPolygon(this.map);
+  }
 });
 
 /**@
@@ -322,15 +288,13 @@ Crafty.c("SolidHitBox", {
  * @see DebugPolygon, DebugCanvas
  */
 Crafty.c("WiredAreaMap", {
-    init: function () {
-        this.requires("DebugPolygon")
-            .debugStroke("green")
-            .matchAreaMap();
-        this.bind("NewAreaMap", this.matchAreaMap);
-    },
-    matchAreaMap: function () {
-        this.debugPolygon(this.mapArea);
-    }
+  init: function() {
+    this.requires("DebugPolygon").debugStroke("green").matchAreaMap();
+    this.bind("NewAreaMap", this.matchAreaMap);
+  },
+  matchAreaMap: function() {
+    this.debugPolygon(this.mapArea);
+  }
 });
 
 /**@
@@ -345,99 +309,105 @@ Crafty.c("WiredAreaMap", {
  * @see DebugPolygon, DebugCanvas
  */
 Crafty.c("SolidAreaMap", {
-    init: function () {
-        this.requires("DebugPolygon")
-            .debugFill("lime").debugAlpha(0.7)
-            .matchAreaMap();
-        this.bind("NewAreaMap", this.matchAreaMap);
-    },
-    matchAreaMap: function () {
-        this.debugPolygon(this.mapArea);
-    }
+  init: function() {
+    this.requires("DebugPolygon")
+      .debugFill("lime")
+      .debugAlpha(0.7)
+      .matchAreaMap();
+    this.bind("NewAreaMap", this.matchAreaMap);
+  },
+  matchAreaMap: function() {
+    this.debugPolygon(this.mapArea);
+  }
 });
 
 Crafty.DebugCanvas = {
-    context: null,
-    entities: [],
-    onetimeEntities: [],
-    add: function (ent) {
-        this.entities.push(ent);
-    },
+  context: null,
+  entities: [],
+  onetimeEntities: [],
+  add: function(ent) {
+    this.entities.push(ent);
+  },
 
-    remove: function (ent) {
-        var list = this.entities;
-        for (var i = list.length - 1; i >= 0; i--)
-            if (list[i] === ent)
-                list.splice(i, 1);
+  remove: function(ent) {
+    var list = this.entities;
+    for (var i = list.length - 1; i >= 0; i--)
+      if (list[i] === ent) list.splice(i, 1);
+  },
 
-    },
+  // Mostly copied from canvas.init()
+  // Called the first time a "DebugCanvas" component is added to an entity
+  // We should consider how to abstract the idea of multiple canvases
+  init: function() {
+    if (!Crafty.DebugCanvas.context) {
+      //check if canvas is supported
+      if (!Crafty.support.canvas) {
+        Crafty.trigger("NoCanvas");
+        Crafty.stop();
+        return;
+      }
 
-    // Mostly copied from canvas.init()
-    // Called the first time a "DebugCanvas" component is added to an entity
-    // We should consider how to abstract the idea of multiple canvases
-    init: function () {
-        if (!Crafty.DebugCanvas.context) {
-            //check if canvas is supported
-            if (!Crafty.support.canvas) {
-                Crafty.trigger("NoCanvas");
-                Crafty.stop();
-                return;
-            }
+      //create an empty canvas element
+      var c;
+      c = document.createElement("canvas");
+      c.width = Crafty.viewport.width;
+      c.height = Crafty.viewport.height;
+      c.style.position = "absolute";
+      c.style.left = "0px";
+      c.style.top = "0px";
+      c.id = "debug-canvas";
+      // The debug canvas should be on the very top; the highest a regular zindex can get is ~10000
+      c.style.zIndex = 100000;
 
-            //create an empty canvas element
-            var c;
-            c = document.createElement("canvas");
-            c.width = Crafty.viewport.width;
-            c.height = Crafty.viewport.height;
-            c.style.position = 'absolute';
-            c.style.left = "0px";
-            c.style.top = "0px";
-            c.id = "debug-canvas";
-            // The debug canvas should be on the very top; the highest a regular zindex can get is ~10000
-            c.style.zIndex = 100000;
-
-            Crafty.stage.elem.appendChild(c);
-            Crafty.DebugCanvas.context = c.getContext('2d');
-            Crafty.DebugCanvas._canvas = c;
-
-
-
-        }
-        //Bind rendering of canvas context (see drawing.js)
-        Crafty.unbind("RenderScene", Crafty.DebugCanvas.renderScene);
-        Crafty.bind("RenderScene", Crafty.DebugCanvas.renderScene);
-
-    },
-
-
-    // copied from drawAll()
-    renderScene: function (rect) {
-        rect = rect || Crafty.viewport.rect();
-        var q = Crafty.DebugCanvas.entities,
-            i = 0,
-            l = q.length,
-            ctx = Crafty.DebugCanvas.context,
-            current;
-
-        var view = Crafty.viewport;
-        ctx.setTransform(view._scale, 0, 0, view._scale, Math.round(view._x*view._scale), Math.round(view._y*view._scale));
-
-        ctx.clearRect(rect._x, rect._y, rect._w, rect._h);
-
-        var lastLayer = null;
-        for (; i < l; i++) {
-            current = q[i];
-
-            // If necessary, update the view transform to match the current entities layer
-            if (lastLayer !== current._drawlayer){
-                view = current._drawLayer._viewportRect();
-                ctx.setTransform(view._scale, 0, 0, view._scale, Math.round(-view._x*view._scale), Math.round(-view._y*view._scale));
-                lastLayer = current._drawLayer;
-            }
-
-            current.debugDraw(ctx);
-        }
-
+      Crafty.stage.elem.appendChild(c);
+      Crafty.DebugCanvas.context = c.getContext("2d");
+      Crafty.DebugCanvas._canvas = c;
     }
+    //Bind rendering of canvas context (see drawing.js)
+    Crafty.unbind("RenderScene", Crafty.DebugCanvas.renderScene);
+    Crafty.bind("RenderScene", Crafty.DebugCanvas.renderScene);
+  },
 
+  // copied from drawAll()
+  renderScene: function(rect) {
+    rect = rect || Crafty.viewport.rect();
+    var q = Crafty.DebugCanvas.entities,
+      i = 0,
+      l = q.length,
+      ctx = Crafty.DebugCanvas.context,
+      current;
+
+    var view = Crafty.viewport;
+    ctx.setTransform(
+      view._scale,
+      0,
+      0,
+      view._scale,
+      Math.round(view._x * view._scale),
+      Math.round(view._y * view._scale)
+    );
+
+    ctx.clearRect(rect._x, rect._y, rect._w, rect._h);
+
+    var lastLayer = null;
+    for (; i < l; i++) {
+      current = q[i];
+
+      // If necessary, update the view transform to match the current entities layer
+      if (lastLayer !== current._drawlayer) {
+        view = current._drawLayer._viewportRect();
+        ctx.setTransform(
+          view._scale,
+          0,
+          0,
+          view._scale,
+          Math.round(-view._x * view._scale),
+          Math.round(-view._y * view._scale)
+        );
+        lastLayer = current._drawLayer;
+      }
+
+      current.debugDraw(ctx);
+    }
+  }
 };

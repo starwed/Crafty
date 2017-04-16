@@ -1,5 +1,4 @@
-var Crafty = require('../core/core.js');
-
+var Crafty = require("../core/core.js");
 
 /**@
  * #Model
@@ -40,8 +39,8 @@ var Crafty = require('../core/core.js');
 module.exports = {
   init: function() {
     this.changed = [];
-    this.bind('Change', this._changed_attributes);
-    this.bind('Change', this._changed_triggers);
+    this.bind("Change", this._changed_attributes);
+    this.bind("Change", this._changed_triggers);
   },
 
   /**
@@ -52,12 +51,12 @@ module.exports = {
    */
   _changed_triggers: function(data, options) {
     var key;
-    options = Crafty.extend.call({pre: ''}, options);
+    options = Crafty.extend.call({ pre: "" }, options);
     for (key in data) {
-      this.trigger('Change[' + options.pre + key + ']', data[key]);
+      this.trigger("Change[" + options.pre + key + "]", data[key]);
       if (data[key].constructor === Object) {
         this._changed_triggers(data[key], {
-          pre: options.pre + key + '.'
+          pre: options.pre + key + "."
         });
       }
     }
@@ -103,4 +102,3 @@ module.exports = {
     }
   }
 };
-

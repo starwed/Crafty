@@ -1,5 +1,4 @@
-var Crafty = require('../core/core.js');
-
+var Crafty = require("../core/core.js");
 
 /**@
  * #HTML
@@ -11,13 +10,13 @@ var Crafty = require('../core/core.js');
  * Adding this to an entity will automatically add the `DOM` component.
  */
 Crafty.c("HTML", {
-    inner: '',
+  inner: "",
 
-    init: function () {
-        this.requires('2D, DOM');
-    },
+  init: function() {
+    this.requires("2D, DOM");
+  },
 
-    /**@
+  /**@
      * #.replace
      * @comp HTML
      * @kind Method
@@ -35,13 +34,13 @@ Crafty.c("HTML", {
      *    .replace("<a href='index.html'>Index</a>");
      * ~~~
      */
-    replace: function (new_html) {
-        this.inner = new_html;
-        this._element.innerHTML = new_html;
-        return this;
-    },
+  replace: function(new_html) {
+    this.inner = new_html;
+    this._element.innerHTML = new_html;
+    return this;
+  },
 
-    /**@
+  /**@
      * #.append
      * @comp HTML
      * @kind Method
@@ -59,13 +58,13 @@ Crafty.c("HTML", {
      *    .append("<a href='index.html'>Index</a>");
      * ~~~
      */
-    append: function (new_html) {
-        this.inner += new_html;
-        this._element.innerHTML += new_html;
-        return this;
-    },
+  append: function(new_html) {
+    this.inner += new_html;
+    this._element.innerHTML += new_html;
+    return this;
+  },
 
-    /**@
+  /**@
      * #.prepend
      * @comp HTML
      * @kind Method
@@ -83,9 +82,9 @@ Crafty.c("HTML", {
      *    .prepend("<a href='index.html'>Index</a>");
      * ~~~
      */
-    prepend: function (new_html) {
-        this.inner = new_html + this.inner;
-        this._element.innerHTML = new_html + this.inner;
-        return this;
-    }
+  prepend: function(new_html) {
+    this.inner = new_html + this.inner;
+    this._element.innerHTML = new_html + this.inner;
+    return this;
+  }
 });

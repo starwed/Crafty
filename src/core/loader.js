@@ -1,7 +1,7 @@
-var Crafty = require('../core/core.js');
+var Crafty = require("../core/core.js");
 
 module.exports = {
-    /**@
+  /**@
      * #Crafty.assets
      * @category Assets
      * @kind Property
@@ -17,9 +17,9 @@ module.exports = {
      * ~~~
      * @see Crafty.load
      */
-    assets: {},
-    __paths: { audio: "", images: "" },
-    /**@
+  assets: {},
+  __paths: { audio: "", images: "" },
+  /**@
      * #Crafty.paths
      * @category Assets
      * @kind Method
@@ -54,18 +54,16 @@ module.exports = {
      *
      * @see Crafty.load
      */
-    paths: function(p) {
-        if (typeof p === "undefined") {
-            return this.__paths;
-        } else {
-            if(p.audio)
-                this.__paths.audio = p.audio;
-            if(p.images)
-                this.__paths.images = p.images;
-        }
-    },
+  paths: function(p) {
+    if (typeof p === "undefined") {
+      return this.__paths;
+    } else {
+      if (p.audio) this.__paths.audio = p.audio;
+      if (p.images) this.__paths.images = p.images;
+    }
+  },
 
-    /**@
+  /**@
      * #Crafty.asset
      * @category Assets
      * @kind Method
@@ -91,21 +89,21 @@ module.exports = {
      *
      * @see Crafty.assets
      */
-    asset: function (key, value) {
-        if (arguments.length === 1) {
-            return Crafty.assets[key];
-        }
+  asset: function(key, value) {
+    if (arguments.length === 1) {
+      return Crafty.assets[key];
+    }
 
-        if (!Crafty.assets[key]) {
-            Crafty.assets[key] = value;
-            this.trigger("NewAsset", {
-                key: key,
-                value: value
-            });
-            return value;
-        }
-    },
-    /**@
+    if (!Crafty.assets[key]) {
+      Crafty.assets[key] = value;
+      this.trigger("NewAsset", {
+        key: key,
+        value: value
+      });
+      return value;
+    }
+  },
+  /**@
      * #Crafty.imageWhitelist
      * @category Assets
      * @kind Method
@@ -147,8 +145,8 @@ module.exports = {
      * @see Crafty.asset
      * @see Crafty.load
      */
-    imageWhitelist: ["jpg", "jpeg", "gif", "png", "svg"],
-    /**@
+  imageWhitelist: ["jpg", "jpeg", "gif", "png", "svg"],
+  /**@
      * #Crafty.load
      * @category Assets
      * @kind Method
@@ -235,137 +233,155 @@ module.exports = {
      * @see Crafty.imageWhitelist
      * @see Crafty.removeAssets
      */
-    load: function (data, oncomplete, onprogress, onerror) {
+  load: function(data, oncomplete, onprogress, onerror) {
+    if (Array.isArray(data)) {
+      Crafty.log(
+        "Calling Crafty.load with an array of assets no longer works; see the docs for more details."
+      );
+      return;
+    }
 
-        if (Array.isArray(data)) {
-            Crafty.log("Calling Crafty.load with an array of assets no longer works; see the docs for more details.");
-            return;
-        }
+    data = typeof data === "string" ? JSON.parse(data) : data;
 
-        data = (typeof data === "string" ? JSON.parse(data) : data);
+    var j = 0,
+      total =
+        (data.audio ? Object.keys(data.audio).length : 0) +
+        (data.images ? Object.keys(data.images).length : 0) +
+        (data.sprites ? Object.keys(data.sprites).length : 0),
+      current,
+      fileUrl,
+      obj,
+      type,
+      asset,
+      paths = Crafty.paths(),
+      getExt = function(f) {
+        return f.substr(f.lastIndexOf(".") + 1).toLowerCase();
+      },
+      getFilePath = function(type, f) {
+        return f.search("://") === -1
+          ? type === "audio" ? paths.audio + f : paths.images + f
+          : f;
+      },
+      // returns null if 'a' is not already a loaded asset, obj otherwise
+      isAsset = function(a) {
+        return Crafty.asset(a) || null;
+      },
+      isSupportedAudio = function(f) {
+        return Crafty.support.audio && Crafty.audio.supports(getExt(f));
+      },
+      isValidImage = function(f) {
+        return Crafty.imageWhitelist.indexOf(getExt(f)) !== -1;
+      },
+      onImgLoad = function(obj, url) {
+        obj.onload = pro;
+        if (Crafty.support.prefix === "webkit") obj.src = ""; // workaround for webkit bug
+        obj.src = url;
+      };
 
-        var j = 0,
-            total = (data.audio ? Object.keys(data.audio).length : 0) +
-                (data.images ? Object.keys(data.images).length : 0) +
-                (data.sprites ? Object.keys(data.sprites).length : 0),
-            current, fileUrl, obj, type, asset,
-            paths = Crafty.paths(),
-            getExt = function(f) {
-                return f.substr(f.lastIndexOf('.') + 1).toLowerCase();
-            },
-            getFilePath = function(type,f) {
-                return (f.search("://") === -1 ? (type === "audio" ? paths.audio + f : paths.images + f) : f);
-            },
-            // returns null if 'a' is not already a loaded asset, obj otherwise
-            isAsset = function(a) {
-                return Crafty.asset(a) || null;
-            },
-            isSupportedAudio = function(f) {
-                return Crafty.support.audio && Crafty.audio.supports(getExt(f));
-            },
-            isValidImage = function(f) {
-                return Crafty.imageWhitelist.indexOf(getExt(f)) !== -1;
-            },
-            onImgLoad = function(obj,url) {
-                obj.onload = pro;
-                if (Crafty.support.prefix === 'webkit')
-                    obj.src = ""; // workaround for webkit bug
-                obj.src = url;
-            };
+    //Progress function
 
-        //Progress function
+    function pro() {
+      var src = this.src;
 
-        function pro() {
-            var src = this.src;
+      //Remove events cause audio trigger this event more than once(depends on browser)
+      if (this.removeEventListener)
+        this.removeEventListener("canplaythrough", pro, false);
 
-            //Remove events cause audio trigger this event more than once(depends on browser)
-            if (this.removeEventListener)
-                this.removeEventListener('canplaythrough', pro, false);
+      j++;
+      //if progress callback, give information of assets loaded, total and percent
+      if (onprogress)
+        onprogress({
+          loaded: j,
+          total: total,
+          percent: j / total * 100,
+          src: src
+        });
 
-            j++;
-            //if progress callback, give information of assets loaded, total and percent
-            if (onprogress)
-                onprogress({
-                    loaded: j,
-                    total: total,
-                    percent: (j / total * 100),
-                    src: src
-                });
+      if (j === total && oncomplete) oncomplete();
+    }
+    //Error function
 
-            if (j === total && oncomplete) oncomplete();
-        }
-        //Error function
+    function err() {
+      var src = this.src;
+      if (onerror)
+        onerror({
+          loaded: j,
+          total: total,
+          percent: j / total * 100,
+          src: src
+        });
 
-        function err() {
-            var src = this.src;
-            if (onerror)
-                onerror({
-                    loaded: j,
-                    total: total,
-                    percent: (j / total * 100),
-                    src: src
-                });
+      j++;
+      if (j === total && oncomplete) oncomplete();
+    }
 
-            j++;
-            if (j === total && oncomplete) oncomplete();
-        }
+    for (type in data) {
+      for (asset in data[type]) {
+        if (!data[type].hasOwnProperty(asset)) continue; // maintain compatibility to other frameworks while iterating array
 
-        for (type in data) {
-            for(asset in data[type]) {
-                if (!data[type].hasOwnProperty(asset))
-                    continue; // maintain compatibility to other frameworks while iterating array
+        current = data[type][asset];
+        obj = null;
 
-                current = data[type][asset];
-                obj = null;
-
-                if (type === "audio") {
-                    if (typeof current === "object") {
-                        var files = [];
-                        for (var i in current) {
-                            fileUrl = getFilePath(type, current[i]);
-                            if (!isAsset(fileUrl) && isSupportedAudio(current[i]) && !Crafty.audio.sounds[asset])
-                                files.push(fileUrl);
-                        }
-                        if (files.length > 0)
-                            obj = Crafty.audio.add(asset, files);
-                    } else if (typeof current === "string") {
-                        fileUrl = getFilePath(type, current);
-                        if (!isAsset(fileUrl) && isSupportedAudio(current) && !Crafty.audio.sounds[asset])
-                            obj = Crafty.audio.add(asset, fileUrl);
-                    }
-                    //extract actual audio obj if audio creation was successfull
-                    if (obj)
-                        obj = obj.obj;
-
-                    //addEventListener is supported on IE9 , Audio as well
-                    if (obj && obj.addEventListener)
-                        obj.addEventListener('canplaythrough', pro, false);
-                } else {
-                    asset = (type === "sprites" ? asset : current);
-                    fileUrl = getFilePath(type, asset);
-                    if (!isAsset(fileUrl) && isValidImage(asset)) {
-                        obj = new Image();
-                        if (type === "sprites")
-                            Crafty.sprite(current.tile, current.tileh, fileUrl, current.map,
-                              current.paddingX, current.paddingY, current.paddingAroundBorder);
-                        Crafty.asset(fileUrl, obj);
-                        onImgLoad(obj, fileUrl);
-                    }
-                }
-
-                if (obj) {
-                    obj.onerror = err;
-                } else {
-                    err.call({src: fileUrl});
-                }
+        if (type === "audio") {
+          if (typeof current === "object") {
+            var files = [];
+            for (var i in current) {
+              fileUrl = getFilePath(type, current[i]);
+              if (
+                !isAsset(fileUrl) &&
+                isSupportedAudio(current[i]) &&
+                !Crafty.audio.sounds[asset]
+              )
+                files.push(fileUrl);
             }
+            if (files.length > 0) obj = Crafty.audio.add(asset, files);
+          } else if (typeof current === "string") {
+            fileUrl = getFilePath(type, current);
+            if (
+              !isAsset(fileUrl) &&
+              isSupportedAudio(current) &&
+              !Crafty.audio.sounds[asset]
+            )
+              obj = Crafty.audio.add(asset, fileUrl);
+          }
+          //extract actual audio obj if audio creation was successfull
+          if (obj) obj = obj.obj;
+
+          //addEventListener is supported on IE9 , Audio as well
+          if (obj && obj.addEventListener)
+            obj.addEventListener("canplaythrough", pro, false);
+        } else {
+          asset = type === "sprites" ? asset : current;
+          fileUrl = getFilePath(type, asset);
+          if (!isAsset(fileUrl) && isValidImage(asset)) {
+            obj = new Image();
+            if (type === "sprites")
+              Crafty.sprite(
+                current.tile,
+                current.tileh,
+                fileUrl,
+                current.map,
+                current.paddingX,
+                current.paddingY,
+                current.paddingAroundBorder
+              );
+            Crafty.asset(fileUrl, obj);
+            onImgLoad(obj, fileUrl);
+          }
         }
 
-        // If we aren't trying to handle *any* of the files, that's as complete as it gets!
-        if (total === 0 && oncomplete) oncomplete();
+        if (obj) {
+          obj.onerror = err;
+        } else {
+          err.call({ src: fileUrl });
+        }
+      }
+    }
 
-    },
-    /**@
+    // If we aren't trying to handle *any* of the files, that's as complete as it gets!
+    if (total === 0 && oncomplete) oncomplete();
+  },
+  /**@
      * #Crafty.removeAssets
      * @category Assets
      * @kind Method
@@ -414,47 +430,47 @@ module.exports = {
      *
      * @see Crafty.load
      */
-    removeAssets: function(data) {
+  removeAssets: function(data) {
+    data = typeof data === "string" ? JSON.parse(data) : data;
 
-        data = (typeof data === "string" ? JSON.parse(data) : data);
+    var current,
+      fileUrl,
+      type,
+      asset,
+      paths = Crafty.paths(),
+      getFilePath = function(type, f) {
+        return f.search("://") === -1
+          ? type === "audio" ? paths.audio + f : paths.images + f
+          : f;
+      };
 
-        var current, fileUrl, type, asset,
-            paths = Crafty.paths(),
-            getFilePath = function(type,f) {
-                return (f.search("://") === -1 ? (type === "audio" ? paths.audio + f : paths.images + f) : f);
-            };
+    for (type in data) {
+      for (asset in data[type]) {
+        if (!data[type].hasOwnProperty(asset)) continue; // maintain compatibility to other frameworks while iterating array
 
-        for (type in data) {
-            for (asset in data[type]) {
-                if (!data[type].hasOwnProperty(asset))
-                    continue; // maintain compatibility to other frameworks while iterating array
+        current = data[type][asset];
 
-                current = data[type][asset];
-
-                if (type === "audio") {
-                    if (typeof current === "object") {
-                        for (var i in current) {
-                            fileUrl = getFilePath(type, current[i]);
-                            if (Crafty.asset(fileUrl))
-                                Crafty.audio.remove(asset);
-                        }
-                    }
-                    else if (typeof current === "string") {
-                        fileUrl = getFilePath(type, current);
-                        if (Crafty.asset(fileUrl))
-                            Crafty.audio.remove(asset);
-                    }
-                } else {
-                    asset = (type === "sprites" ? asset : current);
-                    fileUrl = getFilePath(type, asset);
-                    if (Crafty.asset(fileUrl)) {
-                        if (type === "sprites")
-                            for (var comp in current.map)
-                                delete Crafty.components()[comp];
-                        delete Crafty.assets[fileUrl];
-                    }
-                }
+        if (type === "audio") {
+          if (typeof current === "object") {
+            for (var i in current) {
+              fileUrl = getFilePath(type, current[i]);
+              if (Crafty.asset(fileUrl)) Crafty.audio.remove(asset);
             }
+          } else if (typeof current === "string") {
+            fileUrl = getFilePath(type, current);
+            if (Crafty.asset(fileUrl)) Crafty.audio.remove(asset);
+          }
+        } else {
+          asset = type === "sprites" ? asset : current;
+          fileUrl = getFilePath(type, asset);
+          if (Crafty.asset(fileUrl)) {
+            if (type === "sprites")
+              for (var comp in current.map)
+                delete Crafty.components()[comp];
+            delete Crafty.assets[fileUrl];
+          }
         }
+      }
     }
+  }
 };

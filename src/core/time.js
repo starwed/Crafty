@@ -8,37 +8,36 @@
  * This syncs with Crafty's internal clock, and so should generally be preferred to using methods such as `setTimeout`.
  */
 module.exports = {
-    init: function () {
-        this._delays = [];
-        this._delaysPaused = false;
-        this.bind("EnterFrame", function (frameData) {
-            if (this._delaysPaused) return;
-            var index = this._delays.length;
-            while (--index >= 0) {
-                var item = this._delays[index];
-                if (item === false) {
-                    // remove canceled item from array
-                    this._delays.splice(index, 1);
-                } else {
-                    item.accumulator+=frameData.dt;
-                    // The while loop handles the (pathological) case where dt>delay
-                    while(item.accumulator >= item.delay && item.repeat >= 0){
-                        item.accumulator -= item.delay;
-                        item.repeat--;
-                        item.callback.call(this);
-                    }
-                    // remove finished item from array
-                    if (item.repeat<0){
-                        this._delays.splice(index, 1);
-                        if(typeof item.callbackOff === "function")
-                            item.callbackOff.call(this);
-                    }
-                }
-            }
-        });
-
-    },
-    /**@
+  init: function() {
+    this._delays = [];
+    this._delaysPaused = false;
+    this.bind("EnterFrame", function(frameData) {
+      if (this._delaysPaused) return;
+      var index = this._delays.length;
+      while (--index >= 0) {
+        var item = this._delays[index];
+        if (item === false) {
+          // remove canceled item from array
+          this._delays.splice(index, 1);
+        } else {
+          item.accumulator += frameData.dt;
+          // The while loop handles the (pathological) case where dt>delay
+          while (item.accumulator >= item.delay && item.repeat >= 0) {
+            item.accumulator -= item.delay;
+            item.repeat--;
+            item.callback.call(this);
+          }
+          // remove finished item from array
+          if (item.repeat < 0) {
+            this._delays.splice(index, 1);
+            if (typeof item.callbackOff === "function")
+              item.callbackOff.call(this);
+          }
+        }
+      }
+    });
+  },
+  /**@
      * #.delay
      * @comp Delay
      * @kind Method
@@ -81,17 +80,17 @@ module.exports = {
      * ~~~
      *
      */
-    delay: function (callback, delay, repeat, callbackOff) {
-        this._delays.push({
-            accumulator: 0,
-            callback: callback,
-            callbackOff: callbackOff,
-            delay: delay,
-            repeat: (repeat < 0 ? Infinity : repeat) || 0,
-        });
-        return this;
-    },
-    /**@
+  delay: function(callback, delay, repeat, callbackOff) {
+    this._delays.push({
+      accumulator: 0,
+      callback: callback,
+      callbackOff: callbackOff,
+      delay: delay,
+      repeat: (repeat < 0 ? Infinity : repeat) || 0
+    });
+    return this;
+  },
+  /**@
      * #.cancelDelay
      * @comp Delay
      * @kind Method
@@ -114,17 +113,17 @@ module.exports = {
      * ent.cancelDelay(doSomething);
      * ~~~
      */
-    cancelDelay: function (callback) {
-        var index = this._delays.length;
-        while (--index >= 0) {
-            var item = this._delays[index];
-            if(item && item.callback === callback){
-                this._delays[index] = false;
-            }
-        }
-        return this;
-    },
-    /**@
+  cancelDelay: function(callback) {
+    var index = this._delays.length;
+    while (--index >= 0) {
+      var item = this._delays[index];
+      if (item && item.callback === callback) {
+        this._delays[index] = false;
+      }
+    }
+    return this;
+  },
+  /**@
      * #.pauseDelays
      * @comp Delay
      * @kind Method
@@ -147,10 +146,10 @@ module.exports = {
      * ent.pauseDelays();
      * ~~~
      */
-    pauseDelays: function() {
-        this._delaysPaused = true;
-    },
-    /**@
+  pauseDelays: function() {
+    this._delaysPaused = true;
+  },
+  /**@
      * #.resumeDelays
      * @comp Delay
      * @kind Method
@@ -177,7 +176,7 @@ module.exports = {
      * ent.resumeDelays();
      * ~~~
      */
-    resumeDelays: function() {
-        this._delaysPaused = false;
-    }
+  resumeDelays: function() {
+    this._delaysPaused = false;
+  }
 };

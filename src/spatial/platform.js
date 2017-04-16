@@ -1,4 +1,4 @@
-var Crafty = require('../core/core.js');
+var Crafty = require("../core/core.js");
 
 /**@
  * #Supportable
@@ -13,7 +13,7 @@ var Crafty = require('../core/core.js');
  * The appropriate events are fired when the entity state changes (lands on ground / lifts off ground). The current ground entity can also be accessed with `.ground`.
  */
 Crafty.c("Supportable", {
-    /**@
+  /**@
      * #.ground
      * @comp Supportable
      * @kind Property
@@ -21,11 +21,11 @@ Crafty.c("Supportable", {
      * Access the ground entity (which may be the actual ground entity if it exists, or `null` if it doesn't exist) and thus whether this entity is currently on the ground or not. 
      * The ground entity is also available through the events, when the ground entity changes.
      */
-    _ground: null,
-    _groundComp: null,
-    _preventGroundTunneling: false,
+  _ground: null,
+  _groundComp: null,
+  _preventGroundTunneling: false,
 
-    /**@
+  /**@
      * #.canLand
      * @comp Supportable
      * @kind Property
@@ -44,18 +44,24 @@ Crafty.c("Supportable", {
      * });
      * ~~~
      */
-    canLand: true,
+  canLand: true,
 
-    init: function () {
-        this.requires("2D");
-        this.__area = {_x: 0, _y: 0, _w: 0, _h: 0};
-        this.defineField("ground", function() { return this._ground; }, function(newValue) {});
-    },
-    remove: function(destroyed) {
-        this.unbind("EnterFrame", this._detectGroundTick);
-    },
+  init: function() {
+    this.requires("2D");
+    this.__area = { _x: 0, _y: 0, _w: 0, _h: 0 };
+    this.defineField(
+      "ground",
+      function() {
+        return this._ground;
+      },
+      function(newValue) {}
+    );
+  },
+  remove: function(destroyed) {
+    this.unbind("EnterFrame", this._detectGroundTick);
+  },
 
-    /*@
+  /*@
      * #.startGroundDetection
      * @comp Supportable
      * @kind Method
@@ -80,13 +86,13 @@ Crafty.c("Supportable", {
      *
      * @see Gravity
      */
-    startGroundDetection: function(ground) {
-        if (ground) this._groundComp = ground;
-        this.uniqueBind("EnterFrame", this._detectGroundTick);
+  startGroundDetection: function(ground) {
+    if (ground) this._groundComp = ground;
+    this.uniqueBind("EnterFrame", this._detectGroundTick);
 
-        return this;
-    },
-    /*@
+    return this;
+  },
+  /*@
      * #.stopGroundDetection
      * @comp Supportable
      * @kind Method
@@ -97,13 +103,13 @@ Crafty.c("Supportable", {
      *
      * Disable ground detection for this component. It can be reenabled by calling .startGroundDetection()
      */
-    stopGroundDetection: function() {
-        this.unbind("EnterFrame", this._detectGroundTick);
+  stopGroundDetection: function() {
+    this.unbind("EnterFrame", this._detectGroundTick);
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.preventGroundTunneling
      * @comp Supportable
      * @kind Method
@@ -117,78 +123,80 @@ Crafty.c("Supportable", {
      *
      * @see Motion#.ccdbr
      */
-    preventGroundTunneling: function(enable) {
-        if (typeof enable === 'undefined')
-            enable = true;
-        if (enable)
-            this.requires("Motion");
-        this._preventGroundTunneling = enable;
+  preventGroundTunneling: function(enable) {
+    if (typeof enable === "undefined") enable = true;
+    if (enable) this.requires("Motion");
+    this._preventGroundTunneling = enable;
 
-        return this;
-    },
+    return this;
+  },
 
-    _detectGroundTick: function() {
-        var groundComp = this._groundComp,
-            ground = this._ground,
-            overlap = Crafty.rectManager.overlap,
-            area;
+  _detectGroundTick: function() {
+    var groundComp = this._groundComp,
+      ground = this._ground,
+      overlap = Crafty.rectManager.overlap,
+      area;
 
-        if (!this._preventGroundTunneling) {
-            var pos = this._cbr || this._mbr || this;
-            area = this.__area;
-            area._x = pos._x;
-            area._y = pos._y;
-            area._w = pos._w;
-            area._h = pos._h;
-        } else {
-            area = this.ccdbr(this.__area);
-        }
-        area._h++; // Increase by 1 to make sure map.search() finds the floor
-        // Decrease width by 1px from left and 1px from right, to fall more gracefully
-        // area._x++; area._w--;
-
-
-        // check if we lift-off
-        if (ground) {
-            var garea = ground._cbr || ground._mbr || ground;
-            if (!(ground.__c[groundComp] && Crafty(ground[0]) === ground && overlap(garea, area))) {
-                this._ground = null;
-                this.trigger("LiftedOffGround", ground); // no collision with ground was detected for first time
-                ground = null;
-            }
-        }
-
-        // check if we land (also possible to land on other ground object in same frame after lift-off from current ground object)
-        if (!ground) {
-            var obj, oarea,
-                results = Crafty.map.search(area, false),
-                i = 0,
-                l = results.length;
-
-            for (; i < l; ++i) {
-                obj = results[i];
-                oarea = obj._cbr || obj._mbr || obj;
-                // check for an intersection with the player
-                if (obj !== this && obj.__c[groundComp] && overlap(oarea, area)) {
-                    this.canLand = true;
-                    this.trigger("CheckLanding", obj); // is entity allowed to land?
-                    if (this.canLand) {
-                        this._ground = ground = obj;
-
-                        // snap entity to ground object
-                        this.y = ground._y - this._h;
-                        if (this._x > ground._x + ground._w)
-                            this.x = ground._x + ground._w - 1;
-                        else if (this._x + this._w < ground._x)
-                            this.x = ground._x - this._w + 1;
-
-                        this.trigger("LandedOnGround", ground); // collision with ground was detected for first time
-                        break;
-                    }
-                }
-            }
-        }
+    if (!this._preventGroundTunneling) {
+      var pos = this._cbr || this._mbr || this;
+      area = this.__area;
+      area._x = pos._x;
+      area._y = pos._y;
+      area._w = pos._w;
+      area._h = pos._h;
+    } else {
+      area = this.ccdbr(this.__area);
     }
+    area._h++; // Increase by 1 to make sure map.search() finds the floor
+    // Decrease width by 1px from left and 1px from right, to fall more gracefully
+    // area._x++; area._w--;
+
+    // check if we lift-off
+    if (ground) {
+      var garea = ground._cbr || ground._mbr || ground;
+      if (
+        !(ground.__c[groundComp] &&
+          Crafty(ground[0]) === ground &&
+          overlap(garea, area))
+      ) {
+        this._ground = null;
+        this.trigger("LiftedOffGround", ground); // no collision with ground was detected for first time
+        ground = null;
+      }
+    }
+
+    // check if we land (also possible to land on other ground object in same frame after lift-off from current ground object)
+    if (!ground) {
+      var obj,
+        oarea,
+        results = Crafty.map.search(area, false),
+        i = 0,
+        l = results.length;
+
+      for (; i < l; ++i) {
+        obj = results[i];
+        oarea = obj._cbr || obj._mbr || obj;
+        // check for an intersection with the player
+        if (obj !== this && obj.__c[groundComp] && overlap(oarea, area)) {
+          this.canLand = true;
+          this.trigger("CheckLanding", obj); // is entity allowed to land?
+          if (this.canLand) {
+            this._ground = ground = obj;
+
+            // snap entity to ground object
+            this.y = ground._y - this._h;
+            if (this._x > ground._x + ground._w)
+              this.x = ground._x + ground._w - 1;
+            else if (this._x + this._w < ground._x)
+              this.x = ground._x - this._w + 1;
+
+            this.trigger("LandedOnGround", ground); // collision with ground was detected for first time
+            break;
+          }
+        }
+      }
+    }
+  }
 });
 
 /**@
@@ -210,25 +218,24 @@ Crafty.c("Supportable", {
  * @see Supportable, Gravity
  */
 Crafty.c("GroundAttacher", {
-    _groundAttach: function(ground) {
-        ground.attach(this);
-    },
-    _groundDetach: function(ground) {
-        ground.detach(this);
-    },
+  _groundAttach: function(ground) {
+    ground.attach(this);
+  },
+  _groundDetach: function(ground) {
+    ground.detach(this);
+  },
 
-    init: function () {
-        this.requires("Supportable");
+  init: function() {
+    this.requires("Supportable");
 
-        this.bind("LandedOnGround", this._groundAttach);
-        this.bind("LiftedOffGround", this._groundDetach);
-    },
-    remove: function(destroyed) {
-        this.unbind("LandedOnGround", this._groundAttach);
-        this.unbind("LiftedOffGround", this._groundDetach);
-    }
+    this.bind("LandedOnGround", this._groundAttach);
+    this.bind("LiftedOffGround", this._groundDetach);
+  },
+  remove: function(destroyed) {
+    this.unbind("LandedOnGround", this._groundAttach);
+    this.unbind("LiftedOffGround", this._groundDetach);
+  }
 });
-
 
 /**@
  * #Gravity
@@ -245,26 +252,25 @@ Crafty.c("GroundAttacher", {
  * @see Supportable, Motion
  */
 Crafty.c("Gravity", {
-    _gravityConst: 500,
-    _gravityActive: false,
+  _gravityConst: 500,
+  _gravityActive: false,
 
-    init: function () {
-        this.requires("2D, Supportable, Motion");
+  init: function() {
+    this.requires("2D, Supportable, Motion");
 
-        this.bind("LiftedOffGround", this._startGravity); // start gravity if we are off ground
-        this.bind("LandedOnGround", this._stopGravity); // stop gravity once landed
-    },
-    remove: function(destroyed) {
-        this.unbind("LiftedOffGround", this._startGravity);
-        this.unbind("LandedOnGround", this._stopGravity);
-    },
+    this.bind("LiftedOffGround", this._startGravity); // start gravity if we are off ground
+    this.bind("LandedOnGround", this._stopGravity); // stop gravity once landed
+  },
+  remove: function(destroyed) {
+    this.unbind("LiftedOffGround", this._startGravity);
+    this.unbind("LandedOnGround", this._stopGravity);
+  },
 
-    _gravityCheckLanding: function(ground) {
-        if (this._dy < 0) 
-            this.canLand = false;
-    },
+  _gravityCheckLanding: function(ground) {
+    if (this._dy < 0) this.canLand = false;
+  },
 
-    /**@
+  /**@
      * #.gravity
      * @comp Gravity
      * @kind Method
@@ -285,14 +291,14 @@ Crafty.c("Gravity", {
      *   .gravity("platform");
      * ~~~
      */
-    gravity: function (comp) {
-        this.uniqueBind("CheckLanding", this._gravityCheckLanding);
-        this.startGroundDetection(comp);
-        this._startGravity();
+  gravity: function(comp) {
+    this.uniqueBind("CheckLanding", this._gravityCheckLanding);
+    this.startGroundDetection(comp);
+    this._startGravity();
 
-        return this;
-    },
-    /**@
+    return this;
+  },
+  /**@
      * #.antigravity
      * @comp Gravity
      * @kind Method
@@ -300,15 +306,15 @@ Crafty.c("Gravity", {
      * @sign public this .antigravity()
      * Disable gravity for this component. It can be reenabled by calling .gravity()
      */
-    antigravity: function () {
-        this._stopGravity();
-        this.stopGroundDetection();
-        this.unbind("CheckLanding", this._gravityCheckLanding);
+  antigravity: function() {
+    this._stopGravity();
+    this.stopGroundDetection();
+    this.unbind("CheckLanding", this._gravityCheckLanding);
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.gravityConst
      * @comp Gravity
      * @kind Method
@@ -327,26 +333,26 @@ Crafty.c("Gravity", {
      *   .gravity("platform");
      * ~~~
      */
-    gravityConst: function (g) {
-        if (this._gravityActive) { // gravity active, change acceleration
-            this.ay -= this._gravityConst;
-            this.ay += g;
-        }
-        this._gravityConst = g;
-
-        return this;
-    },
-
-    _startGravity: function() {
-        if (this._gravityActive) return;
-        this._gravityActive = true;
-        this.ay += this._gravityConst;
-    },
-    _stopGravity: function() {
-        if (!this._gravityActive) return;
-        this._gravityActive = false;
-        this.ay = 0;
-        this.vy = 0;
+  gravityConst: function(g) {
+    if (this._gravityActive) {
+      // gravity active, change acceleration
+      this.ay -= this._gravityConst;
+      this.ay += g;
     }
-});
+    this._gravityConst = g;
 
+    return this;
+  },
+
+  _startGravity: function() {
+    if (this._gravityActive) return;
+    this._gravityActive = true;
+    this.ay += this._gravityConst;
+  },
+  _stopGravity: function() {
+    if (!this._gravityActive) return;
+    this._gravityActive = false;
+    this.ay = 0;
+    this.vy = 0;
+  }
+});

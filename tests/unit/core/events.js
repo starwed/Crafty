@@ -5,19 +5,17 @@
   module("Events");
 
   test("bind", function(_) {
-    var first = Crafty.e("test"),
-      triggered = false;
+    var first = Crafty.e("test"), triggered = false;
     first.bind("myevent", function() {
       triggered = true;
     });
     first.trigger("myevent");
     _.strictEqual(triggered, true, "custom event triggered");
-
   });
 
   test("bind groups of entities", function(_) {
     var e1 = Crafty.e("test"), e2 = Crafty.e("test");
-    var test_callback = function(){
+    var test_callback = function() {
       this.test_flag = true;
     };
     Crafty("test").bind("TestEvent", test_callback);
@@ -29,13 +27,16 @@
 
     Crafty.trigger("TestEvent");
     _.strictEqual(e1.test_flag, true, "Global event triggered on first entity");
-    _.strictEqual(e2.test_flag, true, "Global event triggered on second entity");
-
+    _.strictEqual(
+      e2.test_flag,
+      true,
+      "Global event triggered on second entity"
+    );
   });
 
-  test("trigger groups of entities", function(_){
+  test("trigger groups of entities", function(_) {
     var e1 = Crafty.e("test"), e2 = Crafty.e("test");
-    var test_callback = function(){
+    var test_callback = function() {
       this.test_flag = true;
     };
     e1.bind("TestEvent", test_callback);
@@ -46,16 +47,20 @@
   });
 
   test("bind to an event in response to that same event", function(_) {
-    var first = Crafty.e("test"),
-      triggered = 0;
-    function increment(){ triggered++; }
+    var first = Crafty.e("test"), triggered = 0;
+    function increment() {
+      triggered++;
+    }
     first.bind("myevent", function() {
       increment();
       first.bind("myevent", increment);
     });
     first.trigger("myevent");
-    _.strictEqual(triggered, 1, "event added in response to an event should not be triggered by that same event");
-
+    _.strictEqual(
+      triggered,
+      1,
+      "event added in response to an event should not be triggered by that same event"
+    );
   });
 
   test("unbind", function(_) {
@@ -78,7 +83,6 @@
     first.bind("myevent", callback2);
     first.unbind("myevent", callback);
     first.trigger("myevent");
-
   });
 
   test("globalBindAndUnbind", function(_) {
@@ -116,7 +120,6 @@
     Crafty.trigger("Increment");
     _.strictEqual(x, 1, "Crafty.bind fired once");
 
-
     x = 0;
     Crafty.unbind("Increment", add);
     Crafty.trigger("Increment");
@@ -138,17 +141,19 @@
     Crafty.uniqueBind("Increment", add);
     Crafty.uniqueBind("Increment", add);
     Crafty.trigger("Increment");
-    _.strictEqual(x, 1, "Event bound twice by Crafty.uniqueBound fires only once");
+    _.strictEqual(
+      x,
+      1,
+      "Event bound twice by Crafty.uniqueBound fires only once"
+    );
 
     x = 0;
     Crafty.unbind("Increment", add);
     Crafty.trigger("Increment");
     _.strictEqual(x, 0, "uniqueBound does not fire once unbound");
-
   });
 
   test("Entity binding events", function(_) {
-
     var x = 0;
 
     function add() {
@@ -159,7 +164,6 @@
     e.bind("Increment", add);
     e.trigger("Increment");
     _.strictEqual(x, 1, ".bind fired once");
-
 
     x = 0;
     e.unbind("Increment", add);
@@ -187,45 +191,48 @@
   });
 
   test("Multiple bound events", function(_) {
-
     //Test with entity trigger
-    var temp = Crafty.e('Triggerable');
+    var temp = Crafty.e("Triggerable");
     temp.xyz = 0;
     temp.abc = 0;
     temp.def = 0;
-    temp.one('Event A', function() {
+    temp.one("Event A", function() {
       this.xyz++;
     });
-    temp.bind('Event A', function() {
+    temp.bind("Event A", function() {
       this.abc++;
     });
-    temp.one('Event A', function() {
+    temp.one("Event A", function() {
       this.def++;
     });
-    temp.trigger('Event A');
-    temp.trigger('Event A');
+    temp.trigger("Event A");
+    temp.trigger("Event A");
     _.strictEqual(temp.xyz, 1, "ENTITY -- first one() should trigger once");
     _.strictEqual(temp.abc, 2, "regular event should trigger twice");
     _.strictEqual(temp.def, 1, "second one() should trigger once");
     temp.destroy();
 
     //Test with global trigger on entity
-    temp = Crafty.e('Triggerable');
+    temp = Crafty.e("Triggerable");
     temp.xyz = 0;
     temp.abc = 0;
     temp.def = 0;
-    temp.one('Event A', function() {
+    temp.one("Event A", function() {
       this.xyz++;
     });
-    temp.bind('Event A', function() {
+    temp.bind("Event A", function() {
       this.abc++;
     });
-    temp.one('Event A', function() {
+    temp.one("Event A", function() {
       this.def++;
     });
-    Crafty.trigger('Event A');
-    Crafty.trigger('Event A');
-    _.strictEqual(temp.xyz, 1, "GLOBAL TRIGGER -- first one() should trigger once");
+    Crafty.trigger("Event A");
+    Crafty.trigger("Event A");
+    _.strictEqual(
+      temp.xyz,
+      1,
+      "GLOBAL TRIGGER -- first one() should trigger once"
+    );
     _.strictEqual(temp.abc, 2, "regular event should trigger twice");
     _.strictEqual(temp.def, 1, "second one() should trigger once");
     temp.destroy();
@@ -235,23 +242,26 @@
     temp.xyz = 0;
     temp.abc = 0;
     temp.def = 0;
-    temp.one('Event A', function() {
+    temp.one("Event A", function() {
       this.xyz++;
     });
-    temp.bind('Event A', function() {
+    temp.bind("Event A", function() {
       this.abc++;
     });
-    temp.one('Event A', function() {
+    temp.one("Event A", function() {
       this.def++;
     });
-    Crafty.trigger('Event A');
-    Crafty.trigger('Event A');
-    _.strictEqual(temp.xyz, 1, "GLOBAL BIND -- first one() should trigger once");
+    Crafty.trigger("Event A");
+    Crafty.trigger("Event A");
+    _.strictEqual(
+      temp.xyz,
+      1,
+      "GLOBAL BIND -- first one() should trigger once"
+    );
     _.strictEqual(temp.abc, 2, "regular event should trigger twice");
     _.strictEqual(temp.def, 1, "second one() should trigger once");
 
     Crafty.unbind("Event A");
-
   });
 
   // Catch bugs in unbinding logic when something is unbound at depth > 1
@@ -260,24 +270,27 @@
     var counter = 0;
     // Each of these functions can be run at most once, because they unbind on triggering
     var a = function() {
-        counter++;
-        this.unbind("Test", a);
-        this.trigger("Test");
+      counter++;
+      this.unbind("Test", a);
+      this.trigger("Test");
     };
     var b = function() {
-        counter++;
-        this.unbind("Test", b);
-        this.trigger("Test");
+      counter++;
+      this.unbind("Test", b);
+      this.trigger("Test");
     };
     e.bind("Test", a);
     e.bind("Test", b);
     e.trigger("Test");
-    _.strictEqual(counter, 2, "Total number of triggers should be 2 (regardless of bind/unbind order).");
+    _.strictEqual(
+      counter,
+      2,
+      "Total number of triggers should be 2 (regardless of bind/unbind order)."
+    );
   });
 
   test("Data passing", function(_) {
-    var x = 0,
-      e;
+    var x = 0, e;
 
     function add(data) {
       x += data.amount;
@@ -318,11 +331,11 @@
     Crafty.unbind("Increment");
   });
 
-  test("Events and autobind with function names", function(_){
+  test("Events and autobind with function names", function(_) {
     Crafty.c("AutoComp", {
-      counter:0,
-      events: {"Test":"_onTest"},
-      _onTest: function(){
+      counter: 0,
+      events: { Test: "_onTest" },
+      _onTest: function() {
         this.counter++;
       }
     });
@@ -333,16 +346,18 @@
     e.removeComponent("AutoComp");
     e.counter = 0;
     e.trigger("Test");
-    _.strictEqual(e.counter, 0, "Function was not triggered after removal of component");
-
-
+    _.strictEqual(
+      e.counter,
+      0,
+      "Function was not triggered after removal of component"
+    );
   });
 
-  test("Events and autobind with function declared inside object", function(_){
+  test("Events and autobind with function declared inside object", function(_) {
     Crafty.c("AutoComp2", {
-      counter:0,
+      counter: 0,
       events: {
-        Test:function(){
+        Test: function() {
           this.counter++;
         }
       }
@@ -354,9 +369,10 @@
     e.removeComponent("AutoComp2");
     e.counter = 0;
     e.trigger("Test");
-    _.strictEqual(e.counter, 0, "Function was not triggered after removal of component");
-
+    _.strictEqual(
+      e.counter,
+      0,
+      "Function was not triggered after removal of component"
+    );
   });
-
 })();
-

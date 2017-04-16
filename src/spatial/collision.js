@@ -1,9 +1,9 @@
-var Crafty = require('../core/core.js'),
-    DEG_TO_RAD = Math.PI / 180,
-    EPSILON = 1e-6;
+var Crafty = require("../core/core.js"),
+  DEG_TO_RAD = Math.PI / 180,
+  EPSILON = 1e-6;
 
 Crafty.extend({
-    /**@
+  /**@
      * #Crafty.raycast
      * @category 2D
      * @kind Method
@@ -57,115 +57,116 @@ Crafty.extend({
      * @see Crafty.map#Crafty.map.traverseRay
      */
 
-    // origin = {_x, _y}
-    // direction = {x, y}, must be normalized
-    //
-    // Add approximate ray intersection with bounding rectangle,
-    // before doing exact ray intersection if needed in future.
-    // https://gist.github.com/mucaho/77846e9fc0cd3c8b600c
-    raycast: function(origin, direction) {
-        // default parameters
-        var comp = 'obj',
-            maxDistance = Infinity,
-            sort = true;
-        // optional arguments
-        var argument, type;
-        for (var i = 2, l = arguments.length; i < l; ++i) {
-            argument = arguments[i];
-            type = typeof argument;
-            if (type === 'number') maxDistance = argument + EPSILON; // make it inclusive
-            else if (type === 'string') comp = argument;
-            else if (type === 'boolean') sort = argument;
-        }
-
-        var ox = origin._x,
-            oy = origin._y,
-            dx = direction.x,
-            dy = direction.y;
-
-
-        var alreadyChecked = {},
-            results = [];
-
-
-        if (maxDistance < 0) { // find first intersection
-
-            var closestObj = null,
-                minDistance = Infinity;
-
-            // traverse map
-            Crafty.map.traverseRay(origin, direction, function(obj, previousCellDistance) {
-                // check if we advanced to next cell
-                //      then report closest object from previous cell
-                //          if intersection point is in previous cell
-                if (closestObj && minDistance < previousCellDistance) {
-                    results.push({
-                        obj: closestObj,
-                        distance: minDistance,
-                        x: ox + minDistance * dx,
-                        y: oy + minDistance * dy
-                    });
-                    closestObj = null;
-                    minDistance = Infinity;
-
-                    return true;
-                }
-
-                // object must contain polygon hitbox, the specified component and must not already be checked
-                if (!obj.map || !obj.__c[comp] || alreadyChecked[obj[0]]) return;
-                alreadyChecked[obj[0]] = true;
-
-                // do exact intersection test
-                var distance = obj.map.intersectRay(origin, direction);
-                if (distance < minDistance) {
-                    closestObj = obj;
-                    minDistance = distance;
-                }
-            });
-
-            // in case traversal ended and we haven't yet pushed nearest intersecting object
-            if (closestObj) {
-                results.push({
-                    obj: closestObj,
-                    distance: minDistance,
-                    x: ox + minDistance * dx,
-                    y: oy + minDistance * dy
-                });
-            }
-
-        } else { // find intersections up to max distance
-
-            // traverse map
-            Crafty.map.traverseRay(origin, direction, function(obj, previousCellDistance) {
-                // check if we advanced to next cell
-                //      then cancel traversal if previousCellDistance > maxDistance
-                if (previousCellDistance > maxDistance) {
-                    return true;
-                }
-
-                // object must contain polygon hitbox, the specified component and must not already be checked
-                if (!obj.map || !obj.__c[comp] || alreadyChecked[obj[0]]) return;
-                alreadyChecked[obj[0]] = true;
-
-                // do exact intersection test
-                var distance = obj.map.intersectRay(origin, direction);
-                if (distance < maxDistance) {
-                    results.push({
-                        obj: obj,
-                        distance: distance,
-                        x: ox + distance * dx,
-                        y: oy + distance * dy
-                    });
-                }
-            });
-        }
-
-
-        if (sort) results.sort(function(a, b) { return a.distance - b.distance; });
-
-
-        return results;
+  // origin = {_x, _y}
+  // direction = {x, y}, must be normalized
+  //
+  // Add approximate ray intersection with bounding rectangle,
+  // before doing exact ray intersection if needed in future.
+  // https://gist.github.com/mucaho/77846e9fc0cd3c8b600c
+  raycast: function(origin, direction) {
+    // default parameters
+    var comp = "obj", maxDistance = Infinity, sort = true;
+    // optional arguments
+    var argument, type;
+    for (var i = 2, l = arguments.length; i < l; ++i) {
+      argument = arguments[i];
+      type = typeof argument;
+      if (type === "number") maxDistance = argument + EPSILON;
+      else if (type === "string")
+        // make it inclusive
+        comp = argument;
+      else if (type === "boolean") sort = argument;
     }
+
+    var ox = origin._x, oy = origin._y, dx = direction.x, dy = direction.y;
+
+    var alreadyChecked = {}, results = [];
+
+    if (maxDistance < 0) {
+      // find first intersection
+
+      var closestObj = null, minDistance = Infinity;
+
+      // traverse map
+      Crafty.map.traverseRay(origin, direction, function(
+        obj,
+        previousCellDistance
+      ) {
+        // check if we advanced to next cell
+        //      then report closest object from previous cell
+        //          if intersection point is in previous cell
+        if (closestObj && minDistance < previousCellDistance) {
+          results.push({
+            obj: closestObj,
+            distance: minDistance,
+            x: ox + minDistance * dx,
+            y: oy + minDistance * dy
+          });
+          closestObj = null;
+          minDistance = Infinity;
+
+          return true;
+        }
+
+        // object must contain polygon hitbox, the specified component and must not already be checked
+        if (!obj.map || !obj.__c[comp] || alreadyChecked[obj[0]]) return;
+        alreadyChecked[obj[0]] = true;
+
+        // do exact intersection test
+        var distance = obj.map.intersectRay(origin, direction);
+        if (distance < minDistance) {
+          closestObj = obj;
+          minDistance = distance;
+        }
+      });
+
+      // in case traversal ended and we haven't yet pushed nearest intersecting object
+      if (closestObj) {
+        results.push({
+          obj: closestObj,
+          distance: minDistance,
+          x: ox + minDistance * dx,
+          y: oy + minDistance * dy
+        });
+      }
+    } else {
+      // find intersections up to max distance
+
+      // traverse map
+      Crafty.map.traverseRay(origin, direction, function(
+        obj,
+        previousCellDistance
+      ) {
+        // check if we advanced to next cell
+        //      then cancel traversal if previousCellDistance > maxDistance
+        if (previousCellDistance > maxDistance) {
+          return true;
+        }
+
+        // object must contain polygon hitbox, the specified component and must not already be checked
+        if (!obj.map || !obj.__c[comp] || alreadyChecked[obj[0]]) return;
+        alreadyChecked[obj[0]] = true;
+
+        // do exact intersection test
+        var distance = obj.map.intersectRay(origin, direction);
+        if (distance < maxDistance) {
+          results.push({
+            obj: obj,
+            distance: distance,
+            x: ox + distance * dx,
+            y: oy + distance * dy
+          });
+        }
+      });
+    }
+
+    if (sort)
+      results.sort(function(a, b) {
+        return a.distance - b.distance;
+      });
+
+    return results;
+  }
 });
 
 /**@
@@ -191,21 +192,21 @@ Crafty.extend({
  * @see 2D
  */
 Crafty.c("Collision", {
-    init: function () {
-        this.requires("2D");
-        this._collisionData = {};
+  init: function() {
+    this.requires("2D");
+    this._collisionData = {};
 
-        this.collision();
-    },
+    this.collision();
+  },
 
-    // Run by Crafty when the component is removed
-    remove: function() {
-        this._cbr = null;
-        this.unbind("Resize", this._resizeMap);
-        this.unbind("Resize", this._checkBounds);
-    },
+  // Run by Crafty when the component is removed
+  remove: function() {
+    this._cbr = null;
+    this.unbind("Resize", this._resizeMap);
+    this.unbind("Resize", this._checkBounds);
+  },
 
-    /**@
+  /**@
      * #.collision
      * @comp Collision
      * @kind Method
@@ -246,58 +247,67 @@ Crafty.c("Collision", {
      *
      * @see Crafty.polygon
      */
-    collision: function (polygon) {
-        // Unbind anything bound to "Resize"
-        this.unbind("Resize", this._resizeMap);
-        this.unbind("Resize", this._checkBounds);
+  collision: function(polygon) {
+    // Unbind anything bound to "Resize"
+    this.unbind("Resize", this._resizeMap);
+    this.unbind("Resize", this._checkBounds);
 
-        if (!polygon) {
-            // If no polygon is specified, then a polygon is created that matches the bounds of the entity
-            // It will be adjusted on a "Resize" event
-            polygon = new Crafty.polygon([0, 0, this._w, 0, this._w, this._h, 0, this._h]);
-            this.bind("Resize", this._resizeMap);
-            this._cbr = null;
-        } else {
-            // Otherwise, we set the specified hitbox, converting from a list of arguments to a polygon if necessary
-            if (arguments.length > 1) {
-                //convert args to array to create polygon
-                var args = Array.prototype.slice.call(arguments, 0);
-                polygon = new Crafty.polygon(args);
-            // Otherwise, we set the specified hitbox, converting from an array of points to a polygon if necessary
-            } else if (polygon.constructor === Array) {
-                //Clone the array so we don't modify it for anything else that might be using it
-                polygon = new Crafty.polygon(polygon.slice());
-            // Otherwise, we set the specified hitbox
-            } else {
-                //Clone the polygon so we don't modify it for anything else that might be using it
-                polygon = polygon.clone();
-            }
-            // Check to see if the polygon sits outside the entity, and set _cbr appropriately
-            // On resize, the new bounds will be checked if necessary
-            this._findBounds(polygon.points);
+    if (!polygon) {
+      // If no polygon is specified, then a polygon is created that matches the bounds of the entity
+      // It will be adjusted on a "Resize" event
+      polygon = new Crafty.polygon([
+        0,
+        0,
+        this._w,
+        0,
+        this._w,
+        this._h,
+        0,
+        this._h
+      ]);
+      this.bind("Resize", this._resizeMap);
+      this._cbr = null;
+    } else {
+      // Otherwise, we set the specified hitbox, converting from a list of arguments to a polygon if necessary
+      if (arguments.length > 1) {
+        //convert args to array to create polygon
+        var args = Array.prototype.slice.call(arguments, 0);
+        polygon = new Crafty.polygon(args);
+        // Otherwise, we set the specified hitbox, converting from an array of points to a polygon if necessary
+      } else if (polygon.constructor === Array) {
+        //Clone the array so we don't modify it for anything else that might be using it
+        polygon = new Crafty.polygon(polygon.slice());
+        // Otherwise, we set the specified hitbox
+      } else {
+        //Clone the polygon so we don't modify it for anything else that might be using it
+        polygon = polygon.clone();
+      }
+      // Check to see if the polygon sits outside the entity, and set _cbr appropriately
+      // On resize, the new bounds will be checked if necessary
+      this._findBounds(polygon.points);
+    }
+
+    // If the entity is currently rotated, the points in the hitbox must also be rotated
+    if (this.rotation) {
+      polygon.rotate({
+        cos: Math.cos(-this.rotation * DEG_TO_RAD),
+        sin: Math.sin(-this.rotation * DEG_TO_RAD),
+        o: {
+          x: this._origin.x,
+          y: this._origin.y
         }
+      });
+    }
 
-        // If the entity is currently rotated, the points in the hitbox must also be rotated
-        if (this.rotation) {
-            polygon.rotate({
-                cos: Math.cos(-this.rotation * DEG_TO_RAD),
-                sin: Math.sin(-this.rotation * DEG_TO_RAD),
-                o: {
-                    x: this._origin.x,
-                    y: this._origin.y
-                }
-            });
-        }
+    // Finally, assign the hitbox, and attach it to the "Collision" entity
+    this.map = polygon;
+    this.attach(this.map);
+    this.map.shift(this._x, this._y);
+    this.trigger("NewHitbox", polygon);
+    return this;
+  },
 
-        // Finally, assign the hitbox, and attach it to the "Collision" entity
-        this.map = polygon;
-        this.attach(this.map);
-        this.map.shift(this._x, this._y);
-        this.trigger("NewHitbox", polygon);
-        return this;
-    },
-
-    /**@
+  /**@
      * #.cbr
      * @comp Collision
      * @kind Method
@@ -315,114 +325,111 @@ Crafty.c("Collision", {
      *
      * @see 2D#.mbr
      */
-    cbr: function (cbr) {
-        cbr = cbr || {};
-        if (!this._cbr) {
-            return this.mbr(cbr);
-        } else {
-            cbr._x = (this._cbr._x);
-            cbr._y = (this._cbr._y);
-            cbr._w = (this._cbr._w);
-            cbr._h = (this._cbr._h);
-            return cbr;
+  cbr: function(cbr) {
+    cbr = cbr || {};
+    if (!this._cbr) {
+      return this.mbr(cbr);
+    } else {
+      cbr._x = this._cbr._x;
+      cbr._y = this._cbr._y;
+      cbr._w = this._cbr._w;
+      cbr._h = this._cbr._h;
+      return cbr;
+    }
+  },
+
+  // If the hitbox is set by hand, it might extend beyond the entity.
+  // In such a case, we need to track this separately.
+  // This function finds a (non-minimal) bounding circle around the hitbox.
+  //
+  // It uses a pretty naive algorithm to do so, for more complicated options see [wikipedia](http://en.wikipedia.org/wiki/Bounding_sphere).
+  _findBounds: function(points) {
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    var l = points.length;
+
+    // Calculate the MBR of the points by finding the min/max x and y
+    for (var i = 0; i < l; i += 2) {
+      if (points[i] < minX) minX = points[i];
+      if (points[i] > maxX) maxX = points[i];
+      if (points[i + 1] < minY) minY = points[i + 1];
+      if (points[i + 1] > maxY) maxY = points[i + 1];
+    }
+
+    // This describes a circle centered on the MBR of the points, with a diameter equal to its diagonal
+    // It will be used to find a rough bounding box round the points, even if they've been rotated
+    var cbr = {
+      cx: (minX + maxX) / 2,
+      cy: (minY + maxY) / 2,
+      r: Math.sqrt(
+        (maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY)
+      ) / 2
+    };
+
+    // We need to worry about resizing, but only if resizing could possibly change whether the hitbox is in or out of bounds
+    // Thus if the upper-left corner is out of bounds, then there's no need to recheck on resize
+    if (minX >= 0 && minY >= 0) {
+      this._checkBounds = function() {
+        if ((this._cbr === null && this._w < maxX) || this._h < maxY) {
+          this._cbr = cbr;
+          this._calculateMBR();
+        } else if (this._cbr) {
+          this._cbr = null;
+          this._calculateMBR();
         }
-    },
+      };
+      this.bind("Resize", this._checkBounds);
+    }
 
-    // If the hitbox is set by hand, it might extend beyond the entity.
-    // In such a case, we need to track this separately.
-    // This function finds a (non-minimal) bounding circle around the hitbox.
-    //
-    // It uses a pretty naive algorithm to do so, for more complicated options see [wikipedia](http://en.wikipedia.org/wiki/Bounding_sphere).
-    _findBounds: function(points) {
-        var minX = Infinity, maxX = -Infinity, minY=Infinity, maxY=-Infinity;
-        var l = points.length;
+    // If the hitbox is within the entity, _cbr is null
+    // Otherwise, set it, and immediately calculate the bounding box.
+    if (minX >= 0 && minY >= 0 && maxX <= this._w && maxY <= this._h) {
+      this._cbr = null;
+      return false;
+    } else {
+      this._cbr = cbr;
+      this._calculateMBR();
+      return true;
+    }
+  },
 
-        // Calculate the MBR of the points by finding the min/max x and y
-        for (var i=0; i<l; i+=2) {
-            if (points[i] < minX)
-                minX = points[i];
-            if (points[i] > maxX)
-                maxX = points[i];
-            if (points[i+1] < minY)
-                minY = points[i+1];
-            if (points[i+1] > maxY)
-                maxY = points[i+1];
-        }
+  // The default behavior is to match the hitbox to the entity.
+  // This function will change the hitbox when a "Resize" event triggers.
+  _resizeMap: function(e) {
+    var dx, dy, rot = this.rotation * DEG_TO_RAD, points = this.map.points;
 
-        // This describes a circle centered on the MBR of the points, with a diameter equal to its diagonal
-        // It will be used to find a rough bounding box round the points, even if they've been rotated
-        var cbr = {
-            cx: (minX + maxX) / 2,
-            cy: (minY + maxY) / 2,
-            r: Math.sqrt((maxX - minX)*(maxX - minX) + (maxY - minY)*(maxY - minY)) / 2
-        };
+    // Depending on the change of axis, move the corners of the rectangle appropriately
+    if (e.axis === "w") {
+      if (rot) {
+        dx = e.amount * Math.cos(rot);
+        dy = e.amount * Math.sin(rot);
+      } else {
+        dx = e.amount;
+        dy = 0;
+      }
 
-        // We need to worry about resizing, but only if resizing could possibly change whether the hitbox is in or out of bounds
-        // Thus if the upper-left corner is out of bounds, then there's no need to recheck on resize
-        if (minX >= 0 && minY >= 0) {
-            this._checkBounds = function() {
-                if (this._cbr === null && this._w < maxX || this._h < maxY) {
-                   this._cbr = cbr;
-                   this._calculateMBR();
-                } else if (this._cbr) {
-                    this._cbr = null;
-                    this._calculateMBR();
-                }
-            };
-            this.bind("Resize", this._checkBounds);
-        }
+      // "top right" point shifts on change of w
+      points[2] += dx;
+      points[3] += dy;
+    } else {
+      if (rot) {
+        dy = e.amount * Math.cos(rot);
+        dx = -e.amount * Math.sin(rot);
+      } else {
+        dx = 0;
+        dy = e.amount;
+      }
 
-        // If the hitbox is within the entity, _cbr is null
-        // Otherwise, set it, and immediately calculate the bounding box.
-        if (minX >= 0 && minY >= 0 && maxX <= this._w && maxY <= this._h) {
-            this._cbr = null;
-            return false;
-        } else {
-            this._cbr = cbr;
-            this._calculateMBR();
-            return true;
-        }
-    },
+      // "bottom left" point shifts on change of h
+      points[6] += dx;
+      points[7] += dy;
+    }
 
-    // The default behavior is to match the hitbox to the entity.
-    // This function will change the hitbox when a "Resize" event triggers.
-    _resizeMap: function (e) {
-        var dx, dy, rot = this.rotation * DEG_TO_RAD,
-            points = this.map.points;
+    // "bottom right" point shifts on either change
+    points[4] += dx;
+    points[5] += dy;
+  },
 
-        // Depending on the change of axis, move the corners of the rectangle appropriately
-        if (e.axis === 'w') {
-            if (rot) {
-                dx = e.amount * Math.cos(rot);
-                dy = e.amount * Math.sin(rot);
-            } else {
-                dx = e.amount;
-                dy = 0;
-            }
-
-            // "top right" point shifts on change of w
-            points[2] += dx;
-            points[3] += dy;
-        } else {
-            if (rot) {
-                dy = e.amount * Math.cos(rot);
-                dx = -e.amount * Math.sin(rot);
-            } else {
-                dx = 0;
-                dy = e.amount;
-            }
-
-            // "bottom left" point shifts on change of h
-            points[6] += dx;
-            points[7] += dy;
-        }
-
-        // "bottom right" point shifts on either change
-        points[4] += dx;
-        points[5] += dy;
-    },
-
-    /**@
+  /**@
      * #.hit
      * @comp Collision
      * @kind Method
@@ -485,57 +492,65 @@ Crafty.c("Collision", {
      *
      * @see Crafty.map#Crafty.map.search
      */
-    hit: function (component) {
-        var area = this._cbr || this._mbr || this,
-            results = Crafty.map.search(area, false),
-            i = 0,
-            l = results.length,
-            dupes = {},
-            id, obj, oarea, key,
-            overlap = Crafty.rectManager.overlap,
-            hasMap = ('map' in this && 'containsPoint' in this.map),
-            finalresult = [];
+  hit: function(component) {
+    var area = this._cbr || this._mbr || this,
+      results = Crafty.map.search(area, false),
+      i = 0,
+      l = results.length,
+      dupes = {},
+      id,
+      obj,
+      oarea,
+      key,
+      overlap = Crafty.rectManager.overlap,
+      hasMap = "map" in this && "containsPoint" in this.map,
+      finalresult = [];
 
-        if (!l) {
-            return null;
-        }
+    if (!l) {
+      return null;
+    }
 
-        for (; i < l; ++i) {
-            obj = results[i];
-            oarea = obj._cbr || obj._mbr || obj; //use the mbr
+    for (; i < l; ++i) {
+      obj = results[i];
+      oarea = obj._cbr || obj._mbr || obj; //use the mbr
 
-            if (!obj) continue;
-            id = obj[0];
+      if (!obj) continue;
+      id = obj[0];
 
-            //check if not added to hash and that actually intersects
-            if (!dupes[id] && this[0] !== id && obj.__c[component] && overlap(oarea, area))
-                dupes[id] = obj;
-        }
+      //check if not added to hash and that actually intersects
+      if (
+        !dupes[id] &&
+        this[0] !== id &&
+        obj.__c[component] &&
+        overlap(oarea, area)
+      )
+        dupes[id] = obj;
+    }
 
-        for (key in dupes) {
-            obj = dupes[key];
+    for (key in dupes) {
+      obj = dupes[key];
 
-            if (hasMap && 'map' in obj) {
-                var SAT = this._SAT(this.map, obj.map);
-                SAT.obj = obj;
-                SAT.type = "SAT";
-                if (SAT) finalresult.push(SAT);
-            } else {
-                finalresult.push({
-                    obj: obj,
-                    type: "MBR"
-                });
-            }
-        }
+      if (hasMap && "map" in obj) {
+        var SAT = this._SAT(this.map, obj.map);
+        SAT.obj = obj;
+        SAT.type = "SAT";
+        if (SAT) finalresult.push(SAT);
+      } else {
+        finalresult.push({
+          obj: obj,
+          type: "MBR"
+        });
+      }
+    }
 
-        if (!finalresult.length) {
-            return null;
-        }
+    if (!finalresult.length) {
+      return null;
+    }
 
-        return finalresult;
-    },
+    return finalresult;
+  },
 
-    /**@
+  /**@
      * #.onHit
      * @comp Collision
      * @kind Method
@@ -573,24 +588,24 @@ Crafty.c("Collision", {
      * @see .hit
      * @see Crafty.map#Crafty.map.search
      */
-    onHit: function (component, callbackOn, callbackOff) {
-        var justHit = false;
-        this.bind("EnterFrame", function () {
-            var hitData = this.hit(component);
-            if (hitData) {
-                callbackOn.call(this, hitData, !justHit);
-                justHit = true;
-            } else if (justHit) {
-                if (typeof callbackOff === 'function') {
-                    callbackOff.call(this);
-                }
-                justHit = false;
-            }
-        });
-        return this;
-    },
+  onHit: function(component, callbackOn, callbackOff) {
+    var justHit = false;
+    this.bind("EnterFrame", function() {
+      var hitData = this.hit(component);
+      if (hitData) {
+        callbackOn.call(this, hitData, !justHit);
+        justHit = true;
+      } else if (justHit) {
+        if (typeof callbackOff === "function") {
+          callbackOff.call(this);
+        }
+        justHit = false;
+      }
+    });
+    return this;
+  },
 
-    /**
+  /**
      * This is a helper method for creating collisions handlers set up by `checkHits`. Do not call this directly.
      *
      * @param {String} component - The name of the component for which this handler checks for collisions.
@@ -598,26 +613,26 @@ Crafty.c("Collision", {
      *
      * @see .checkHits
      */
-    _createCollisionHandler: function(component, collisionData) {
-        return function() {
-            var hitData = this.hit(component);
+  _createCollisionHandler: function(component, collisionData) {
+    return function() {
+      var hitData = this.hit(component);
 
-            if (collisionData.occurring === true) {
-                if (hitData !== null) {
-                    // The collision is still in progress
-                    return;
-                }
+      if (collisionData.occurring === true) {
+        if (hitData !== null) {
+          // The collision is still in progress
+          return;
+        }
 
-                collisionData.occurring = false;
-                this.trigger("HitOff", component);
-            } else if (hitData !== null) {
-                collisionData.occurring = true;
-                this.trigger("HitOn", hitData);
-            }
-        };
-    },
+        collisionData.occurring = false;
+        this.trigger("HitOff", component);
+      } else if (hitData !== null) {
+        collisionData.occurring = true;
+        this.trigger("HitOn", hitData);
+      }
+    };
+  },
 
-    /**@
+  /**@
      * #.checkHits
      * @comp Collision
      * @kind Method
@@ -662,33 +677,39 @@ Crafty.c("Collision", {
      * @see .hit
      * @see Crafty.map#Crafty.map.search
      */
-    checkHits: function () {
-        var components = arguments;
-        var i = 0;
+  checkHits: function() {
+    var components = arguments;
+    var i = 0;
 
-        if (components.length === 1) {
-            components = components[0].split(/\s*,\s*/);
-        }
+    if (components.length === 1) {
+      components = components[0].split(/\s*,\s*/);
+    }
 
-        for (; i < components.length; ++i) {
-            var component = components[i];
-            var collisionData = this._collisionData[component];
+    for (; i < components.length; ++i) {
+      var component = components[i];
+      var collisionData = this._collisionData[component];
 
-            if (collisionData !== undefined) {
-                // There is already a handler for collision with this component
-                continue;
-            }
+      if (collisionData !== undefined) {
+        // There is already a handler for collision with this component
+        continue;
+      }
 
-            this._collisionData[component] = collisionData = { occurring: false, handler: null };
-            collisionData.handler = this._createCollisionHandler(component, collisionData);
+      this._collisionData[component] = collisionData = {
+        occurring: false,
+        handler: null
+      };
+      collisionData.handler = this._createCollisionHandler(
+        component,
+        collisionData
+      );
 
-            this.bind("EnterFrame", collisionData.handler);
-        }
+      this.bind("EnterFrame", collisionData.handler);
+    }
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.ignoreHits
      * @comp Collision
      * @kind Method
@@ -719,39 +740,39 @@ Crafty.c("Collision", {
      *     .ignoreHits('Solid'); // stop checking for collisions with entities that have the Solid component
      * ~~~
      */
-    ignoreHits: function () {
-        var components = arguments;
-        var i = 0;
-        var collisionData;
+  ignoreHits: function() {
+    var components = arguments;
+    var i = 0;
+    var collisionData;
 
-        if (components.length === 0) {
-            for (collisionData in this._collisionData) {
-                this.unbind("EnterFrame", collisionData.handler);
-            }
+    if (components.length === 0) {
+      for (collisionData in this._collisionData) {
+        this.unbind("EnterFrame", collisionData.handler);
+      }
 
-            this._collisionData = {};
-        }
+      this._collisionData = {};
+    }
 
-        if (components.length === 1) {
-            components = components[0].split(/\s*,\s*/);
-        }
+    if (components.length === 1) {
+      components = components[0].split(/\s*,\s*/);
+    }
 
-        for (; i < components.length; ++i) {
-            var component = components[i];
-            collisionData = this._collisionData[component];
+    for (; i < components.length; ++i) {
+      var component = components[i];
+      collisionData = this._collisionData[component];
 
-            if (collisionData === undefined) {
-                continue;
-            }
+      if (collisionData === undefined) {
+        continue;
+      }
 
-            this.unbind("EnterFrame", collisionData.handler);
-            delete this._collisionData[component];
-        }
+      this.unbind("EnterFrame", collisionData.handler);
+      delete this._collisionData[component];
+    }
 
-        return this;
-    },
+    return this;
+  },
 
-    /**@
+  /**@
      * #.resetHitChecks
      * @comp Collision
      * @kind Method
@@ -785,161 +806,166 @@ Crafty.c("Collision", {
      *     })
      * ~~~
      */
-    resetHitChecks: function() {
-        var components = arguments;
-        var i = 0;
-        var collisionData;
+  resetHitChecks: function() {
+    var components = arguments;
+    var i = 0;
+    var collisionData;
 
-        if (components.length === 0) {
-            for (collisionData in this._collisionData) {
-                this._collisionData[collisionData].occurring = false;
-            }
-        }
-
-        if (components.length === 1) {
-            components = components[0].split(/\s*,\s*/);
-        }
-
-        for (; i < components.length; ++i) {
-            var component = components[i];
-            collisionData = this._collisionData[component];
-
-            if (collisionData === undefined) {
-                continue;
-            }
-
-            collisionData.occurring = false;
-        }
-
-        return this;
-    },
-
-    _SAT: function (poly1, poly2) {
-        var i = 0,
-            points1 = poly1.points, points2 = poly2.points,
-            l = points1.length/2,
-            j, k = points2.length/2,
-            nx=0, ny=0,
-            length,
-            min1, min2,
-            max1, max2,
-            interval,
-            MTV = -Infinity,
-            MNx = null,
-            MNy = null,
-            dot,
-            np;
-
-        //loop through the edges of Polygon 1
-        for (; i < l; i++) {
-            np = (i === l - 1 ? 0 : i + 1);
-
-            //generate the normal for the current edge
-            nx = -(points1[2*i+1] - points1[2*np+1]);
-            ny = (points1[2*i] - points1[2*np]);
-
-            //normalize the vector
-            length = Math.sqrt(nx * nx + ny * ny);
-            nx /= length;
-            ny /= length;
-
-            //default min max
-            min1 = min2 = Infinity;
-            max1 = max2 = -Infinity;
-
-            //project all vertices from poly1 onto axis
-            for (j = 0; j < l; ++j) {
-                dot = points1[2*j] * nx + points1[2*j+1] * ny;
-                if (dot > max1) max1 = dot;
-                if (dot < min1) min1 = dot;
-            }
-
-            //project all vertices from poly2 onto axis
-            for (j = 0; j < k; ++j) {
-                dot = points2[2*j] * nx + points2[2*j+1] * ny;
-                if (dot > max2) max2 = dot;
-                if (dot < min2 ) min2 = dot;
-            }
-
-            //calculate the minimum translation vector should be negative
-            if (min1 < min2) {
-                interval = min2 - max1;
-                nx = -nx;
-                ny = -ny;
-            } else {
-                interval = min1 - max2;
-            }
-
-            //exit early if positive
-            if (interval >= 0) {
-                return false;
-            }
-
-            if (interval > MTV) {
-                MTV = interval;
-                MNx = nx;
-                MNy = ny;
-            }
-        }
-
-        //loop through the edges of Polygon 2
-        for (i = 0; i < k; i++) {
-            np = (i === k - 1 ? 0 : i + 1);
-
-            //generate the normal for the current edge
-            nx = -(points2[2*i+1] - points2[2*np+1]);
-            ny = (points2[2*i] - points2[2*np]);
-
-            //normalize the vector
-            length = Math.sqrt(nx * nx + ny * ny);
-            nx /= length;
-            ny /= length;
-
-            //default min max
-            min1 = min2 = Infinity;
-            max1 = max2 = -Infinity;
-
-            //project all vertices from poly1 onto axis
-            for (j = 0; j < l; ++j) {
-                dot = points1[2*j] * nx + points1[2*j+1] * ny;
-                if (dot > max1) max1 = dot;
-                if (dot < min1) min1 = dot;
-            }
-
-            //project all vertices from poly2 onto axis
-            for (j = 0; j < k; ++j) {
-                dot = points2[2*j] * nx + points2[2*j+1] * ny;
-                if (dot > max2) max2 = dot;
-                if (dot < min2) min2 = dot;
-            }
-
-            //calculate the minimum translation vector should be negative
-            if (min1 < min2) {
-                interval = min2 - max1;
-                nx = -nx;
-                ny = -ny;
-            } else {
-                interval = min1 - max2;
-            }
-
-            //exit early if positive
-            if (interval >= 0) {
-                return false;
-            }
-
-            if (interval > MTV) {
-                MTV = interval;
-                MNx = nx;
-                MNy = ny;
-            }
-        }
-
-        return {
-            overlap: MTV,
-            normal: {
-                x: MNx,
-                y: MNy
-            }
-        };
+    if (components.length === 0) {
+      for (collisionData in this._collisionData) {
+        this._collisionData[collisionData].occurring = false;
+      }
     }
+
+    if (components.length === 1) {
+      components = components[0].split(/\s*,\s*/);
+    }
+
+    for (; i < components.length; ++i) {
+      var component = components[i];
+      collisionData = this._collisionData[component];
+
+      if (collisionData === undefined) {
+        continue;
+      }
+
+      collisionData.occurring = false;
+    }
+
+    return this;
+  },
+
+  _SAT: function(poly1, poly2) {
+    var i = 0,
+      points1 = poly1.points,
+      points2 = poly2.points,
+      l = points1.length / 2,
+      j,
+      k = points2.length / 2,
+      nx = 0,
+      ny = 0,
+      length,
+      min1,
+      min2,
+      max1,
+      max2,
+      interval,
+      MTV = -Infinity,
+      MNx = null,
+      MNy = null,
+      dot,
+      np;
+
+    //loop through the edges of Polygon 1
+    for (; i < l; i++) {
+      np = i === l - 1 ? 0 : i + 1;
+
+      //generate the normal for the current edge
+      nx = -(points1[2 * i + 1] - points1[2 * np + 1]);
+      ny = points1[2 * i] - points1[2 * np];
+
+      //normalize the vector
+      length = Math.sqrt(nx * nx + ny * ny);
+      nx /= length;
+      ny /= length;
+
+      //default min max
+      min1 = min2 = Infinity;
+      max1 = max2 = -Infinity;
+
+      //project all vertices from poly1 onto axis
+      for (j = 0; j < l; ++j) {
+        dot = points1[2 * j] * nx + points1[2 * j + 1] * ny;
+        if (dot > max1) max1 = dot;
+        if (dot < min1) min1 = dot;
+      }
+
+      //project all vertices from poly2 onto axis
+      for (j = 0; j < k; ++j) {
+        dot = points2[2 * j] * nx + points2[2 * j + 1] * ny;
+        if (dot > max2) max2 = dot;
+        if (dot < min2) min2 = dot;
+      }
+
+      //calculate the minimum translation vector should be negative
+      if (min1 < min2) {
+        interval = min2 - max1;
+        nx = -nx;
+        ny = -ny;
+      } else {
+        interval = min1 - max2;
+      }
+
+      //exit early if positive
+      if (interval >= 0) {
+        return false;
+      }
+
+      if (interval > MTV) {
+        MTV = interval;
+        MNx = nx;
+        MNy = ny;
+      }
+    }
+
+    //loop through the edges of Polygon 2
+    for (i = 0; i < k; i++) {
+      np = i === k - 1 ? 0 : i + 1;
+
+      //generate the normal for the current edge
+      nx = -(points2[2 * i + 1] - points2[2 * np + 1]);
+      ny = points2[2 * i] - points2[2 * np];
+
+      //normalize the vector
+      length = Math.sqrt(nx * nx + ny * ny);
+      nx /= length;
+      ny /= length;
+
+      //default min max
+      min1 = min2 = Infinity;
+      max1 = max2 = -Infinity;
+
+      //project all vertices from poly1 onto axis
+      for (j = 0; j < l; ++j) {
+        dot = points1[2 * j] * nx + points1[2 * j + 1] * ny;
+        if (dot > max1) max1 = dot;
+        if (dot < min1) min1 = dot;
+      }
+
+      //project all vertices from poly2 onto axis
+      for (j = 0; j < k; ++j) {
+        dot = points2[2 * j] * nx + points2[2 * j + 1] * ny;
+        if (dot > max2) max2 = dot;
+        if (dot < min2) min2 = dot;
+      }
+
+      //calculate the minimum translation vector should be negative
+      if (min1 < min2) {
+        interval = min2 - max1;
+        nx = -nx;
+        ny = -ny;
+      } else {
+        interval = min1 - max2;
+      }
+
+      //exit early if positive
+      if (interval >= 0) {
+        return false;
+      }
+
+      if (interval > MTV) {
+        MTV = interval;
+        MNx = nx;
+        MNy = ny;
+      }
+    }
+
+    return {
+      overlap: MTV,
+      normal: {
+        x: MNx,
+        y: MNy
+      }
+    };
+  }
 });
