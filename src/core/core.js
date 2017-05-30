@@ -1258,11 +1258,17 @@ Crafty._callbackMethods = {
         }
         var callbacks = this._callbacks[event];
 
+        // If there's a single callback, there's no need to iterate, and so no need to muck around with the depth of iteration
+        var l = callbacks.length;
+        if (l === 1 && callbacks[0]) {
+            callbacks[0].call(this, data);
+            return;
+        }
+
         // Callback loop; deletes dead callbacks, but only when it is safe to do so
-        var i, l = callbacks.length;
         // callbacks.depth tracks whether this function was invoked in the middle of a previous iteration through the same callback array
         callbacks.depth++;
-        for (i = 0; i < l; i++) {
+        for (var i = 0; i < l; i++) {
             if (typeof callbacks[i] === "undefined") {
                 if (callbacks.depth <= 1) {
                     callbacks.splice(i, 1);
