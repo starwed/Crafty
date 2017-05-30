@@ -57,7 +57,7 @@ var Crafty = function (selector) {
 };
     // Internal variables
 var GUID, frame, components, entities, handlers, onloads, compEntities,
-slice, rlist, rspace;
+slice, rlist, rspace, frameData;
 
 
 components  = {}; // Map of components and their functions
@@ -73,6 +73,8 @@ var initState = function () {
     compEntities= {}; // Map from componentName to (entityId -> entity)
     handlers    = {}; // Global event handlers
     onloads     = []; // Temporary storage of onload handlers
+
+    frameData = {}; // Event data object
 };
 
 initState();
@@ -1717,11 +1719,9 @@ Crafty.extend({
                 for (var i = 0; i < loops; i++) {
                     lastFrameTime = currentTime;
                     
-                    var frameData = {
-                        frame: frame++,
-                        dt: dt,
-                        gameTime: gameTime
-                    };
+                    frameData.frame = frame++;
+                    frameData.dt = dt;
+                    frameData.gameTime = gameTime;
 
                     // Event that happens before "UpdateFrame",
                     // e.g. for setting-up movement in response to user input for the next "UpdateFrame" event
