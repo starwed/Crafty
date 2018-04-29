@@ -347,7 +347,7 @@ Crafty._registerLayerTemplate("Canvas", {
 
             // we need to keep track of all stale states, because drawing method can change dynamically
             // track stale grid cell keys for dirty grid cell drawing
-            dirtyKeys = obj._entry.keys; // cached computation of Crafty.HashMap.key(obj)
+            dirtyKeys = Crafty.map.entries[obj[0]].keys; // cached computation of Crafty.HashMap.key(obj)
             staleKeys = obj.staleKeys;
             if (staleKeys === undefined) obj.staleKeys = staleKeys = { x1: 0, y1: 0, x2: 0, y2: 0 };
             staleKeys.x1 = dirtyKeys.x1;
@@ -395,7 +395,7 @@ Crafty._registerLayerTemplate("Canvas", {
                 }
             }
 
-            keys = obj._entry.keys; // cached computation of Crafty.HashMap.key(obj)
+            keys = Crafty.map.entries[obj[0]].keys; // cached computation of Crafty.HashMap.key(obj)
             for (j = keys.x1; j <= keys.x2; j++) {
                 for (k = keys.y1; k <= keys.y2; k++) {
                     // if dirty cell is inside area to be drawn

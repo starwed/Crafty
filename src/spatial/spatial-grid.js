@@ -34,6 +34,7 @@ var cellsize, // TODO: make cellsize an instance property, so multiple maps with
 var HashMap = function (cell) {
     cellsize = cell || 64;
     this.map = {};
+    this.entries = {};
 
     this.boundsDirty = false;
     this.coordBoundsDirty = false;
@@ -95,12 +96,24 @@ HashMap.cellsize = function() {
  * @see Crafty.HashMap
  */
 HashMap.prototype = {
+    // shim for moving off externally tracked entries
+    updateEntry: function (rect, id) {
+        var entry = this.entries[id];
+        //check if buckets change
+        if (HashMap.hash(HashMap.key(rect, keyHolder)) !== HashMap.hash(entry.keys)) {
+            this.refresh(id);
+        } else {
+            //mark map coordinate boundaries as dirty
+            this.map.coordBoundsDirty = true;
+        }
+    },
+
     /**@
      * #Crafty.map.insert
      * @comp Crafty.map
      * @kind Method
      *
-     * @sign public Object Crafty.map.insert(Object obj[, Object entry])
+     * @sign public Object Crafty.map.insert(Object obj, Number id)
      * @param obj - An entity to be inserted.
      * @param entry - An existing entry object to reuse.  (Optional)
      * @returns An object representing this object's entry in the HashMap
@@ -114,10 +127,11 @@ HashMap.prototype = {
      * }
      * ~~~
      */
-    insert: function (obj, entry) {
+    insert: function (obj, id) {
         var i, j, hash;
+        var entry = this.entries[id];
         var keys = HashMap.key(obj, entry && entry.keys);
-        entry = entry || new Entry(keys, obj, this);
+        entry = entry || (this.entries[id] = new Entry(keys, obj, this));
 
         //insert into all x buckets
         for (i = keys.x1; i <= keys.x2; i++) {
@@ -131,8 +145,6 @@ HashMap.prototype = {
 
         //mark map boundaries as dirty
         this.boundsDirty = true;
-
-        return entry;
     },
 
     /**@
@@ -238,8 +250,8 @@ HashMap.prototype = {
      * @comp Crafty.map
      * @kind Method
      *
-     * @sign public void Crafty.map.remove(Entry entry)
-     * @param entry - An entry to remove from the hashmap
+     * @sign public void Crafty.map.remove(Number id)
+     * @param entry - The id of an entry to remove from the hashmap
      *
      * Remove an entry from the broad phase map.
      *
@@ -248,7 +260,8 @@ HashMap.prototype = {
      * Crafty.map.remove(e);
      * ~~~
      */
-    remove: function (entry) {
+    remove: function (id) {
+        var entry = this.entries[id];
         var keys = entry.keys;
         var obj = entry.obj;
         var i = 0,
@@ -267,7 +280,7 @@ HashMap.prototype = {
                     for (m = 0; m < n; m++)
                         if (cell[m] && cell[m][0] === obj[0])
                             cell.splice(m, 1);
-                }
+                } 
             }
         }
 
@@ -280,8 +293,8 @@ HashMap.prototype = {
      * @comp Crafty.map
      * @kind Method
      *
-     * @sign public void Crafty.map.refresh(Entry entry)
-     * @param entry - An entry to update
+     * @sign public void Crafty.map.refresh(Number id)
+     * @param entry - The id of an entry to update
      *
      * Update an entry's keys, and its position in the broad phrase map.
      *
@@ -290,7 +303,8 @@ HashMap.prototype = {
      * Crafty.map.refresh(e);
      * ~~~
      */
-    refresh: function (entry) {
+    refresh: function (id) {
+        var entry = this.entries[id];
         var keys = entry.keys;
         var obj = entry.obj;
         var cell, i, j, m, n;

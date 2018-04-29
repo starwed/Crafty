@@ -260,14 +260,14 @@ Crafty.c("2D", {
         this._children = [];
 
         //insert self into the HashMap
-        this._entry = Crafty.map.insert(this);
+        Crafty.map.insert(this, this[0]);
         
 
         //when object changes, update HashMap
         this.bind("Move", function (e) {
             // Choose the largest bounding region that exists
             var area = this._cbr || this._mbr || this;
-            this._entry.update(area);
+            Crafty.map.updateEntry(area, this[0]);
             // Move children (if any) by the same amount
             if (this._children.length > 0) {
                 this._cascade(e);
@@ -277,7 +277,7 @@ Crafty.c("2D", {
         this.bind("Rotate", function (e) {
             // Choose the largest bounding region that exists
             var old = this._cbr || this._mbr || this;
-            this._entry.update(old);
+            Crafty.map.updateEntry(old, this[0]);
             // Rotate children (if any) by the same amount
             if (this._children.length > 0) {
                 this._cascadeRotation(e);
@@ -305,7 +305,7 @@ Crafty.c("2D", {
                 this._parent.detach(this);
             }
 
-            Crafty.map.remove(this._entry);
+            Crafty.map.remove(this[0]);
 
             this.detach();
         });
@@ -313,10 +313,10 @@ Crafty.c("2D", {
 
     events: {
         "Freeze":function(){
-            Crafty.map.remove(this._entry);
+            Crafty.map.remove(this[0]);
         },
         "Unfreeze":function(){
-            this._entry = Crafty.map.insert(this, this._entry);
+            Crafty.map.insert(this, this[0]);
         }
     }, 
 
