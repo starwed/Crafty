@@ -75,6 +75,10 @@ var initState = function () {
     onloads     = []; // Temporary storage of onload handlers
 };
 
+window.get_entity = function(id) {
+    return entities[id];
+}
+
 initState();
 
 /**@
@@ -1396,6 +1400,27 @@ Crafty.extend({
         this.timer.init();
 
         return this;
+    },
+
+    // async_resources is an array of promises, or functions that return a promise.
+    // In the latter case, functions are passed the Crafty object as a parameter.
+    initAsync: function(async_resources, w, h, stage_elem) {
+        var promises = [];
+        for (var i in async_resources) {
+            if (typeof async_resources[i] === 'function') {
+                promises.push(async_resources[i](Crafty));
+            } else {
+                promises.push(async_resources[i]);
+            }
+        }
+        var window_load = new Promise(function(resolve,reject){
+            window.onload = resolve;
+        });
+        promises.push(window_load);
+        return Promise.all(promises).then(function(values){
+            Crafty.init(w, h, stage_elem);
+            return values;
+        });
     },
 
     // There are some events that need to be bound to Crafty when it's started/restarted, so store them here

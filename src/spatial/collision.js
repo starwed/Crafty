@@ -7,7 +7,7 @@ Crafty.extend({
      * #Crafty.raycast
      * @category 2D
      * @kind Method
-     * 
+     *  
      * @sign public Array .raycast(Object origin, Object direction[, Number maxDistance][, String comp][, Boolean sort])
      * @param origin - the point of origin from which the ray will be cast. The object must contain the properties `_x` and `_y`.
      * @param direction - the direction the ray will be cast. It must be normalized. The object must contain the properties `x` and `y`.
@@ -72,10 +72,11 @@ Crafty.extend({
         var argument, type;
         for (var i = 2, l = arguments.length; i < l; ++i) {
             argument = arguments[i];
-            type = typeof argument;
-            if (type === 'number') maxDistance = argument + EPSILON; // make it inclusive
-            else if (type === 'string') comp = argument;
-            else if (type === 'boolean') sort = argument;
+            switch(typeof argument) {
+                case 'number': maxDistance = argument + EPSILON; break;
+                case 'string': comp = argument; break;
+                case 'boolean': sort = argument; break;
+            }
         }
 
         var ox = origin._x,
@@ -87,18 +88,18 @@ Crafty.extend({
         var alreadyChecked = {},
             results = [];
 
-
+        var lastSetChecked = -1;
         if (maxDistance < 0) { // find first intersection
 
             var closestObj = null,
                 minDistance = Infinity;
 
             // traverse map
-            Crafty.map.traverseRay(origin, direction, function(obj, previousCellDistance) {
+            Crafty.map.traverseRay(origin, direction, function(obj, setNumber) {
                 // check if we advanced to next cell
                 //      then report closest object from previous cell
                 //          if intersection point is in previous cell
-                if (closestObj && minDistance < previousCellDistance) {
+                if (closestObj && lastSetChecked < setNumber) {
                     results.push({
                         obj: closestObj,
                         distance: minDistance,
@@ -124,7 +125,7 @@ Crafty.extend({
             });
 
             // in case traversal ended and we haven't yet pushed nearest intersecting object
-            if (closestObj) {
+            if (closestObj)  {
                 results.push({
                     obj: closestObj,
                     distance: minDistance,
@@ -134,15 +135,8 @@ Crafty.extend({
             }
 
         } else { // find intersections up to max distance
-
             // traverse map
-            Crafty.map.traverseRay(origin, direction, function(obj, previousCellDistance) {
-                // check if we advanced to next cell
-                //      then cancel traversal if previousCellDistance > maxDistance
-                if (previousCellDistance > maxDistance) {
-                    return true;
-                }
-
+            Crafty.map.traverseRay(origin, direction, function(obj, setNumber) {
                 // object must contain polygon hitbox, the specified component and must not already be checked
                 if (!obj.map || !obj.__c[comp] || alreadyChecked[obj[0]]) return;
                 alreadyChecked[obj[0]] = true;
@@ -157,7 +151,7 @@ Crafty.extend({
                         y: oy + distance * dy
                     });
                 }
-            });
+            }, maxDistance);
         }
 
 

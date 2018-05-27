@@ -426,7 +426,7 @@ HashMap.prototype = {
         coords.maxY = -Infinity;
         coords.minX = Infinity;
         coords.minY = Infinity;
-
+        
         var k, ent, cell;
         //Using broad phase hash to speed up the computation of boundaries.
         for (var h in this.map) {
@@ -490,7 +490,7 @@ HashMap.prototype = {
      * @comp Crafty.map
      * @kind Method
      *
-     * @sign public void Crafty.map.traverseRay(Object origin, Object direction, Function callback)
+     * @sign public void Crafty.map.traverseRay(Object origin, Object direction, Function callback[, Number maxDistance])
      * @param origin - the point of origin from which the ray will be cast. The object must contain the properties `_x` and `_y`.
      * @param direction - the direction the ray will be cast. It must be normalized. The object must contain the properties `x` and `y`.
      * @param callback - a callback that will be called for each object that is encountered along the ray.
@@ -567,7 +567,7 @@ HashMap.prototype = {
     //  d = -------------------
     //         direction.y
     //
-    traverseRay: function(origin, direction, callback) {
+    traverseRay: function(origin, direction, callback, maxDistance) {
         var dirX = direction.x,
             dirY = direction.y;
         // copy input data
@@ -578,6 +578,7 @@ HashMap.prototype = {
             _w: 0,
             _h: 0
         };
+        maxDistance = maxDistance || Infinity;
 
 
         var keyBounds = this._keyBoundaries();
@@ -623,7 +624,9 @@ HashMap.prototype = {
 
         // advance starting cell to be inside of map bounds
         while ((stepCol === 1 && currentCol < minCol && minCol !== Infinity) || (stepCol === -1 && currentCol > maxCol && maxCol !== -Infinity) ||
-               (stepRow === 1 && currentRow < minRow && minRow !== Infinity) || (stepRow === -1 && currentRow > maxRow && maxRow !== -Infinity)) {
+               (stepRow === 1 && currentRow < minRow && minRow !== Infinity) || (stepRow === -1 && currentRow > maxRow && maxRow !== -Infinity)
+                && previousDistance <= maxDistance
+            ) {
 
             // advance to closest cell
             if (nextDistanceX < nextDistanceY) {
@@ -643,7 +646,9 @@ HashMap.prototype = {
         // traverse over cells
         // TODO: maybe change condition to `while (currentCol !== endX) || (currentRow !== endY)`
         while ((minCol <= currentCol && currentCol <= maxCol) &&
-               (minRow <= currentRow && currentRow <= maxRow)) {
+               (minRow <= currentRow && currentRow <= maxRow) &&
+                previousDistance <= maxDistance
+            ) {
 
             // process cell
             if ((cell = this.map[(currentCol << 16) ^ currentRow])) {
@@ -659,7 +664,7 @@ HashMap.prototype = {
             if (nextDistanceX < nextDistanceY) {
                 previousDistance = nextDistanceX;
 
-                currentCol += stepCol;
+                currentCol += stepCol; 
                 nextDistanceX += deltaDistanceX;
             } else {
                 previousDistance = nextDistanceY;
