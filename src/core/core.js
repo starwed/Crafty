@@ -53,6 +53,13 @@ var version = require('./version');
  */
 
 var Crafty = function (selector) {
+    // optimization for selecting an entity by id
+    // TODO test that the branching isn't inherently expensive?
+    // TODO move some of the other logic in the init constructor into this method
+    // Invoking the constructor has a cost that can be avoided in some cases
+    if (typeof selector === 'number') {
+        return entities[id];
+    }
     return new Crafty.fn.init(selector);
 };
     // Internal variables
@@ -74,10 +81,6 @@ var initState = function () {
     handlers    = {}; // Global event handlers
     onloads     = []; // Temporary storage of onload handlers
 };
-
-window.get_entity = function(id) {
-    return entities[id];
-}
 
 initState();
 
