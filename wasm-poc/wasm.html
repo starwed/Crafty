@@ -1,0 +1,77 @@
+<html>
+    <head>
+        <script src='wasm-utils.js'></script>
+        <script>
+            function prepareMapModule(exports) {
+                var mapModule = {};
+
+
+                var $map = exports.new_map();
+                console.log('map', $map);
+                var $buffer_ptr = exports.get_result_buffer();
+                console.log('bp', $buffer_ptr);
+                console.log(exports);
+                var $buffer_view = new Int32Array(exports.memory.buffer, $buffer_ptr, 1000);
+
+                var update_map_raw =  exports.update_map;
+                var check_cell_raw = exports.check_cell;
+                var search_raw = exports.search;
+
+                mapModule.update_map = function(id, x, y, w, h) {
+                    update_map_raw($map, id, x, y, w, h);
+                }
+                mapModule.check_cell = function(id, i, j) {
+                    return check_cell_raw($map, id, i, j);
+                }
+                mapModule.search = function(x, y, w, h) {
+                    var l = search_raw($map, $buffer_ptr, x, y, w, h);
+                    var results = [];
+                    for (var i =0; i<l; i++) {
+                        results.push($buffer_view[i]);
+                    }
+                    return results;
+                }
+                return mapModule;
+            }
+            window.Module = {};
+            //var memory = new WebAssembly.Memory({initial:20});
+            fetchAndInstantiate("./wasm_test.wasm")
+                .then(mod => {
+                    console.log(mod);
+                    Module.double_it  = mod.exports.double_it;
+                    Module.get_first = mod.exports.get_first;
+                    Module.set_first = mod.exports.set_first;
+
+                    var mapModule = prepareMapModule(mod.exports);
+                    //console.log(memory.buffer);
+
+                    // Begin map test
+                    mapModule.update_map(1, 5.0, 5.0, 10.0, 10.0);
+                    mapModule.update_map(2, 10.0, 10.0, 10.0, 10.0);
+                    var test1 = mapModule.check_cell(1, 0, 0);
+                    var test2 = mapModule.check_cell(1, 1, 1);
+                    console.log("true?", test1, "false?", test2);
+                    console.log('ding1');
+                    console.log(mapModule.search(0, 0, 40, 40));
+                    console.log('ding2');
+
+                    mapModule.update_map(1, 60.0, 60.0, 10.0, 10.0);
+                    var test1 = mapModule.check_cell(1, 0, 0);
+                    var test2 = mapModule.check_cell(1, 1, 1);
+                    console.log("true?", test1, "true?", test2);
+                    console.log(mapModule.search(0, 0, 40, 40));
+
+                    mapModule.update_map(2, 1060.0, 1060.0, 10.0, 10.0);
+                    console.log(mapModule.search(0, 0, 40, 40));
+
+                }).then(()=>console.log(Module.double_it(3)));
+        </script>
+
+    </head>
+    <body>
+    <h2>Hi</h2>
+    Body text.
+        <textarea id='out' />
+    </body>
+
+</html>

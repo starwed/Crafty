@@ -1,0 +1,11 @@
+[package]
+name = "wasm-test"
+version = "0.1.0"
+authors = ["Tim Martin <starwed@gmail.com>"]
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+itertools = "0.7.6"
