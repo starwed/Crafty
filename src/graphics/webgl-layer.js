@@ -9,7 +9,8 @@ function RenderProgramWrapper(layer, shader){
     this.draw = function() { };
 
     this.array_size = 16;
-    this.max_size = 1024;
+    // TODO make this configurable
+    this.max_size = 2048;
     this._indexArray = new Uint16Array(6 * this.array_size);
     this._indexBuffer = layer.context.createBuffer();
 }
