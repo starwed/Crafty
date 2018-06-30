@@ -2,92 +2,24 @@
 <html>
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <title>Crafty.js - comparison of WebGL, DOM, and Canvas rendering</title>
-  
- 
-  
-  
+  <title>Crafty.js - demo of collision performance with/without wasm</title>
   <script src='wasm-utils.js'></script>
-  <script src='patch.js'></script>
-    
-      <script type='text/javascript' src="crafty.js"></script>
-    
-  
+  <script src='faster-map.js'></script>
+  <script src="../crafty.js"></script>
+  <script src='collision-stress.js'></script>
   <style type='text/css'>
       body{margin:0;}
   </style>
-  
-
-
-<script type='text/javascript'>//<![CDATA[ 
- 
-    function startScene(){
-      Crafty.stage.fullscreen = true
-      Crafty.viewport.clampToEntities = false;
-
-      //Crafty.timer.steptype("semifixed");
-      
-        var SIZE = 15;
-        var n = 50, m=30;
-        var MULT = 1;
-        
-        var MAX_X = n * SIZE * 1.5;
-        var MAX_Y = m * SIZE * 1.5;
-        var results_holder = [];
-        function updater() {
-            results_holder.length = 0;
-            var results = Crafty.map.search(this, results_holder);
-            if (results.length > 1) {
-                this.vx = -this.vx;
-                this.vy = -this.vy;
-            } else {
-                if (this._x > MAX_X || this._x < 0) {
-                    this.vx = -this.vx;
-                }
-                if (this._y > MAX_Y || this._y <0 ) {
-                    this.vy = -this.vy;
-                }
-            }
-        }
-      function placeCollider(x, y) {
-        var angle = 2 * Math.PI * Math.random();
-        var speed =  50;
-        Crafty.e("2D, WebGL, Color, Motion").color("red").attr(
-            { x:x, y:y, w:SIZE, h:SIZE,
-                vx: speed * Math.cos(angle),
-                vy: speed * Math.sin(angle)
-            })
-            .bind("EnterFrame", updater);
-      };
-
-      for (var i=0; i < n ; i++) {
-          for (var j=0; j < m; j++) {
-            placeCollider(MULT * i * SIZE * 1.4, MULT * j * SIZE * 1.4);
-          }
-      }
-
-    }
-
-    var crafty_modules = [];
-    crafty_modules.push(loadMapModule);
-    
-    Crafty
-        .initAsync(crafty_modules)
-        .then(startScene);
-    
-    
-    
-    //]]>
-
-</script>
-
-
 </head>
-<body>
-  
-  
-</body>
-
-
+    <body>
+        <div style="padding: 1rem">
+            <label for='n'>n</label> <input type='text' id='n' value='30'></input>
+            <br/>
+            <label for='m'>m</label> <input type= 'text' id='m' value='30'></input>
+            <br/>
+            <label for='wasm'>Use wasm module</label><input type='checkbox' id='wasm'></input>
+            <br/>
+            <button onclick='go()'>Go</button>
+        </div>
+    </body>
 </html>
-

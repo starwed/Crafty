@@ -13,7 +13,7 @@ pub struct CraftyEntry {
     y1: i32,
     x2: i32,
     y2: i32,
-    // crafty-style coordinates
+    // crafty-style coordinates 
     x: f32,
     y: f32,
     w: f32,
@@ -63,9 +63,6 @@ pub trait SpatialMap {
     fn search(&mut self, x: f32, y: f32, w: f32, h: f32) -> HashSet<i32>;
     fn unfiltered_search(&mut self, x: f32, y: f32, w: f32, h: f32) -> HashSet<i32>;
     
-    // not necessary for crafty, but useful for testing
-    fn check_cell<'a, 'b>(&mut self, id:i32, i: i32, j: i32)  -> bool;
-    
     fn get_boundaries(&self) -> MapBoundaries;
 }
 
@@ -88,7 +85,6 @@ impl GridSpatialMap {
         self.cell_manager.cells.iter().count()
     }
 
-
     fn get_crafty_entries_in_cell<'a>(&'a self,  cell: &'a MapCell) ->  Vec<&CraftyEntry> {
         cell.entries
             .iter()
@@ -105,8 +101,6 @@ impl GridSpatialMap {
     // might not happen in the first cell the entity is found int.
     //
     // note: lifetime ellision doens't happen automatically for impl trait; that's what `+ '_` does
-
-    // todo: fix case where dir_x/y = 0
     pub fn traverse_ray(& self, ox: f32, oy: f32, dir_x: f32, dir_y: f32, max_distance: f32) -> impl Iterator<Item=MapTraversalResult> + '_ {
         let current_col = self.key(ox);
         let current_row = self.key(oy);
@@ -180,15 +174,6 @@ impl SpatialMap for GridSpatialMap {
                 map.insert_entry(&new_entry);
                 entry.insert(new_entry);
             }
-        }
-    }
-
-    // Just for testing, remove later
-    fn check_cell<'a, 'b>(&mut self, id:i32, i: i32, j: i32)  -> bool {
-        let map = &mut self.cell_manager;
-        match map.cells.entry((i, j)) {
-            Occupied(cell_entry) => cell_entry.get().entries.contains(&id),
-            _ => false
         }
     }
 

@@ -43,7 +43,6 @@ impl<T> CellContentTraverser<T> where T:Iterator<Item=EntityIterator> {
     }
 }
 
-// todo: could have bounds here only, and not on struct
 impl<T> Iterator for CellContentTraverser<T> where T:Iterator<Item=EntityIterator> {
     type Item = MapTraversalResult;
     fn next(&mut self) -> Option<MapTraversalResult> {
@@ -56,13 +55,11 @@ impl<T> Iterator for CellContentTraverser<T> where T:Iterator<Item=EntityIterato
         // loop until we get a result from an iterator, or the next iterator is empty
         while let Some(ref mut candidate_iterator) = self.current_candidate_iterator {
             if let Some(candidate) = candidate_iterator.next() {
-                println!("-- Found {} in set {}", candidate, self.current_set_number);
                 return Some(MapTraversalResult{
                     id: candidate,
                     set_number: self.current_set_number
                 });
             } else {
-                println!("Getting next set");
                 self.current_candidate_iterator =  self.cell_traverser.next();
                 self.current_set_number += 1;
             }
@@ -92,9 +89,6 @@ impl<'a> Iterator for RayCellTraverser<'a> {
     type Item = EntityIterator;
     fn next(&mut self) -> Option<EntityIterator> {
             while self.t_max_x - self.t_delta_x < self.max_distance && self.t_max_y - self.t_delta_y < self.max_distance {
-                println!("Getting iterator for cell {} {}", self.current_col, self.current_row);
-                println!("Max {} {} Delta {} {} ColRow {} {}", self.t_max_x, self.t_max_y, self.t_delta_x, self.t_delta_y,
-                    self.step_col, self.step_row);
                 // get cell contents
                 let candidates = 
                     self.cell_manager
@@ -107,11 +101,11 @@ impl<'a> Iterator for RayCellTraverser<'a> {
                     self.t_max_y += self.t_delta_y;
                     self.current_row += self.step_row;
                 }
-                println!("How many candidates? {}", candidates.len());
+                
                 return Some(EntityIterator {
                     set_iterator: candidates.into_iter()
                 })
             }
-            return None;
+            None
     }
 }

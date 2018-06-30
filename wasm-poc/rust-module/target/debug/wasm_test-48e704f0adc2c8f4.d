@@ -1,1 +1,0 @@
-/Users/timothymartin/Code/wasm-test/target/debug/wasm_test-48e704f0adc2c8f4: /Users/timothymartin/Code/wasm-test/src/lib.rs /Users/timothymartin/Code/wasm-test/src/map.rs /Users/timothymartin/Code/wasm-test/src/ray_traverser.rs

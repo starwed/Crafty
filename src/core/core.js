@@ -58,7 +58,7 @@ var Crafty = function (selector) {
     // TODO move some of the other logic in the init constructor into this method
     // Invoking the constructor has a cost that can be avoided in some cases
     if (typeof selector === 'number') {
-        return entities[id];
+        return entities[selector];
     }
     return new Crafty.fn.init(selector);
 };
@@ -1407,6 +1407,11 @@ Crafty.extend({
 
     // async_resources is an array of promises, or functions that return a promise.
     // In the latter case, functions are passed the Crafty object as a parameter.
+    // In addition to the specified promises, also wait for the document to load
+    // That'll be added at the end of the promis array
+    // 
+    // Once complete it will call Crafty.init with w, h, stage_elem, and then finally 
+    // resolve a promise with the values of the promise array
     initAsync: function(async_resources, w, h, stage_elem) {
         var promises = [];
         for (var i in async_resources) {
@@ -1416,10 +1421,16 @@ Crafty.extend({
                 promises.push(async_resources[i]);
             }
         }
-        var window_load = new Promise(function(resolve,reject){
-            window.onload = resolve;
-        });
-        promises.push(window_load);
+
+        // wait for document loading if necessary
+        // TODO probably could just wait for 'interactive', but this is simpler for now
+        if (document.readyState != 'complete') {
+            var window_load = new Promise(function(resolve,reject){
+                window.onload = resolve;
+                promises.push(window_load);
+            });
+        }
+
         return Promise.all(promises).then(function(values){
             Crafty.init(w, h, stage_elem);
             return values;
@@ -1864,7 +1875,7 @@ Crafty.extend({
     e: function () {
         var id = UID();
         entities[id] = null;
-        entities[id] = Crafty(id);
+        entities[id] = new Crafty.fn.init(id);
 
         if (arguments.length > 0) {
             entities[id].addComponent.apply(entities[id], arguments);

@@ -3630,6 +3630,10 @@ Crafty.extend({
 
     // async_resources is an array of promises, or functions that return a promise.
     // In the latter case, functions are passed the Crafty object as a parameter.
+    // In addition to the specified promises, also wait for the document to load
+    // That'll be added at the end of the promis array
+    // 
+    // Once complete it passes the resolved values of the various promises
     initAsync: function(async_resources, w, h, stage_elem) {
         var promises = [];
         for (var i in async_resources) {
@@ -3639,10 +3643,15 @@ Crafty.extend({
                 promises.push(async_resources[i]);
             }
         }
-        var window_load = new Promise(function(resolve,reject){
-            window.onload = resolve;
-        });
-        promises.push(window_load);
+
+        // wait for document loading if necessary
+        if (document.readyState != 'complete') {
+            var window_load = new Promise(function(resolve, reject){
+                window.onload = resolve;
+                promises.push(window_load);
+            });
+        }
+        
         return Promise.all(promises).then(function(values){
             Crafty.init(w, h, stage_elem);
             return values;
